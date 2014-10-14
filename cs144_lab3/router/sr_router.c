@@ -78,6 +78,47 @@ void sr_handlepacket(struct sr_instance* sr,
 
   printf("*** -> Received packet of length %d \n",len);
 
+  printf("packet is %u\n", packet);
+  printf("interface is %s\n", interface);
+  print_addr_ip(packet);
+  ethertype(packet);
+  /* When the router receives any packet, it should be determined what type of the protocol is. Hence, */
+  /*sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;
+  uint16_t ethernet_protocol_type = ntohs(header->ether_type);
+
+  if(ethernet_protocol_type == ip_protocol_icmp){
+
+  }else if(ethernet_protocol_type == ethertype_arp){
+
+  }else if(ethernet_protocol_type == ethertype_ip){
+
+  }*/
+      /*switch (ethernet_protocol_type)
+      {
+          case sr_ip_protocol:
+          {
+              Check whether IP or ICMP
+              break;
+          }
+          case ETHERTYPE_ARP:
+          {
+              sr_arp_hdr_t *arp_header = (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+              unsigned short opcode = arp_header->ar_op;
+              if (opcode == ARP_REQUEST)
+              {
+                  // Unicast ARP reply back to requester if Target Protocol Address == any of
+                  // the ip's in if_list
+                  sr_handle_received_arpreq(sr, arp_header);
+              }
+              else if (opcode == ARP_REPLY)
+              {
+                  sr_handle_arpreply(sr, arp_header);
+              }
+              break;
+          }
+          default:
+              break;
+      }*/
   /* fill in code here */
 
 }/* end sr_ForwardPacket */
