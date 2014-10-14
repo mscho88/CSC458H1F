@@ -78,9 +78,9 @@ void sr_handlepacket(struct sr_instance* sr,
 
   printf("*** -> Received packet of length %d \n",len);
 
-  printf("packet is %u\n", packet);
-  printf("interface is %s\n", interface);
-  print_addr_ip(packet);
+  /*printf("packet is %u\n", packet);*/
+  /*printf("interface is %s\n", interface);*/
+  print_addr_eth(packet);
   ethertype(packet);
   /* When the router receives any packet, it should be determined what type of the protocol is. Hence, */
   /*sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;
