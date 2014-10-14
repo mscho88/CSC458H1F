@@ -112,8 +112,11 @@ int sr_connect_to_server(struct sr_instance* sr,unsigned short port,
         return -1;
     }
 
-    printf("Printing IP address of the server to connect .. \n");
+    printf("************************************************\n");
+    printf(" Connecting to ");
     print_addr_ip(sr->sr_addr);
+    printf(" ... \n");
+    printf("************************************************\n");
 
     /* attempt to connect to the server */
     if (connect(sr->sockfd, (struct sockaddr *)&(sr->sr_addr),
