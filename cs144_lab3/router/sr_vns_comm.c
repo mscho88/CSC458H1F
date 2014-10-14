@@ -112,11 +112,7 @@ int sr_connect_to_server(struct sr_instance* sr,unsigned short port,
         return -1;
     }
 
-    printf("Server is %s\n", sr->sr_addr->sin_addr);
-    printf("Server is %s\n", sr->sr_addr->sin_family);
-    printf("Server is %s\n", sr->sr_addr->sin_len);
-    printf("Server is %s\n", sr->sr_addr->sin_port);
-    printf("Server is %s\n", sr->sr_addr->sin_zero);
+    printf("Server is %s\n", sr->sr_addr);
 
     /* attempt to connect to the server */
     if (connect(sr->sockfd, (struct sockaddr *)&(sr->sr_addr),
