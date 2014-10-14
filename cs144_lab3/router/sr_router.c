@@ -81,7 +81,7 @@ void sr_handlepacket(struct sr_instance* sr,
   /*printf("packet is %u\n", packet);*/
   /*printf("interface is %s\n", interface);*/
   print_addr_eth(packet);
-  ethertype(packet);
+  printf("%" PRIu16 "\n",ethertype(packet));
   /* When the router receives any packet, it should be determined what type of the protocol is. Hence, */
   /*sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;
   uint16_t ethernet_protocol_type = ntohs(header->ether_type);
