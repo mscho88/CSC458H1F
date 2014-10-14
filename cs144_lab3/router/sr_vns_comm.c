@@ -95,7 +95,6 @@ int sr_connect_to_server(struct sr_instance* sr,unsigned short port,
     sr->sr_addr.sin_family = AF_INET;
     sr->sr_addr.sin_port = htons(port);
 
-    printf("Server is %d\n", server);
     /* grab hosts address from domain name */
     if ((hp = gethostbyname(server))==0)
     {
@@ -112,6 +111,8 @@ int sr_connect_to_server(struct sr_instance* sr,unsigned short port,
         perror("socket(..):sr_client.c::sr_connect_to_server(..)");
         return -1;
     }
+
+    printf("Server is %s\n", sr->sr_addr);
 
     /* attempt to connect to the server */
     if (connect(sr->sockfd, (struct sockaddr *)&(sr->sr_addr),
