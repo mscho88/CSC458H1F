@@ -133,7 +133,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	    fprintf(stderr, "Failed on inserting the sender information : \n");
     	}
 
-    	struct sr_arpentry is_have = sr_arpcache_lookup(&(sr->cache), arp_header->ar_tip);
+    	struct sr_arpentry *is_have = sr_arpcache_lookup(&(sr->cache), arp_header->ar_tip);
     	if(is_have->valid){
     		/* If the router finds the valid ARP cache which is the
     		 * MAC address of the sender wants, then sends back to
