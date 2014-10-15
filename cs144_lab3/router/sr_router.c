@@ -83,43 +83,63 @@ void sr_handlepacket(struct sr_instance* sr,
    * where to send the packet by comparing the address in the routing
    * table. It may drop the packet if there exists no address to send.
    */
+  sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
+
   printf(" Packet detail ... \n");
   printf(" Source : ");
-  print_addr_eth(((sr_ethernet_hdr_t *) packet)->ether_shost);
+  print_addr_eth(packet_header->ether_shost);
   printf(" Destination : ");
-  print_addr_eth(((sr_ethernet_hdr_t *) packet)->ether_dhost);
+  print_addr_eth(packet_header->ether_dhost);
   printf(" *****************\n;");
 
-  uint16_t ethernet_protocol_type = htons(((sr_ethernet_hdr_t *) packet)->ether_type);
+  uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
 
   if(ethernet_protocol_type == ethertype_arp){
-	  printf("Ethernet type is arp\n");
-	  /*sr_handlepacket_arp(sr, packet, len, );*/
+  	  Debug("*** -> Received Address Resolution Protocol \n");
+  	  sr_handlepacket_arp(sr, packet, len, packet_header);
   }else if(ethernet_protocol_type == ethertype_ip){
-	  printf("Ethernet type is ip\n");
-	  /*sr_handlepacket_ip();*/
+	  Debug("*** -> Received Internet Protocol \n");
+	  sr_handlepacket_ip(sr, packet, len, packet_header);
+  }else{
+	  Debug("*** -> Received unknown packet of length %d \n", len);
   }
-
 }/* end sr_ForwardPacket */
 
 /*---------------------------------------------------------------------
  * Method: sr_handlepacket(uint8_t* p,char* interface)
  * Scope:  Global
  *
- * This method is called when the ethernet type is ARP.
+ * This method is called when the ethernet type is Address Resolution
+ * Protocol.
  *
  *---------------------------------------------------------------------*/
-void sr_handlepacket_arp(){
+void sr_handlepacket_arp(struct sr_instance* sr,
+        uint8_t * packet,
+        unsigned int len,
+        struct sr_ethernet_hdr_t *header){
 
+	/* Set the packet to the Address Resolution Protocol */
+    struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet
+    		+ sizeof(struct sr_ethernet_hdr)));
+
+    printf("ARP header\n");
+    printf("arp header hardware address %u \n", arp_header->ar_hrd);
+
+    printf("arp op %u \n", arp_header->ar_op);
+    printf("sender %s \n", arp_header->ar_sha);
+    printf("destin %s \n", arp_header->ar_tha);
 }/* end sr_handlepacket_arp */
 
 /*---------------------------------------------------------------------
  * Method: sr_handlepacket(uint8_t* p,char* interface)
  * Scope:  Global
  *
- * This method is called when the ethernet type is ARP.
+ * This method is called when the ethernet type is Internet Protocol.
  *
  *---------------------------------------------------------------------*/
-void sr_handlepacket_ip(){
+void sr_handlepacket_ip(struct sr_instance* sr,
+        uint8_t * packet,
+        unsigned int len,
+        struct sr_ethernet_hdr_t *header){
 
 }/* end sr_handlepacket_ip */
