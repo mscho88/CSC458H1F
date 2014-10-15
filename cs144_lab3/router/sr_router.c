@@ -125,13 +125,13 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) == NULL){
     		    struct sr_if* rx_if = sr_get_interface(sr, interface);
 
-    		    struct sr_ethernet_hdr* rx_e_hdr = (struct sr_ethernet_hdr*)packet;
-    			struct sr_ethernet_hdr* tx_e_hdr = ((sr_ethernet_hdr_t*)(malloc(sizeof(sr_ethernet_hdr_t))));
+    		    sr_ethernet_hdr_t* rx_e_hdr = (struct sr_ethernet_hdr*)packet;
+    		    sr_ethernet_hdr_t* tx_e_hdr = ((sr_ethernet_hdr_t*)(malloc(sizeof(sr_ethernet_hdr_t))));
     			uint8_t* tx_packet;
     			int queue_index;
 
-    			struct sr_arphdr* rx_arp_hdr = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-    			struct sr_arphdr* tx_arp_hdr = ((sr_arp_hdr_t*)(malloc(sizeof(sr_arp_hdr_t))));
+    			sr_arp_hdr_t* rx_arp_hdr = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+    			sr_arp_hdr_t* tx_arp_hdr = ((sr_arp_hdr_t*)(malloc(sizeof(sr_arp_hdr_t))));
 
     			Debug("Success on caching the sender information. \n");
 				for (int i = 0; i < ETHER_ADDR_LEN; i++){
