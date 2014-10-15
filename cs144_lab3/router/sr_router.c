@@ -99,7 +99,7 @@ void sr_handlepacket(struct sr_instance* sr,
 
   if(ethernet_protocol_type == ethertype_arp){
   	  Debug("*** -> Received Address Resolution Protocol \n");
-  	  sr_handlepacket_arp(sr, packet, len, packet_header);
+  	  /*sr_handlepacket_arp(sr, packet, len, packet_header);*/
   }else if(ethernet_protocol_type == ethertype_ip){
 	  Debug("*** -> Received Internet Protocol \n");
 	  sr_handlepacket_ip(sr, packet, len, packet_header);
