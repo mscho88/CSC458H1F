@@ -116,29 +116,30 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	  assert(packet);
 	  assert(interface);
 	  assert(header);
-
 	/* Set the packet to the ARP header */
 	struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet + sizeof(struct sr_ethernet_hdr)));
 	print_addr_ip_int(arp_header->ar_tip);
 	sr_print_routing_table(sr);
-	/* When the router receives ARP packet, then the router firstly
-	 * checks whether the router has any interface with the given ip
-	 * address.*/
-	struct sr_if *interfaces = sr_get_interface(sr, interface);
-	struct sr_if *cur = interfaces;
-	while(cur != NULL){
-		if(cur->ip == arp_header->ar_tip){
-			/*sr_send_packet(sr, packet, len, interface);*/
-			return;
-		}
-		cur = cur->next;
-	}
 
     if(htons(arp_header->ar_op) == arp_op_request){
     	/* Since the packet is ARP request, it is required to broadcast
     	 * to the devices where the router knows. */
     	Debug("*** -> Address Resolution Protocol Request \n");
-    	sr_send_packet(sr, packet, len, interface);
+
+
+    	/* When the router receives ARP packet, then the router firstly
+    	 * checks whether the router has any interface with the given ip
+    	 * address.*/
+    	struct sr_if *interfaces = sr_get_interface(sr, interface);
+    	struct sr_if *cur = interfaces;
+    	while(cur != NULL){
+    		if(cur->ip == arp_header->ar_tip){
+    	        struct sr_packet *new_pkt = (struct sr_packet *)malloc(sizeof(struct sr_packet));
+    			sr_send_packet(sr, packet, len, interface);
+    			return;
+    		}
+    		cur = cur->next;
+    	}
     }else if(htons(arp_header->ar_op) == arp_op_reply){
     	/* Since the packet is ARP reply, it is required to send
     	 * back the the sender to let it know the MAC address of the
