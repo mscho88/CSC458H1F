@@ -97,6 +97,7 @@ void sr_handlepacket(struct sr_instance* sr,
 
   sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;
   print_addr_eth(header->ether_shost);
+  print_addr_eth(header->ether_dhost);
   /*print_addr_eth(header->ether_shost);
   print_addr_eth(header->ether_shost[2]);
   print_addr_eth(header->ether_shost[3]);
