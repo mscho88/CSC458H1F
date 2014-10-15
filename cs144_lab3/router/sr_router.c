@@ -79,7 +79,6 @@ void sr_handlepacket(struct sr_instance* sr,
   printf("*** -> Received packet of length %d \n",len);
 
   sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
-  struct sr_if *interfaces = sr_get_interface(sr, interface);
 
   /*sr_print_if_list(sr);
   printf("hahaha\n");
@@ -100,15 +99,6 @@ void sr_handlepacket(struct sr_instance* sr,
    * where to send the packet by comparing the address in the routing
    * table. It may drop the packet if there exists no address to send.
    */
-
-/*
-  printf(" Packet detail ... \n");
-  printf(" Source : ");
-  print_addr_eth(packet_header->ether_shost);
-  printf(" Destination : ");
-  print_addr_eth(packet_header->ether_dhost);
-  printf(" *****************\n;");
-*/
   uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
 
   if(ethernet_protocol_type == ethertype_arp){
@@ -135,6 +125,22 @@ void sr_handlepacket_arp(struct sr_instance* sr,
         unsigned int len,
 		char* interface,
         struct sr_ethernet_hdr_t *header){
+	/* REQUIRES */
+	  assert(sr);
+	  assert(packet);
+	  assert(interface);
+	  assert(header);
+
+	/* When the router receives ARP packet, then the router firstly
+	 * checkes whether the router has any interface with such MAC
+	 * address.*/
+	struct sr_if *interfaces = sr_get_interface(sr, interface);
+	struct sr_if *cur = interfaces;
+	print_ip_init(cur->ip);
+	/*while(cur != NULL){
+		if(cur->ip)
+		cur = cur->next;
+	}*/
 
 	/* Set the packet to the ARP header */
     struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet + sizeof(struct sr_ethernet_hdr)));
@@ -144,8 +150,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	 * to the devices where the router knows. */
     	Debug("*** -> Address Resolution Protocol Request \n");
     	sr_send_packet(sr, packet, len, interface);
-    	/* To transmit the packet, the router needs to copy the packet
-		 * locally to protect the loss of the data in the packet.*/
     }else if(htons(arp_header->ar_op) == arp_op_reply){
     	/* Since the packet is ARP reply, it is required to send
     	 * back the the sender to let it know the MAC address of the
