@@ -78,13 +78,25 @@ void sr_handlepacket(struct sr_instance* sr,
 
   printf("*** -> Received packet of length %d \n",len);
 
-  /*printf("packet is %u\n", packet);*/
-  /*printf("interface is %s\n", interface);*/
   print_addr_eth(packet);
   printf("%" PRIu8 "\n", packet);
   printf("%" PRIu16 "\n", ethertype(packet));
-  /* When the router receives any packet, it should be determined what type of the protocol is. Hence, */
-  /*sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;
+
+  printf("sr_instance\n");
+  printf("socket fd : %d\n", sr->sockfd);
+  printf("user name : %s\n", sr->user);
+  printf("host name : %s\n", sr->host);
+  printf("template : %s\n", sr->template);
+  printf("topology id : %d\n", sr->topo_id);
+  print_addr_ip(sr->sr_addr);
+
+  /* When the router receives any packet, it should be determined what
+   * type of the protocol is. After that, it is required to figure out
+   * where to send the packet by comparing the address in the routing
+   * table. It may drop the packet if there exists no address to send.
+   */
+
+  sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;
   uint16_t ethernet_protocol_type = ntohs(header->ether_type);
 
   if(ethernet_protocol_type == ip_protocol_icmp){
@@ -93,7 +105,7 @@ void sr_handlepacket(struct sr_instance* sr,
 
   }else if(ethernet_protocol_type == ethertype_ip){
 
-  }*/
+  }
       /*switch (ethernet_protocol_type)
       {
           case sr_ip_protocol:
