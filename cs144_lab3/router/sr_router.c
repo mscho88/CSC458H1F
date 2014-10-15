@@ -128,6 +128,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     			Debug("Error on caching the sender information. \n");
     		}else{
     			/*send back the arp_reply*/
+    			Debug("Success on caching the sender information. \n");
     		}
     	}else{
     		/*send back the arp_reply*/
