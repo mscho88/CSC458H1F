@@ -78,20 +78,23 @@ void sr_handlepacket(struct sr_instance* sr,
 
   printf("*** -> Received packet of length %d \n",len);
 
+  struct sr_if *interfaces = sr_get_interface(sr, interface);
+  sr_print_if(interfaces);
+
   /* When the router receives any packet, it should be determined what
    * type of the protocol is. After that, it is required to figure out
    * where to send the packet by comparing the address in the routing
    * table. It may drop the packet if there exists no address to send.
    */
   sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
-
+/*
   printf(" Packet detail ... \n");
   printf(" Source : ");
   print_addr_eth(packet_header->ether_shost);
   printf(" Destination : ");
   print_addr_eth(packet_header->ether_dhost);
   printf(" *****************\n;");
-
+*/
   uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
 
   if(ethernet_protocol_type == ethertype_arp){
@@ -118,16 +121,24 @@ void sr_handlepacket_arp(struct sr_instance* sr,
         unsigned int len,
         struct sr_ethernet_hdr_t *header){
 
-	/* Set the packet to the Address Resolution Protocol */
+	/* Set the packet to the ARP header */
     struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet
     		+ sizeof(struct sr_ethernet_hdr)));
 
-    printf("ARP header\n");
-    printf("arp header hardware address %u \n", arp_header->ar_hrd);
+    if(htons(arp_header->ar_op) == arp_op_request){
+    	/* Since the packet is ARP request, it is required to broadcast
+    	 * to the devices where the router knows. */
+    	Debug("*** -> Address Resolution Protocol Request \n");
+    	/* sr_send_packet(); */
+    	/* To transmit the packet, the router needs to copy the packet
+		 * locally to protect the loss of the data in the packet.*/
+    }else if(htons(arp_header->ar_op) == arp_op_reply){
+    	/* Since the packet is ARP reply, it is required to send
+    	 * back the the sender to let it know the MAC address of the
+    	 * destination where the sender wants to know. */
+    	Debug("*** -> Address Resolution Protocol reply \n");
 
-    printf("arp op %u \n", arp_header->ar_op);
-    printf("sender %s \n", arp_header->ar_sha);
-    printf("destin %s \n", arp_header->ar_tha);
+    }
 }/* end sr_handlepacket_arp */
 
 /*---------------------------------------------------------------------
