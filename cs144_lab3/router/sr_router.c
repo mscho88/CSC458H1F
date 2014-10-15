@@ -210,6 +210,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 void sr_handlepacket_ip(struct sr_instance* sr,
         uint8_t * packet,
         unsigned int len,
-        struct sr_ethernet_hdr_t *header){
+        sr_ethernet_hdr_t *header){
 
 }/* end sr_handlepacket_ip */
