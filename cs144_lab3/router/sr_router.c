@@ -78,13 +78,12 @@ void sr_handlepacket(struct sr_instance* sr,
 
   printf("*** -> Received packet of length %d \n",len);
 
-  sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
-
   /* When the router receives any packet, it should be determined what
    * type of the protocol is. After that, it is required to figure out
    * where to send the packet by comparing the address in the routing
    * table. It may drop the packet if there exists no address to send.
    */
+  sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
   uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
 
   if(ethernet_protocol_type == ethertype_arp){
@@ -92,7 +91,7 @@ void sr_handlepacket(struct sr_instance* sr,
   	  sr_handlepacket_arp(sr, packet, len, interface);
   }else if(ethernet_protocol_type == ethertype_ip){
 	  Debug("*** -> Received Internet Protocol \n");
-	  /*sr_handlepacket_ip(sr, packet, len, packet_header);*/
+	  sr_handlepacket_ip(sr, packet, len, interface);
   }else{
 	  Debug("*** -> Received unknown packet of length %d \n", len);
   }
@@ -103,7 +102,10 @@ void sr_handlepacket(struct sr_instance* sr,
  * Scope:  Global
  *
  * This method is called when the ethernet type is Address Resolution
- * Protocol.
+ * Protocol. The router is required to send the reply packet to the
+ * sender back (this is what the sender wants). Hence, the router
+ * firstly look up the ARP cache and the interfaces what the router
+ * knows. Otherwise, the router broadcast to the adjacent routers.
  *
  *---------------------------------------------------------------------*/
 void sr_handlepacket_arp(struct sr_instance* sr,
@@ -115,85 +117,71 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	assert(packet);
 	assert(interface);
 
-
     /*sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;*/
 
-	/* Set the packet to the ARP header
-	struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet + sizeof(sr_ethernet_hdr_t)));
-	print_addr_ip_int(arp_header->ar_tip);
-	sr_print_routing_table(sr);*/
-    sr_ethernet_hdr_t* rx_e_hdr = (sr_ethernet_hdr_t *) packet;
-	sr_ethernet_hdr_t* tx_e_hdr = ((sr_ethernet_hdr_t *)(malloc(sizeof(sr_ethernet_hdr_t))));
-	uint8_t* tx_packet;
-    struct sr_if* rx_if = sr_get_interface(sr, interface);
+	/* Set the packet to the ARP header */
+	sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-    /***** Getting the ARP header *****/
-    sr_arp_hdr_t *rx_arp_hdr = ((sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t)));
-    sr_arp_hdr_t *tx_arp_hdr = ((sr_arp_hdr_t *)(malloc(sizeof(sr_arp_hdr_t))));
-
-    if(htons(rx_arp_hdr->ar_op) == arp_op_request){
-    	int i;
-    	/* Since the packet is ARP request, it is required to broadcast
-    	 * to the devices where the router knows. */
+    if(htons(arp_header->ar_op) == arp_op_request){
     	Debug("*** -> Address Resolution Protocol Request \n");
 
-    	/* When the router receives ARP packet, then the router firstly
-    	 * checks whether the router has any interface with the given ip
-    	 * address. */
+    	/* When the router receives ARP request, it is required to
+    	 * check the ARP cache first whether the router already knows
+		 * the request for the sender. Also, the router keeps track of
+		 * ARP cache of the sender on ARP request. */
+    	if(sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip) == NULL){
+    	    fprintf(stderr, "Failed on inserting the sender information : \n");
+    	}
+
+    	struct sr_arpentry is_have = sr_arpcache_lookup(&(sr->cache), arp_header->ar_tip);
+    	if(is_have->valid){
+    		/* If the router finds the valid ARP cache which is the
+    		 * MAC address of the sender wants, then sends back to
+    		 * the packet to the sender.*/
+    		/*********send the packet back to the sender*********/
+    		printf("The router needs to send back the packet with ARP reply. \n");
+    		return;
+    	}
+
+    	/* If the router does not have any valid MAC address to respond
+    	 * to the sender, ..*/
+
+    	/* Firstly, the router tries to look up the router among the
+		 * interfaces.*/
     	struct sr_if *interfaces = sr_get_interface(sr, interface);
-
-    	for (i = 0; i < ETHER_ADDR_LEN; i++){
-    		tx_e_hdr->ether_dhost[i] = rx_e_hdr->ether_shost[i];
-    	}
-
-    	for (i = 0; i < ETHER_ADDR_LEN; i++){
-    		tx_e_hdr->ether_shost[i] = ((uint8_t)(rx_if->addr[i]));
-    	}
-
-    	tx_e_hdr->ether_type = rx_e_hdr->ether_type;
-    	tx_arp_hdr->ar_hrd = rx_arp_hdr->ar_hrd;
-    	tx_arp_hdr->ar_pro = rx_arp_hdr->ar_pro;
-
-    	tx_arp_hdr->ar_hln = rx_arp_hdr->ar_hln;
-    	tx_arp_hdr->ar_pln = rx_arp_hdr->ar_pln;
-    	tx_arp_hdr->ar_op = htons(rx_arp_hdr->ar_op);
-
-    	for (i = 0; i < ETHER_ADDR_LEN; i++){
-    		tx_arp_hdr->ar_sha[i] = ((uint8_t)(rx_if->addr[i]));
-    	}
-
-    	tx_arp_hdr->ar_sip = rx_arp_hdr->ar_tip;
-
-    	for (i = 0; i < ETHER_ADDR_LEN; i++){
-    		tx_arp_hdr->ar_tha[i] = rx_arp_hdr->ar_sha[i];
-    	}
-    	tx_arp_hdr->ar_tip = rx_arp_hdr->ar_sip;
-
-    	tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t))));
-    	memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr_t));
-    	memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(sr_arp_hdr_t));
-
-    	sr_ethernet_hdr_t* temp = (sr_ethernet_hdr_t*)(tx_packet);
-    	print_hdr_eth(temp);
-    	sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
-
-    	free(tx_packet);
-    	free(tx_arp_hdr);
-    	free(tx_e_hdr);
-    	/*while(cur != NULL){
+    	struct sr_if *cur = interfaces;
+    	while(cur != 0){
     		if(cur->ip == arp_header->ar_tip){
-    	        /*uint8_t *new_pkt = malloc(sizeof(struct sr_ether_header_t) + sizeof(struct sr_header_t));
-    	        sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
-    	        memcpy(packet_header->ether_dhost, arp_header->
-    			sr_send_packet(sr, packet, len, interface);
-    			free(new_pkt);
+    			/* Since there does not exist the destination ARP cache,
+    			 * above ARP cache looking up failed. Hence, the router
+    			 * is required to learn the destination and store the
+    			 * information in the ARP cache. */
+    			if(sr_arpcache_insert(&(sr->cache), cur->addr, cur->ip) == NULL){
+    				fprintf(stderr, "Failed on inserting the sender information : \n");
+    			}
+        		/*********send the packet back to the sender*********/
+
+        		printf("The router needs to send back the packet with ARP reply. \n");
     			return;
     		}
     		cur = cur->next;
-    	}*/
-    	printf("reached here\n");
-    	return;
-    }else if(htons(rx_arp_hdr->ar_op) == arp_op_reply){
+    	}
+
+    	/* Since the router could not find the valid interface, the
+		 * router needs to broadcast the packet to adjacent routers.
+		 * Sending the packet to the sender is unnecessary as if
+		 * statement refers.*/
+    	cur = interfaces;
+    	while(cur != 0){
+    		if(cur->ip != arp_header->ar_sip){
+        		/*********send the packet back to the sender*********/
+
+        		printf("The router needs to send the packet with ARP request to adjacent routers. \n");
+    		}
+    		cur = cur->next;
+    	}
+    	printf("Reached the End of ARP request. \n");
+    }else if(htons(arp_header->ar_op) == arp_op_reply){
     	/* Since the packet is ARP reply, it is required to send
     	 * back the the sender to let it know the MAC address of the
     	 * destination where the sender wants to know. */
@@ -212,6 +200,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 void sr_handlepacket_ip(struct sr_instance* sr,
         uint8_t * packet,
         unsigned int len,
-        sr_ethernet_hdr_t *header){
+        char* interface){
 
 }/* end sr_handlepacket_ip */
