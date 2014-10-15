@@ -166,7 +166,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				free(tx_packet);
 				free(tx_arp_hdr);
 				free(tx_e_hdr);
-
+				printf("Reached end of the line\n");
     		}else{
     			Debug("Error on caching the sender information. \n");
     		}
