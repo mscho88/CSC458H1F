@@ -129,8 +129,8 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     struct sr_if* rx_if = sr_get_interface(sr, interface);
 
     /***** Getting the ARP header *****/
-    struct sr_arp_hdr* rx_arp_hdr = ((struct sr_arp_hdr*)(packet + sizeof(sr_ethernet_hdr_t)));
-    struct sr_arp_hdr* tx_arp_hdr = ((struct sr_arp_hdr*)(malloc(sizeof(struct sr_arp_hdr))));
+    sr_arp_hdr_t *rx_arp_hdr = ((sr_arp_hdr_t)(packet + sizeof(sr_ethernet_hdr_t)));
+    sr_arp_hdr_t *tx_arp_hdr = ((sr_arp_hdr_t)(malloc(sizeof(sr_arp_hdr_t))));
 
     if(htons(rx_arp_hdr->ar_op) == arp_op_request){
     	int i;
@@ -170,11 +170,11 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	}
     	tx_arp_hdr->ar_tip = rx_arp_hdr->ar_sip;
 
-    	tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(struct sr_arp_hdr))));
+    	tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof( sr_arp_hdr_t))));
     	memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr_t));
-    	memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(struct sr_arp_hdr));
+    	memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof( sr_arp_hdr_t));
 
-    	sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(struct sr_arp_hdr), rx_if->name);
+    	sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
 
     	free(tx_packet);
     	free(tx_arp_hdr);
