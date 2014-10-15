@@ -111,19 +111,28 @@ void sr_handlepacket_arp(struct sr_instance* sr,
         unsigned int len,
 		char* interface){
 	/* REQUIRES */
-	  assert(sr);
-	  assert(packet);
-	  assert(interface);
+	assert(sr);
+	assert(packet);
+	assert(interface);
 
 
-    sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;
+    /*sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;*/
 
-	/* Set the packet to the ARP header */
-	struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet + sizeof(struct sr_ethernet_hdr)));
+	/* Set the packet to the ARP header
+	struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet + sizeof(sr_ethernet_hdr_t)));
 	print_addr_ip_int(arp_header->ar_tip);
-	sr_print_routing_table(sr);
+	sr_print_routing_table(sr);*/
+    sr_ethernet_hdr_t* rx_e_hdr = (sr_ethernet_hdr_t *) packet;
+	sr_ethernet_hdr_t* tx_e_hdr = ((sr_ethernet_hdr_t *)(malloc(sizeof(sr_ethernet_hdr_t))));
+	uint8_t* tx_packet;
+	int queue_index;
+    struct sr_if* rx_if = sr_get_interface(sr, interface);
 
-    if(htons(arp_header->ar_op) == arp_op_request){
+    /***** Getting the ARP header *****/
+    struct sr_arphdr* rx_arp_hdr = ((struct sr_arp_hdr*)(packet + sizeof(sr_ethernet_hdr_t)));
+    struct sr_arphdr* tx_arp_hdr = ((struct sr_arp_hdr*)(malloc(sizeof(struct sr_arp_hdr))));
+
+    if(htons(rx_arp_hdr->ar_op) == arp_op_request){
     	/* Since the packet is ARP request, it is required to broadcast
     	 * to the devices where the router knows. */
     	Debug("*** -> Address Resolution Protocol Request \n");
@@ -132,19 +141,57 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	 * checks whether the router has any interface with the given ip
     	 * address. */
     	struct sr_if *interfaces = sr_get_interface(sr, interface);
-    	struct sr_if *cur = interfaces;
-    	while(cur != NULL){
+
+    	for (int i = 0; i < ETHER_ADDR_LEN; i++){
+    		tx_e_hdr->ether_dhost[i] = rx_e_hdr->ether_shost[i];
+    	}
+
+    	for (int i = 0; i < ETHER_ADDR_LEN; i++){
+    		tx_e_hdr->ether_shost[i] = ((uint8_t)(rx_if->addr[i]));
+    	}
+
+    	tx_e_hdr->ether_type = rx_e_hdr->ether_type;
+    	tx_arp_hdr->ar_hrd = rx_arp_hdr->ar_hrd;
+    	tx_arp_hdr->ar_pro = rx_arp_hdr->ar_pro;
+
+    	tx_arp_hdr->ar_hln = rx_arp_hdr->ar_hln;
+    	tx_arp_hdr->ar_pln = rx_arp_hdr->ar_pln;
+    	tx_arp_hdr->ar_op = htons(rx_arp_hdr->ar_op);
+
+    	for (int i = 0; i < ETHER_ADDR_LEN; i++){
+    		tx_arp_hdr->ar_sha[i] = ((uint8_t)(rx_if->addr[i]));
+    	}
+
+    	tx_arp_hdr->ar_sip = rx_arp_hdr->ar_tip;
+
+    	for (int i = 0; i < ETHER_ADDR_LEN; i++){
+    		tx_arp_hdr->ar_tha[i] = rx_arp_hdr->ar_sha[i];
+    	}
+    	tx_arp_hdr->ar_tip = rx_arp_hdr->ar_sip;
+
+    	tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(struct sr_arp_hdr))));
+    	memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr)t));
+    	memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(struct sr_arp_hdr));
+
+    	Debug("-> Sending ARP REPLY Packet, length = %d\n", sizeof(sr_ethernet_hdr) + sizeof(sr_arphdr));
+    	sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(struct sr_arp_hdr), rx_if->name);
+
+    	free(tx_packet);
+    	free(tx_arp_hdr);
+    	free(tx_e_hdr);
+    	/*while(cur != NULL){
     		if(cur->ip == arp_header->ar_tip){
     	        /*uint8_t *new_pkt = malloc(sizeof(struct sr_ether_header_t) + sizeof(struct sr_header_t));
     	        sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
     	        memcpy(packet_header->ether_dhost, arp_header->
     			sr_send_packet(sr, packet, len, interface);
-    			free(new_pkt);*/
+    			free(new_pkt);
     			return;
     		}
     		cur = cur->next;
-    	}
-    }else if(htons(arp_header->ar_op) == arp_op_reply){
+    	}*/
+    	return;
+    }else if(htons(rx_arp_hdr->ar_op) == arp_op_reply){
     	/* Since the packet is ARP reply, it is required to send
     	 * back the the sender to let it know the MAC address of the
     	 * destination where the sender wants to know. */
