@@ -81,9 +81,9 @@ void sr_handlepacket(struct sr_instance* sr,
   sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
   struct sr_if *interfaces = sr_get_interface(sr, interface);
 
-  sr_print_if_list(sr);
+  /*sr_print_if_list(sr);
   printf("hahaha\n");
-  sr_print_if(interfaces->next);
+  sr_print_if(interfaces->next);*/
   /*
   struct sr_if *cur = interfaces;
   while(cur != NULL){
@@ -136,8 +136,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
         struct sr_ethernet_hdr_t *header){
 
 	/* Set the packet to the ARP header */
-    struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet
-    		+ sizeof(struct sr_ethernet_hdr)));
+    struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet + sizeof(struct sr_ethernet_hdr)));
 
     if(htons(arp_header->ar_op) == arp_op_request){
     	/* Since the packet is ARP request, it is required to broadcast
