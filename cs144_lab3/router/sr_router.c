@@ -133,6 +133,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     struct sr_arp_hdr* tx_arp_hdr = ((struct sr_arp_hdr*)(malloc(sizeof(struct sr_arp_hdr))));
 
     if(htons(rx_arp_hdr->ar_op) == arp_op_request){
+    	int i;
     	/* Since the packet is ARP request, it is required to broadcast
     	 * to the devices where the router knows. */
     	Debug("*** -> Address Resolution Protocol Request \n");
@@ -142,11 +143,11 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	 * address. */
     	struct sr_if *interfaces = sr_get_interface(sr, interface);
 
-    	for (int i = 0; i < ETHER_ADDR_LEN; i++){
+    	for (i = 0; i < ETHER_ADDR_LEN; i++){
     		tx_e_hdr->ether_dhost[i] = rx_e_hdr->ether_shost[i];
     	}
 
-    	for (int i = 0; i < ETHER_ADDR_LEN; i++){
+    	for (i = 0; i < ETHER_ADDR_LEN; i++){
     		tx_e_hdr->ether_shost[i] = ((uint8_t)(rx_if->addr[i]));
     	}
 
@@ -158,13 +159,13 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	tx_arp_hdr->ar_pln = rx_arp_hdr->ar_pln;
     	tx_arp_hdr->ar_op = htons(rx_arp_hdr->ar_op);
 
-    	for (int i = 0; i < ETHER_ADDR_LEN; i++){
+    	for (i = 0; i < ETHER_ADDR_LEN; i++){
     		tx_arp_hdr->ar_sha[i] = ((uint8_t)(rx_if->addr[i]));
     	}
 
     	tx_arp_hdr->ar_sip = rx_arp_hdr->ar_tip;
 
-    	for (int i = 0; i < ETHER_ADDR_LEN; i++){
+    	for (i = 0; i < ETHER_ADDR_LEN; i++){
     		tx_arp_hdr->ar_tha[i] = rx_arp_hdr->ar_sha[i];
     	}
     	tx_arp_hdr->ar_tip = rx_arp_hdr->ar_sip;
