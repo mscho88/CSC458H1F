@@ -160,7 +160,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr_t));
 				memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(sr_arp_hdr_t));
 
-				Debug("-> Sending ARP REPLY Packet, length = %d\n", sizeof(sr_ethernet_hdr) + sizeof(sr_arphdr));
+				Debug("-> Sending ARP REPLY Packet, length = %d\n", sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t));
 				sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
 
 				free(tx_packet);
