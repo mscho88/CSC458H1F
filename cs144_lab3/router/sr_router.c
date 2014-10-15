@@ -80,8 +80,6 @@ void sr_handlepacket(struct sr_instance* sr,
 
   sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
 
-
-
   /* When the router receives any packet, it should be determined what
    * type of the protocol is. After that, it is required to figure out
    * where to send the packet by comparing the address in the routing
@@ -119,21 +117,20 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	  assert(interface);
 	  assert(header);
 
-	/* If the packet is sent to the router, then just send the ARP
-	 * reply back to the sender. */
-
+	/* Set the packet to the ARP header */
+	struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet + sizeof(struct sr_ethernet_hdr)));
+	print_addr_ip_int(arp_header->ar_tip);
 	/* When the router receives ARP packet, then the router firstly
 	 * checks whether the router has any interface with the given ip
 	 * address.*/
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
 	struct sr_if *cur = interfaces;
 	while(cur != NULL){
-		print_addr_ip_int(cur->ip);
+		if(cur->ip == arp_header->ar_tip){
+			return;
+		}
 		cur = cur->next;
 	}
-
-	/* Set the packet to the ARP header */
-    struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet + sizeof(struct sr_ethernet_hdr)));
 
     if(htons(arp_header->ar_op) == arp_op_request){
     	/* Since the packet is ARP request, it is required to broadcast
