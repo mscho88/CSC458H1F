@@ -129,20 +129,20 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	 * check the ARP cache first whether the router already knows
 		 * the request for the sender. Also, the router keeps track of
 		 * ARP cache of the sender on ARP request. */
-    	printf(" sender information : %s \n", arp_header->ar_sha);
+    	printf(" sender information : %x \n", arp_header->ar_sha);
     	print_addr_ip_int(arp_header->ar_sip);
     	if(sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip) == NULL){
     	    fprintf(stderr, "Failed on inserting the sender information : \n");
-    	}
-
-    	struct sr_arpentry *is_have = sr_arpcache_lookup(&(sr->cache), arp_header->ar_tip);
-    	if(is_have->valid){
-    		/* If the router finds the valid ARP cache which is the
-    		 * MAC address of the sender wants, then sends back to
-    		 * the packet to the sender.*/
-    		/*********send the packet back to the sender*********/
-    		printf("The router needs to send back the packet with ARP reply. \n");
-    		return;
+    	}else{
+			struct sr_arpentry *is_have = sr_arpcache_lookup(&(sr->cache), arp_header->ar_tip);
+			if(is_have->valid){
+				/* If the router finds the valid ARP cache which is the
+				 * MAC address of the sender wants, then sends back to
+				 * the packet to the sender.*/
+				/*********send the packet back to the sender*********/
+				printf("The router needs to send back the packet with ARP reply. \n");
+				return;
+			}
     	}
 
     	/* If the router does not have any valid MAC address to respond
