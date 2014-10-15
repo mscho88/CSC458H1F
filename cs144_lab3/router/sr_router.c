@@ -190,6 +190,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		}
     		cur = cur->next;
     	}*/
+    	printf("reached here");
     	return;
     }else if(htons(rx_arp_hdr->ar_op) == arp_op_reply){
     	/* Since the packet is ARP reply, it is required to send
