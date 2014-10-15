@@ -135,7 +135,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	print_addr_ip_int(arp_header->ar_sip);*/
 
 
-    	if(sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip) == NULL){
+    	if(sr_arpcache_insert(&(sr->cache), *arp_header->ar_sha, arp_header->ar_sip) == NULL){
     	    fprintf(stderr, "Failed on inserting the sender information : \n");
     	}else{
 			struct sr_arpentry *is_have = sr_arpcache_lookup(&(sr->cache), arp_header->ar_tip);
