@@ -152,7 +152,9 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		 * interfaces.*/
     	struct sr_if *interfaces = sr_get_interface(sr, interface);
     	struct sr_if *cur = interfaces;
+    	printf("before the while loop\n");
     	while(cur != NULL){
+        	printf("in the while loop\n");
     		if(cur->ip == arp_header->ar_tip){
     			/* Since there does not exist the destination ARP cache,
     			 * above ARP cache looking up failed. Hence, the router
@@ -169,6 +171,8 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		}
     		cur = cur->next;
     	}
+
+    	printf("after the while loop\n");
 
     	/* Since the router could not find the valid interface, the
 		 * router needs to broadcast the packet to adjacent routers.
