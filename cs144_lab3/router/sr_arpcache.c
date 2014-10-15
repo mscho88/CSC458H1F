@@ -103,6 +103,9 @@ struct sr_arpreq *sr_arpcache_insert(struct sr_arpcache *cache,
                                      unsigned char *mac,
                                      uint32_t ip)
 {
+	printf("address is %u\n", mac);
+
+	printf("address is %u\n", *mac);
     pthread_mutex_lock(&(cache->lock));
     
     struct sr_arpreq *req, *prev = NULL, *next = NULL; 
