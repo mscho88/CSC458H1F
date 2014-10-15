@@ -129,8 +129,8 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     struct sr_if* rx_if = sr_get_interface(sr, interface);
 
     /***** Getting the ARP header *****/
-    struct sr_arphdr* rx_arp_hdr = ((struct sr_arp_hdr*)(packet + sizeof(sr_ethernet_hdr_t)));
-    struct sr_arphdr* tx_arp_hdr = ((struct sr_arp_hdr*)(malloc(sizeof(struct sr_arp_hdr))));
+    struct sr_arp_hdr* rx_arp_hdr = ((struct sr_arp_hdr*)(packet + sizeof(sr_ethernet_hdr_t)));
+    struct sr_arp_hdr* tx_arp_hdr = ((struct sr_arp_hdr*)(malloc(sizeof(struct sr_arp_hdr))));
 
     if(htons(rx_arp_hdr->ar_op) == arp_op_request){
     	/* Since the packet is ARP request, it is required to broadcast
