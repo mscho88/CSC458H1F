@@ -79,7 +79,7 @@ void sr_handlepacket(struct sr_instance* sr,
   printf("*** -> Received packet of length %d \n",len);
 
   struct sr_if *interfaces = sr_get_interface(sr, interface);
-  sr_print_if(interfaces);
+  sr_print_if_list(sr);
 
   /* When the router receives any packet, it should be determined what
    * type of the protocol is. After that, it is required to figure out
