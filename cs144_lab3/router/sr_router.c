@@ -88,7 +88,6 @@ void sr_handlepacket(struct sr_instance* sr,
   printf("host name : %s\n", sr->host);
   printf("template : %s\n", sr->template);
   printf("topology id : %d\n", sr->topo_id);
-  //print_addr_ip(&sr->sr_addr);
 
   /* When the router receives any packet, it should be determined what
    * type of the protocol is. After that, it is required to figure out
