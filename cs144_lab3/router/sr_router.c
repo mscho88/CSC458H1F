@@ -102,10 +102,7 @@ void sr_handlepacket(struct sr_instance* sr,
  * Scope:  Global
  *
  * This method is called when the ethernet type is Address Resolution
- * Protocol. The router is required to send the reply packet to the
- * sender back (this is what the sender wants). Hence, the router
- * firstly look up the ARP cache and the interfaces what the router
- * knows. Otherwise, the router broadcast to the adjacent routers.
+ * Protocol.
  *
  *---------------------------------------------------------------------*/
 void sr_handlepacket_arp(struct sr_instance* sr,
@@ -117,88 +114,25 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	assert(packet);
 	assert(interface);
 
-    /*sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;*/
-
 	/* Set the packet to the ARP header */
 	sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
     if(htons(arp_header->ar_op) == arp_op_request){
     	Debug("*** -> Address Resolution Protocol Request \n");
-
-    	/* When the router receives ARP request, it is required to
-    	 * check the ARP cache first whether the router already knows
-		 * the request for the sender. Also, the router keeps track of
-		 * ARP cache of the sender on ARP request. */
-
-
-    	/*printf(" sender information : %x \n", arp_header->ar_sha);
-    	print_addr_ip_int(arp_header->ar_sip);*/
-
-    	print_hdr_eth((uint8_t *)packet);
-    	print_addr_eth((uint8_t *)packet);
-    	print_hdr_arp((uint8_t *)arp_header);
-
-    	if(sr_arpcache_insert(&sr->cache, arp_header->ar_sha, arp_header->ar_sip) == NULL){
-    	    fprintf(stderr, "Failed on inserting the sender information : \n");
+    	struct sr_arpentry *arp_entry = sr_arpcache_lookup(&(sr->cache), arp_header->ar_sip);
+    	if(arp_entry == NULL){
+    		/* Since there is no ARP cache saved, the router saves the
+			 * information of the sender. */
+    		struct sr_arpreq *arp_req = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip);
+    		if(arp_req == NULL){
+    			Debug("Error on caching the sender information. \n");
+    		}else{
+    			/*send back the arp_reply*/
+    		}
     	}else{
-			struct sr_arpentry *is_have = sr_arpcache_lookup(&(sr->cache), arp_header->ar_tip);
-			if(is_have->valid){
-				/* If the router finds the valid ARP cache which is the
-				 * MAC address of the sender wants, then sends back to
-				 * the packet to the sender.*/
-				/*********send the packet back to the sender*********/
-				printf("The router needs to send back the packet with ARP reply. \n");
-				return;
-			}
+    		/*send back the arp_reply*/
     	}
-
-    	/* If the router does not have any valid MAC address to respond
-    	 * to the sender, ..*/
-
-    	/* Firstly, the router tries to look up the router among the
-		 * interfaces.*/
-    	struct sr_if *interfaces = sr_get_interface(sr, interface);
-    	struct sr_if *cur = interfaces;
-    	printf("before the while loop\n");
-    	while(cur != NULL){
-        	printf("in the while loop\n");
-    		if(cur->ip == arp_header->ar_tip){
-    			/* Since there does not exist the destination ARP cache,
-    			 * above ARP cache looking up failed. Hence, the router
-    			 * is required to learn the destination and store the
-    			 * information in the ARP cache. */
-    			if(sr_arpcache_insert(&(sr->cache), cur->addr, cur->ip) == NULL){
-    				printf("hello world11\n");
-    				fprintf(stderr, "Failed on inserting the sender information : \n");
-    			}
-        		/*********send the packet back to the sender*********/
-
-        		printf("The router needs to send back the packet with ARP reply. \n");
-    			return;
-    		}
-    		cur = cur->next;
-    	}
-
-    	printf("after the while loop\n");
-
-    	/* Since the router could not find the valid interface, the
-		 * router needs to broadcast the packet to adjacent routers.
-		 * Sending the packet to the sender is unnecessary as if
-		 * statement refers.*/
-    	cur = interfaces;
-    	while(cur != 0){
-    		if(cur->ip != arp_header->ar_sip){
-        		/*********send the packet back to the sender*********/
-
-        		printf("The router needs to send the packet with ARP request to adjacent routers. \n");
-    		}
-    		cur = cur->next;
-    	}
-    	printf("Reached the End of ARP request. \n");
     }else if(htons(arp_header->ar_op) == arp_op_reply){
-    	/* Since the packet is ARP reply, it is required to send
-    	 * back the the sender to let it know the MAC address of the
-    	 * destination where the sender wants to know. */
     	Debug("*** -> Address Resolution Protocol reply \n");
 
     }
