@@ -130,6 +130,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		 * the request for the sender. Also, the router keeps track of
 		 * ARP cache of the sender on ARP request. */
     	if(sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip) == NULL){
+    		printf("hello world\n");
     	    fprintf(stderr, "Failed on inserting the sender information : \n");
     	}
 
@@ -157,6 +158,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     			 * is required to learn the destination and store the
     			 * information in the ARP cache. */
     			if(sr_arpcache_insert(&(sr->cache), cur->addr, cur->ip) == NULL){
+    				printf("hello world11\n");
     				fprintf(stderr, "Failed on inserting the sender information : \n");
     			}
         		/*********send the packet back to the sender*********/
