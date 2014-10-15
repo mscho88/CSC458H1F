@@ -134,7 +134,9 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	/*printf(" sender information : %x \n", arp_header->ar_sha);
     	print_addr_ip_int(arp_header->ar_sip);*/
 
+    	print_hdr_eth((uint8_t *)packet);
     	print_hdr_arp((uint8_t *)arp_header);
+
     	if(sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip) == NULL){
     	    fprintf(stderr, "Failed on inserting the sender information : \n");
     	}else{
