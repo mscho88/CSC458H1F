@@ -137,7 +137,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
 	struct sr_if *cur = interfaces;
 	printf("thisthisthis\n");
-	print_ip_init(cur->ip);
+	print_addr_ip_init(cur->ip);
 	/*while(cur != NULL){
 		if(cur->ip)
 		cur = cur->next;
