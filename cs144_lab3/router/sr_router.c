@@ -88,7 +88,7 @@ void sr_handlepacket(struct sr_instance* sr,
    * table. It may drop the packet if there exists no address to send.
    */
   uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
-  print_addr_eth(packet_header->ether_dhost);
+
   if(ethernet_protocol_type == ethertype_arp){
   	  Debug("*** -> Received Address Resolution Protocol \n");
   	  sr_handlepacket_arp(sr, packet, len, interface, packet_header);
@@ -128,7 +128,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
 	struct sr_if *cur = interfaces;
 	while(cur != NULL){
-
+		print_addr_ip_int(cur->ip);
 		cur = cur->next;
 	}
 
