@@ -96,12 +96,12 @@ void sr_handlepacket(struct sr_instance* sr,
    */
 
   sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;
-  print_addr_eth(header->ether_shost[0]);
-  print_addr_eth(header->ether_shost[1]);
+  print_addr_eth(header->ether_shost);
+  /*print_addr_eth(header->ether_shost);
   print_addr_eth(header->ether_shost[2]);
   print_addr_eth(header->ether_shost[3]);
   print_addr_eth(header->ether_shost[4]);
-  print_addr_eth(header->ether_shost[5]);
+  print_addr_eth(header->ether_shost[5]);*/
 
   uint16_t ethernet_protocol_type = ntohs(header->ether_type);
 
