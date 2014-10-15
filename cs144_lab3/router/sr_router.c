@@ -77,69 +77,49 @@ void sr_handlepacket(struct sr_instance* sr,
   assert(interface);
 
   printf("*** -> Received packet of length %d \n",len);
-/*
-  print_addr_eth(packet);
-  printf("%" PRIu8 "\n", packet);
-  printf("%" PRIu16 "\n", ethertype(packet));
 
-  printf("sr_instance\n");
-  printf("socket fd : %d\n", sr->sockfd);
-  printf("user name : %s\n", sr->user);
-  printf("host name : %s\n", sr->host);
-  printf("template : %s\n", sr->template);
-  printf("topology id : %d\n", sr->topo_id);
-*/
   /* When the router receives any packet, it should be determined what
    * type of the protocol is. After that, it is required to figure out
    * where to send the packet by comparing the address in the routing
    * table. It may drop the packet if there exists no address to send.
    */
+  printf(" Packet detail ... \n");
+  printf(" Source : ");
+  print_addr_eth(((sr_ethernet_hdr_t *) packet)->ether_shost);
+  printf(" Destination : ");
+  print_addr_eth(((sr_ethernet_hdr_t *) packet)->ether_dhost);
+  printf(" *****************\n;");
 
-  sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;
-  print_addr_eth(header->ether_shost);
-  print_addr_eth(header->ether_dhost);
-  /*print_addr_eth(header->ether_shost);
-  print_addr_eth(header->ether_shost[2]);
-  print_addr_eth(header->ether_shost[3]);
-  print_addr_eth(header->ether_shost[4]);
-  print_addr_eth(header->ether_shost[5]);*/
+  uint16_t ethernet_protocol_type = htons(((sr_ethernet_hdr_t *) packet)->ether_type);
 
-  uint16_t ethernet_protocol_type = ntohs(header->ether_type);
-
-  if(ethernet_protocol_type == ip_protocol_icmp){
-
-  }else if(ethernet_protocol_type == ethertype_arp){
-
+  if(ethernet_protocol_type == ethertype_arp){
+	  printf("Ethernet type is arp\n");
+	  /*sr_handlepacket_arp(sr, packet, len, );*/
   }else if(ethernet_protocol_type == ethertype_ip){
-
+	  printf("Ethernet type is ip\n");
+	  /*sr_handlepacket_ip();*/
   }
-      /*switch (ethernet_protocol_type)
-      {
-          case sr_ip_protocol:
-          {
-              Check whether IP or ICMP
-              break;
-          }
-          case ETHERTYPE_ARP:
-          {
-              sr_arp_hdr_t *arp_header = (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
-              unsigned short opcode = arp_header->ar_op;
-              if (opcode == ARP_REQUEST)
-              {
-                  // Unicast ARP reply back to requester if Target Protocol Address == any of
-                  // the ip's in if_list
-                  sr_handle_received_arpreq(sr, arp_header);
-              }
-              else if (opcode == ARP_REPLY)
-              {
-                  sr_handle_arpreply(sr, arp_header);
-              }
-              break;
-          }
-          default:
-              break;
-      }*/
-  /* fill in code here */
 
 }/* end sr_ForwardPacket */
 
+/*---------------------------------------------------------------------
+ * Method: sr_handlepacket(uint8_t* p,char* interface)
+ * Scope:  Global
+ *
+ * This method is called when the ethernet type is ARP.
+ *
+ *---------------------------------------------------------------------*/
+void sr_handlepacket_arp(){
+
+}/* end sr_handlepacket_arp */
+
+/*---------------------------------------------------------------------
+ * Method: sr_handlepacket(uint8_t* p,char* interface)
+ * Scope:  Global
+ *
+ * This method is called when the ethernet type is ARP.
+ *
+ *---------------------------------------------------------------------*/
+void sr_handlepacket_ip(){
+
+}/* end sr_handlepacket_ip */
