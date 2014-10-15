@@ -78,15 +78,29 @@ void sr_handlepacket(struct sr_instance* sr,
 
   printf("*** -> Received packet of length %d \n",len);
 
+  sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
   struct sr_if *interfaces = sr_get_interface(sr, interface);
+
   sr_print_if_list(sr);
+  printf("hahaha\n");
+  sr_print_if(interfaces);
+  /*
+  struct sr_if *cur = interfaces;
+  while(cur != NULL){
+	  for(int i = 0; i < ETHER_ADDR_LEN; i++){
+		  if(packet_header->ether_dhost[i] == ){
+
+		  }
+	  }
+	  cur = cur->next;
+  }*/
 
   /* When the router receives any packet, it should be determined what
    * type of the protocol is. After that, it is required to figure out
    * where to send the packet by comparing the address in the routing
    * table. It may drop the packet if there exists no address to send.
    */
-  sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
+
 /*
   printf(" Packet detail ... \n");
   printf(" Source : ");
@@ -99,7 +113,7 @@ void sr_handlepacket(struct sr_instance* sr,
 
   if(ethernet_protocol_type == ethertype_arp){
   	  Debug("*** -> Received Address Resolution Protocol \n");
-  	  /*sr_handlepacket_arp(sr, packet, len, packet_header);*/
+  	  sr_handlepacket_arp(sr, packet, len, packet_header);
   }else if(ethernet_protocol_type == ethertype_ip){
 	  Debug("*** -> Received Internet Protocol \n");
 	  sr_handlepacket_ip(sr, packet, len, packet_header);
