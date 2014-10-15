@@ -118,17 +118,57 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
     if(htons(arp_header->ar_op) == arp_op_request){
-    	Debug("*** -> Address Resolution Protocol Request \n");
-    	struct sr_arpentry *arp_entry = sr_arpcache_lookup(&(sr->cache), arp_header->ar_sip);
-    	if(arp_entry == NULL){
-    		/* Since there is no ARP cache saved, the router saves the
-			 * information of the sender. */
-    		struct sr_arpreq *arp_req = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip);
-    		if(arp_req == NULL){
-    			Debug("Error on caching the sender information. \n");
-    		}else{
-    			/*send back the arp_reply*/
+    	struct sr_arpentry *arp_entry;
+    	if((arp_entry = sr_arpcache_lookup(&(sr->cache), arp_header->ar_sip)) == NULL){
+    		/* If no ARP cache is saved, the router caches the sender. */
+    		struct sr_arpreq *arp_cache;
+    		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) == NULL){
+    		    struct sr_if* rx_if = sr_get_interface(sr, interface);
+
+    		    struct sr_ethernet_hdr* rx_e_hdr = (struct sr_ethernet_hdr*)packet;
+    			struct sr_ethernet_hdr* tx_e_hdr = ((sr_ethernet_hdr_t*)(malloc(sizeof(sr_ethernet_hdr_t))));
+    			uint8_t* tx_packet;
+    			int queue_index;
+
+    			struct sr_arphdr* rx_arp_hdr = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+    			struct sr_arphdr* tx_arp_hdr = ((sr_arp_hdr_t*)(malloc(sizeof(sr_arp_hdr_t))));
+
     			Debug("Success on caching the sender information. \n");
+				for (int i = 0; i < ETHER_ADDR_LEN; i++){
+					tx_e_hdr->ether_dhost[i] = rx_e_hdr->ether_shost[i];
+				}
+
+				for (int i = 0; i < ETHER_ADDR_LEN; i++){
+					tx_e_hdr->ether_shost[i] = ((uint8_t)(rx_if->addr[i]));
+				}
+
+				tx_e_hdr->ether_type = rx_e_hdr->ether_type;
+				tx_arp_hdr->ar_hrd = rx_arp_hdr->ar_hrd;
+				tx_arp_hdr->ar_pro = rx_arp_hdr->ar_pro;
+				tx_arp_hdr->ar_hln = rx_arp_hdr->ar_hln;
+				tx_arp_hdr->ar_pln = rx_arp_hdr->ar_pln;
+				tx_arp_hdr->ar_op = htons(arp_header->ar_op);
+				for (int i = 0; i < ETHER_ADDR_LEN; i++){
+					tx_arp_hdr->ar_sha[i] = ((uint8_t)(rx_if->addr[i]));
+				}
+				tx_arp_hdr->ar_sip = rx_arp_hdr->ar_tip;
+				for (int i = 0; i < ETHER_ADDR_LEN; i++){
+					tx_arp_hdr->ar_tha[i] = rx_arp_hdr->ar_sha[i];
+				}
+				tx_arp_hdr->ar_tip = rx_arp_hdr->ar_sip;
+				tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t))));
+				memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr_t));
+				memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(sr_arp_hdr_t));
+
+				Debug("-> Sending ARP REPLY Packet, length = %d\n", sizeof(sr_ethernet_hdr) + sizeof(sr_arphdr));
+				sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
+
+				free(tx_packet);
+				free(tx_arp_hdr);
+				free(tx_e_hdr);
+
+    		}else{
+    			Debug("Error on caching the sender information. \n");
     		}
     	}else{
     		/*send back the arp_reply*/
@@ -150,5 +190,10 @@ void sr_handlepacket_ip(struct sr_instance* sr,
         uint8_t * packet,
         unsigned int len,
         char* interface){
+	/* REQUIRES */
+	assert(sr);
+	assert(packet);
+	assert(interface);
 
+	Debug("*** -> IP \n");
 }/* end sr_handlepacket_ip */
