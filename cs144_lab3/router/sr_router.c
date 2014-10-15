@@ -120,7 +120,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     /*sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;*/
 
 	/* Set the packet to the ARP header */
-	sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_arp_hdr_t)));
+	sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
     if(htons(arp_header->ar_op) == arp_op_request){
     	Debug("*** -> Address Resolution Protocol Request \n");
