@@ -83,7 +83,7 @@ void sr_handlepacket(struct sr_instance* sr,
 
   sr_print_if_list(sr);
   printf("hahaha\n");
-  sr_print_if(interfaces);
+  sr_print_if(interfaces->next);
   /*
   struct sr_if *cur = interfaces;
   while(cur != NULL){
