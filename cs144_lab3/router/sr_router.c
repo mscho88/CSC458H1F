@@ -92,7 +92,7 @@ void sr_handlepacket(struct sr_instance* sr,
   	  sr_handlepacket_arp(sr, packet, len, interface);
   }else if(ethernet_protocol_type == ethertype_ip){
 	  Debug("*** -> Received Internet Protocol \n");
-	  sr_handlepacket_ip(sr, packet, len, packet_header);
+	  /*sr_handlepacket_ip(sr, packet, len, packet_header);*/
   }else{
 	  Debug("*** -> Received unknown packet of length %d \n", len);
   }
@@ -170,7 +170,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	tx_arp_hdr->ar_tip = rx_arp_hdr->ar_sip;
 
     	tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(struct sr_arp_hdr))));
-    	memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr)t));
+    	memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr_t)));
     	memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(struct sr_arp_hdr));
 
     	Debug("-> Sending ARP REPLY Packet, length = %d\n", sizeof(sr_ethernet_hdr) + sizeof(sr_arphdr));
