@@ -137,9 +137,10 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	print_hdr_eth((uint8_t *)packet);
     	print_addr_eth((uint8_t *)packet);
     	print_hdr_arp((uint8_t *)arp_header);
-    	print_addr_ip_int(arp_header->ar_tip);
 
-    	if(sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip) == NULL){
+    	struct sr_arpreq *arpreq = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip);
+    	print_addr_ip_int((uint32_t*)arpreq->ip);
+    	if( == NULL){
     	    fprintf(stderr, "Failed on inserting the sender information : \n");
     	}else{
 			struct sr_arpentry *is_have = sr_arpcache_lookup(&(sr->cache), arp_header->ar_tip);
