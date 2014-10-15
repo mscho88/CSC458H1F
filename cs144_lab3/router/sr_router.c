@@ -80,19 +80,7 @@ void sr_handlepacket(struct sr_instance* sr,
 
   sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
 
-  /*sr_print_if_list(sr);
-  printf("hahaha\n");
-  sr_print_if(interfaces->next);*/
-  /*
-  struct sr_if *cur = interfaces;
-  while(cur != NULL){
-	  for(int i = 0; i < ETHER_ADDR_LEN; i++){
-		  if(packet_header->ether_dhost[i] == ){
 
-		  }
-	  }
-	  cur = cur->next;
-  }*/
 
   /* When the router receives any packet, it should be determined what
    * type of the protocol is. After that, it is required to figure out
@@ -100,7 +88,7 @@ void sr_handlepacket(struct sr_instance* sr,
    * table. It may drop the packet if there exists no address to send.
    */
   uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
-
+  print_addr_eth(packet_header->ether_dhost);
   if(ethernet_protocol_type == ethertype_arp){
   	  Debug("*** -> Received Address Resolution Protocol \n");
   	  sr_handlepacket_arp(sr, packet, len, interface, packet_header);
@@ -121,27 +109,28 @@ void sr_handlepacket(struct sr_instance* sr,
  *
  *---------------------------------------------------------------------*/
 void sr_handlepacket_arp(struct sr_instance* sr,
-        uint8_t * packet,
+        uint8_t*  packet,
         unsigned int len,
 		char* interface,
-        struct sr_ethernet_hdr_t *header){
+        struct sr_ethernet_hdr_t* header){
 	/* REQUIRES */
 	  assert(sr);
 	  assert(packet);
 	  assert(interface);
 	  assert(header);
 
+	/* If the packet is sent to the router, then just send the ARP
+	 * reply back to the sender. */
+
 	/* When the router receives ARP packet, then the router firstly
-	 * checkes whether the router has any interface with such MAC
+	 * checks whether the router has any interface with the given ip
 	 * address.*/
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
 	struct sr_if *cur = interfaces;
-	printf("thisthisthis\n");
-	print_addr_ip_int(cur->ip);
-	/*while(cur != NULL){
-		if(cur->ip)
+	while(cur != NULL){
+
 		cur = cur->next;
-	}*/
+	}
 
 	/* Set the packet to the ARP header */
     struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet + sizeof(struct sr_ethernet_hdr)));
