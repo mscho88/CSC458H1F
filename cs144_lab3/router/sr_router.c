@@ -120,6 +120,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	/* Set the packet to the ARP header */
 	struct sr_arp_hdr* arp_header = ((struct sr_arp_hdr*)(packet + sizeof(struct sr_ethernet_hdr)));
 	print_addr_ip_int(arp_header->ar_tip);
+	sr_print_routing_table(sr);
 	/* When the router receives ARP packet, then the router firstly
 	 * checks whether the router has any interface with the given ip
 	 * address.*/
@@ -127,6 +128,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	struct sr_if *cur = interfaces;
 	while(cur != NULL){
 		if(cur->ip == arp_header->ar_tip){
+			/*sr_send_packet(sr, packet, len, interface);*/
 			return;
 		}
 		cur = cur->next;
