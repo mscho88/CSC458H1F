@@ -77,7 +77,7 @@ void sr_handlepacket(struct sr_instance* sr,
   assert(interface);
 
   printf("*** -> Received packet of length %d \n",len);
-
+/*
   print_addr_eth(packet);
   printf("%" PRIu8 "\n", packet);
   printf("%" PRIu16 "\n", ethertype(packet));
@@ -88,7 +88,7 @@ void sr_handlepacket(struct sr_instance* sr,
   printf("host name : %s\n", sr->host);
   printf("template : %s\n", sr->template);
   printf("topology id : %d\n", sr->topo_id);
-
+*/
   /* When the router receives any packet, it should be determined what
    * type of the protocol is. After that, it is required to figure out
    * where to send the packet by comparing the address in the routing
@@ -96,6 +96,13 @@ void sr_handlepacket(struct sr_instance* sr,
    */
 
   sr_ethernet_hdr_t *header = (sr_ethernet_hdr_t *) packet;
+  print_addr_eth(header->ether_shost[0]);
+  print_addr_eth(header->ether_shost[1]);
+  print_addr_eth(header->ether_shost[2]);
+  print_addr_eth(header->ether_shost[3]);
+  print_addr_eth(header->ether_shost[4]);
+  print_addr_eth(header->ether_shost[5]);
+
   uint16_t ethernet_protocol_type = ntohs(header->ether_type);
 
   if(ethernet_protocol_type == ip_protocol_icmp){

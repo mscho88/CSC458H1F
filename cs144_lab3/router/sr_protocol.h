@@ -142,7 +142,7 @@ struct sr_ethernet_hdr
 #ifndef ETHER_ADDR_LEN
 #define ETHER_ADDR_LEN 6
 #endif
-    uint8_t  ether_dhost[ETHER_ADDR_LEN];    /* destination ethernet address */
+    uint8_t  sr_handlepacket[ETHER_ADDR_LEN];    /* destination ethernet address */
     uint8_t  ether_shost[ETHER_ADDR_LEN];    /* source ethernet address */
     uint16_t ether_type;                     /* packet type ID */
 } __attribute__ ((packed)) ;
