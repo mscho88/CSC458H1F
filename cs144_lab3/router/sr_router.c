@@ -129,8 +129,9 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	 * check the ARP cache first whether the router already knows
 		 * the request for the sender. Also, the router keeps track of
 		 * ARP cache of the sender on ARP request. */
+    	printf(" sender information : %s \n", arp_header->ar_sha);
+    	print_addr_ip_int(arp_header->ar_sip);
     	if(sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip) == NULL){
-    		printf("hello world\n");
     	    fprintf(stderr, "Failed on inserting the sender information : \n");
     	}
 
@@ -151,7 +152,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		 * interfaces.*/
     	struct sr_if *interfaces = sr_get_interface(sr, interface);
     	struct sr_if *cur = interfaces;
-    	while(cur != 0){
+    	while(cur != NULL){
     		if(cur->ip == arp_header->ar_tip){
     			/* Since there does not exist the destination ARP cache,
     			 * above ARP cache looking up failed. Hence, the router
