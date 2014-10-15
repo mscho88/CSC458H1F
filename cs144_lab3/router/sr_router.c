@@ -125,7 +125,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     sr_ethernet_hdr_t* rx_e_hdr = (sr_ethernet_hdr_t *) packet;
 	sr_ethernet_hdr_t* tx_e_hdr = ((sr_ethernet_hdr_t *)(malloc(sizeof(sr_ethernet_hdr_t))));
 	uint8_t* tx_packet;
-	int queue_index;
     struct sr_if* rx_if = sr_get_interface(sr, interface);
 
     /***** Getting the ARP header *****/
@@ -170,11 +169,11 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	}
     	tx_arp_hdr->ar_tip = rx_arp_hdr->ar_sip;
 
-    	tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof( sr_arp_hdr_t))));
+    	tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t))));
     	memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr_t));
-    	memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof( sr_arp_hdr_t));
+    	memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(sr_arp_hdr_t));
 
-    	print_hdr_eth((uint8_t*)(tx_packet));
+    	print_hdr_arp((uint8_t*)(tx_packet));
     	sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
 
     	free(tx_packet);
@@ -191,7 +190,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		}
     		cur = cur->next;
     	}*/
-    	printf("reached here");
+    	printf("reached here\n");
     	return;
     }else if(htons(rx_arp_hdr->ar_op) == arp_op_reply){
     	/* Since the packet is ARP reply, it is required to send
