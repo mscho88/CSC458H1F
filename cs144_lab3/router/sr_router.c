@@ -172,11 +172,9 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t))));
     	memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr_t));
     	memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(sr_arp_hdr_t));
-    	print_addr_eth((uint8_t*)(tx_packet));
-    	print_hdr_arp((uint8_t*)(tx_packet));
-    	print_hdr_eth((uint8_t*)(tx_packet));
-    	print_hdr_ip((uint8_t*)(tx_packet));
 
+    	sr_ethernet_hdr_t* temp = (sr_ethernet_hdr_t*)(tx_packet);
+    	print_hdr_eth(temp);
     	sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
 
     	free(tx_packet);
