@@ -113,7 +113,7 @@ void sr_handlepacket(struct sr_instance* sr,
 
   if(ethernet_protocol_type == ethertype_arp){
   	  Debug("*** -> Received Address Resolution Protocol \n");
-  	  sr_handlepacket_arp(sr, packet, len, packet_header);
+  	  sr_handlepacket_arp(sr, packet, len, interface, packet_header);
   }else if(ethernet_protocol_type == ethertype_ip){
 	  Debug("*** -> Received Internet Protocol \n");
 	  sr_handlepacket_ip(sr, packet, len, packet_header);
@@ -133,6 +133,7 @@ void sr_handlepacket(struct sr_instance* sr,
 void sr_handlepacket_arp(struct sr_instance* sr,
         uint8_t * packet,
         unsigned int len,
+		char* interface,
         struct sr_ethernet_hdr_t *header){
 
 	/* Set the packet to the ARP header */
@@ -142,7 +143,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	/* Since the packet is ARP request, it is required to broadcast
     	 * to the devices where the router knows. */
     	Debug("*** -> Address Resolution Protocol Request \n");
-    	/* sr_send_packet(); */
+    	sr_send_packet(sr, packet, len, interface);
     	/* To transmit the packet, the router needs to copy the packet
 		 * locally to protect the loss of the data in the packet.*/
     }else if(htons(arp_header->ar_op) == arp_op_reply){
