@@ -143,13 +143,14 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		    uint8_t* _packet = (uint8_t*)malloc(length);
 
     		    sr_ethernet_hdr_t* eth_tmp_header = (sr_ethernet_hdr_t *)_packet;
-    		    sr_arp_hdr_t* arp_tmp_header = (sr_arp_hdr_t*)_packet + sizeof(sr_ethernet_hdr_t);
+
 
     		    memcpy(eth_tmp_header->ether_dhost, eth_orig_header->ether_shost, ETHER_ADDR_LEN);
     		    memcpy(eth_tmp_header->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
     		    eth_tmp_header->ether_type = htons(ethertype_arp);
     		    print_hdr_eth((sr_ethernet_hdr_t*)_packet);
 
+    		    sr_arp_hdr_t* arp_tmp_header = (sr_arp_hdr_t*)_packet + sizeof(sr_ethernet_hdr_t);
     		    arp_tmp_header->ar_hrd = arp_orig_header->ar_hrd;
     		    arp_tmp_header->ar_pro = htons(ethertype_arp);
     		    arp_tmp_header->ar_hln = ETHER_ADDR_LEN;
