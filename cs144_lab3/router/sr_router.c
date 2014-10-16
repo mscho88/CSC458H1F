@@ -128,15 +128,15 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
     		    print_hdr_arp((uint8_t*)arp_header);
     		    sr_arp_hdr_t* arp_packet = (sr_arp_hdr_t*)(_packet);
-    		    arp_packet->ar_hrd = arp_header->ar_hrd;
+    		    arp_packet->ar_hrd = htons(arp_header->ar_hrd);
 				arp_packet->ar_pro = htons(ethertype_ip);
-				arp_packet->ar_hln = ETHER_ADDR_LEN;
-    		    arp_packet->ar_pln = arp_header->ar_pln;
+				arp_packet->ar_hln = htons(ETHER_ADDR_LEN);
+    		    arp_packet->ar_pln = htons(arp_header->ar_pln);
 				arp_packet->ar_op = htons(arp_op_reply);
 				memcpy(arp_packet->ar_sha, interfaces->addr, ETHER_ADDR_LEN);
-    		    arp_packet->ar_sip = interfaces->ip;
+    		    arp_packet->ar_sip = htons(interfaces->ip);
 				memcpy(arp_packet->ar_tha, arp_header->ar_sha, ETHER_ADDR_LEN);
-				arp_packet->ar_tip = arp_header->ar_sip;
+				arp_packet->ar_tip = htons(arp_header->ar_sip);
 
 				print_hdr_arp((uint8_t*)arp_packet);
 				print_hdr_eth(_packet);
