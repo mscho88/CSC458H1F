@@ -140,8 +140,11 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		    }
 
 
-    		    /* --------------------------*/
-    		    print_hdr_arp((uint8_t*)arp_header);
+    		    print_hdr_eth(packet);
+    		    print_hdr_ip(packet);
+    		    print_hdr_icmp(packet);
+    		    print_hdr_arp(packet);
+
     		    sr_ethernet_hdr_t * eth_packet = (sr_ethernet_hdr_t *) _packet;
     		    memcpy(eth_packet->ether_dhost, arp_header->ar_tha, ETHER_ADDR_LEN);
     		    memcpy(eth_packet->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
@@ -158,7 +161,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				memcpy(arp_packet->ar_tha, arp_header->ar_sha, ETHER_ADDR_LEN);
 				arp_packet->ar_tip = arp_header->ar_sip;
 
-				print_hdr_arp((uint8_t*)_packet);
+				/*print_hdr_arp((uint8_t*)_packet);*/
 
 				sr_send_packet(sr, _packet, length, if_walker->name);
 
