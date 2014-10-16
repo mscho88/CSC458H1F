@@ -126,7 +126,19 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     			unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
     		    uint8_t* _packet = malloc(length);
     		    struct sr_if *interfaces = sr_get_interface(sr, interface);
+    		    /* -----------------------*/
+    		    struct sr_if* if_walker = 0;
+    		    if_walker = sr->if_list;
 
+    		    while(if_walker){
+    		    	if(if_walker->ip == arp_header->ar_tip){
+    		    		break;
+    		    	}
+    		    	if_walker = if_walker->next;
+    		    }
+
+
+    		    /* --------------------------*/
     		    print_hdr_arp((uint8_t*)arp_header);
     		    sr_arp_hdr_t* arp_packet = (sr_arp_hdr_t*)(_packet);
     		    arp_packet->ar_hrd = arp_header->ar_hrd;
@@ -135,15 +147,15 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				arp_packet->ar_hln = ETHER_ADDR_LEN;
     		    arp_packet->ar_pln = arp_header->ar_pln;
 				arp_packet->ar_op = htons(arp_op_reply);
-				memcpy(arp_packet->ar_sha, interfaces->addr, ETHER_ADDR_LEN);
-    		    arp_packet->ar_sip = interfaces->ip;
+				memcpy(arp_packet->ar_sha, if_walker->addr, ETHER_ADDR_LEN);
+    		    arp_packet->ar_sip = if_walker->ip;
 				memcpy(arp_packet->ar_tha, arp_header->ar_sha, ETHER_ADDR_LEN);
 				arp_packet->ar_tip = arp_header->ar_sip;
 
 				print_hdr_arp((uint8_t*)arp_packet);
 				print_hdr_eth(_packet);
 
-				sr_send_packet(sr, _packet, length, interfaces->name);
+				sr_send_packet(sr, _packet, length, if_walker->name);
 
 				free(_packet);
 
