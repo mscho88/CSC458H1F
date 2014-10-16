@@ -136,6 +136,13 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     }
 }/* end sr_handlepacket_arp */
 
+/*---------------------------------------------------------------------
+ * Method: send_packet(struct sr_instance* sr, uint8_t* packet, char* interface)
+ * Scope:  Global
+ *
+ * This method is called when the router needs to send a packet.
+ *
+ *---------------------------------------------------------------------*/
 void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface){
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t *)packet;
 	sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
@@ -150,17 +157,30 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface){
 	free(_packet);
 }
 
+/*---------------------------------------------------------------------
+ * Method: build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, struct sr_if* if_walker)
+ * Scope:  Global
+ *
+ * This method is called when the ethernet type is Internet Protocol.
+ *
+ *---------------------------------------------------------------------*/
 void build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, struct sr_if* if_walker){
 	sr_ethernet_hdr_t *eth_tmp_header = (sr_ethernet_hdr_t *)_packet;
 	memcpy(eth_tmp_header->ether_dhost, eth_orig_header->ether_shost, ETHER_ADDR_LEN);
 	memcpy(eth_tmp_header->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
 	eth_tmp_header->ether_type = htons(ethertype_arp);
 }
-
+/*---------------------------------------------------------------------
+ * Method: sr_handlepacket(uint8_t* p,char* interface)
+ * Scope:  Global
+ *
+ * This method is called when the ethernet type is Internet Protocol.
+ *
+ *---------------------------------------------------------------------*/
 void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr_if* if_walker){
 	sr_arp_hdr_t *arp_tmp_header = (sr_arp_hdr_t *)_packet;
 	arp_tmp_header->ar_hrd = arp_orig_header->ar_hrd;
-	arp_tmp_header->ar_pro = htons(ethertype_ip);
+	arp_tmp_header->ar_pro = htons(ethertype_arp);
 	arp_tmp_header->ar_hln = ETHER_ADDR_LEN;
 	arp_tmp_header->ar_pln = arp_orig_header->ar_pln;
 	arp_tmp_header->ar_op = htons(arp_op_reply);
@@ -169,30 +189,6 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr
 	memcpy(arp_tmp_header->ar_tha, arp_orig_header->ar_sha, ETHER_ADDR_LEN);
 	arp_tmp_header->ar_tip = arp_orig_header->ar_sip;
 }
-
-/*
-void populate_ethernet_header(uint8_t *buf, uint8_t *eth_shost, uint8_t *eth_dhost, uint16_t ether_type)
-{
-    struct sr_ethernet_hdr *rep_eth_hdr = (struct sr_ethernet_hdr *) buf;
-    memcpy(rep_eth_hdr->ether_shost, eth_shost, sizeof(uint8_t) * ETHER_ADDR_LEN);
-    memcpy(rep_eth_hdr->ether_dhost, eth_dhost, sizeof(uint8_t) * ETHER_ADDR_LEN);
-    rep_eth_hdr->ether_type = htons(ether_type);
-}
-void populate_arp_header(uint8_t *buf, uint16_t hrd, uint16_t op, uint8_t *sha, uint32_t sip, uint8_t *dha, uint32_t dip)
-{
-    struct sr_arphdr *arp_hdr = (struct sr_arphdr *)buf;
-
-    arp_hdr->ar_hrd = htons(hrd);
-    arp_hdr->ar_pro = htons(ETHERTYPE_IP);
-    arp_hdr->ar_hln = ETHER_ADDR_LEN;
-    arp_hdr->ar_pln = IPv4_ADDR_LEN;
-    arp_hdr->ar_op = htons(op);
-    memcpy(arp_hdr->ar_sha, sha, ETHER_ADDR_LEN);
-    arp_hdr->ar_sip = sip;
-    memcpy(arp_hdr->ar_tha, dha, ETHER_ADDR_LEN);
-    arp_hdr->ar_tip = dip;
-}*/
-
 
 /*---------------------------------------------------------------------
  * Method: sr_handlepacket(uint8_t* p,char* interface)
