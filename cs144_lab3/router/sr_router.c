@@ -155,6 +155,8 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				arp_packet->ar_tip = arp_header->ar_sip;
 
 				/*print_hdr_arp((uint8_t*)_packet);*/
+				print_hdr_eth((sr_ethernet_hdr_t *)packet);
+
 				print_hdr_eth((sr_ethernet_hdr_t *)_packet);
 				print_hdr_ip((sr_ip_hdr_t *)_packet);
 				print_hdr_icmp((sr_icmp_hdr_t *)_packet);
