@@ -143,22 +143,22 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface){
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
 
 	uint8_t* _packet = (uint8_t*)malloc(length);
-	build_ether_header((sr_ethernet_hdr_t *)_packet, eth_orig_header, interfaces);
-	build_arp_header((sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), arp_orig_header, interfaces);
+	build_ether_header(_packet, eth_orig_header, interfaces);
+	build_arp_header(_packet + sizeof(sr_ethernet_hdr_t), arp_orig_header, interfaces);
 
 	sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
 	free(_packet);
 }
 
-void build_ether_header(sr_ethernet_hdr_t *eth_tmp_header/*uint8_t *_packet*/, sr_ethernet_hdr_t* eth_orig_header, struct sr_if* if_walker){
-	/*sr_ethernet_hdr_t *eth_tmp_header = (sr_ethernet_hdr_t *)_packet;*/
+void build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, struct sr_if* if_walker){
+	sr_ethernet_hdr_t *eth_tmp_header = (sr_ethernet_hdr_t *)_packet;
 	memcpy(eth_tmp_header->ether_dhost, eth_orig_header->ether_shost, ETHER_ADDR_LEN);
 	memcpy(eth_tmp_header->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
 	eth_tmp_header->ether_type = htons(ethertype_arp);
 }
 
-void build_arp_header(sr_arp_hdr_t *arp_tmp_header/*uint8_t *_packet*/, sr_arp_hdr_t* arp_orig_header, struct sr_if* if_walker){
-	/*sr_arp_hdr_t *arp_tmp_header = (sr_arp_hdr_t *)_packet;*/
+void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr_if* if_walker){
+	sr_arp_hdr_t *arp_tmp_header = (sr_arp_hdr_t *)_packet;
 	arp_tmp_header->ar_hrd = arp_orig_header->ar_hrd;
 	arp_tmp_header->ar_pro = htons(ethertype_ip);
 	arp_tmp_header->ar_hln = ETHER_ADDR_LEN;
