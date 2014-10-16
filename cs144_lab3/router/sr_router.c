@@ -128,36 +128,10 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		    sr_ethernet_hdr_t* rx_e_hdr = (sr_ethernet_hdr_t*)packet;
     		    sr_ethernet_hdr_t* tx_e_hdr = ((sr_ethernet_hdr_t*)(malloc(sizeof(sr_ethernet_hdr_t))));
     			uint8_t* tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t))));
-
-    			sr_arp_hdr_t* rx_arp_hdr = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-    			sr_arp_hdr_t* tx_arp_hdr = ((sr_arp_hdr_t*)(malloc(sizeof(sr_arp_hdr_t))));
-
-				tx_e_hdr->ether_type = htons(rx_e_hdr->ether_type);
-
-				tx_arp_hdr->ar_hrd = htons(rx_arp_hdr->ar_hrd);
-				tx_arp_hdr->ar_pro = htons(rx_arp_hdr->ar_pro);
-
-				tx_arp_hdr->ar_hln = rx_arp_hdr->ar_hln;
-				tx_arp_hdr->ar_pln = rx_arp_hdr->ar_pln;
-
-				tx_arp_hdr->ar_op = htons(arp_op_reply);
-				tx_arp_hdr->ar_tip = rx_arp_hdr->ar_sip;
-				for (i = 0; i < ETHER_ADDR_LEN; i++){
-					tx_e_hdr->ether_dhost[i] = rx_e_hdr->ether_shost[i];
-					tx_e_hdr->ether_shost[i] = ((uint8_t)(rx_if->addr[i]));
-					tx_arp_hdr->ar_tha[i] = rx_arp_hdr->ar_sha[i];
-					tx_arp_hdr->ar_sha[i] = ((uint8_t)(rx_if->addr[i]));
-				}
-
-				memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr_t));
-				memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(sr_arp_hdr_t));
-
-				Debug("-> Sending ARP REPLY Packet, length = %d\n", sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t));
-				sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
+    			print_hdr_eth(tx_packet);
 
 				free(tx_packet);
-				free(tx_arp_hdr);
-				free(tx_e_hdr);
+
     		}else{
     			Debug("Error on caching the sender information. \n");
     		}
@@ -169,6 +143,30 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
     }
 }/* end sr_handlepacket_arp */
+
+/*
+void populate_ethernet_header(uint8_t *buf, uint8_t *eth_shost, uint8_t *eth_dhost, uint16_t ether_type)
+{
+    struct sr_ethernet_hdr *rep_eth_hdr = (struct sr_ethernet_hdr *) buf;
+    memcpy(rep_eth_hdr->ether_shost, eth_shost, sizeof(uint8_t) * ETHER_ADDR_LEN);
+    memcpy(rep_eth_hdr->ether_dhost, eth_dhost, sizeof(uint8_t) * ETHER_ADDR_LEN);
+    rep_eth_hdr->ether_type = htons(ether_type);
+}
+void populate_arp_header(uint8_t *buf, uint16_t hrd, uint16_t op, uint8_t *sha, uint32_t sip, uint8_t *dha, uint32_t dip)
+{
+    struct sr_arphdr *arp_hdr = (struct sr_arphdr *)buf;
+
+    arp_hdr->ar_hrd = htons(hrd);
+    arp_hdr->ar_pro = htons(ETHERTYPE_IP);
+    arp_hdr->ar_hln = ETHER_ADDR_LEN;
+    arp_hdr->ar_pln = IPv4_ADDR_LEN;
+    arp_hdr->ar_op = htons(op);
+    memcpy(arp_hdr->ar_sha, sha, ETHER_ADDR_LEN);
+    arp_hdr->ar_sip = sip;
+    memcpy(arp_hdr->ar_tha, dha, ETHER_ADDR_LEN);
+    arp_hdr->ar_tip = dip;
+}*/
+
 
 /*---------------------------------------------------------------------
  * Method: sr_handlepacket(uint8_t* p,char* interface)
