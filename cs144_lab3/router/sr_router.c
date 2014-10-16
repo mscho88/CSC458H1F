@@ -146,7 +146,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
     		    print_hdr_eth((sr_ethernet_hdr_t*)_packet);
 
-    		    build_arp_header((sr_arp_hdr_t*)_packet + sizeof(sr_ethernet_hdr_t*), arp_orig_header, if_walker);
+    		    build_arp_header((sr_arp_hdr_t*)_packet + sizeof(sr_arp_hdr_t*), arp_orig_header, if_walker);
 
 				print_hdr_eth((sr_ethernet_hdr_t *)_packet);
 				print_hdr_arp((sr_arp_hdr_t *)_packet);
