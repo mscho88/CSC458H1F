@@ -117,21 +117,27 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
 	/* Set the packet to the ARP header */
     sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-    print_hdr_arp((uint8_t*)arp_orig_header);
-	if(htons(arp_orig_header->ar_op) == arp_op_request){
+
+    if(htons(arp_orig_header->ar_op) == arp_op_request){
+    	/* If the packet is ARP request, then the router tries to caches
+    	 * the information of the sender. */
     	struct sr_arpentry *arp_entry;
     	if((arp_entry = sr_arpcache_lookup(&(sr->cache), arp_orig_header->ar_sip)) == NULL){
-    		/* If no ARP cache is saved, the router caches the sender. */
+    		/* If ARP cache is saved, the router sends back the message
+    		 * to the sender. */
     		struct sr_arpreq *arp_cache;
     		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_orig_header->ar_sha, arp_orig_header->ar_sip)) == NULL){
+    			/* Send ARP reply message */
         		send_packet(sr, packet, interface);
     		}else{
     			Debug("Error on caching the sender information. \n");
     		}
     	}else{
+    		/* Send ARP reply message */
     		send_packet(sr, packet, interface);
     	}
     }else if(htons(arp_orig_header->ar_op) == arp_op_reply){
+    	/* If the packet is ARP reply, then the router ....*/
     	Debug("*** -> Address Resolution Protocol reply \n");
     }
 }/* end sr_handlepacket_arp */
@@ -145,6 +151,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
  *---------------------------------------------------------------------*/
 void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface){
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t *)packet;
+
 	sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
@@ -206,5 +213,53 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	assert(packet);
 	assert(interface);
 
-	Debug("*** -> IP \n");
+   	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+	struct sr_arpentry *ip_entry;
+
+	print_hdr_ip((sr_ip_hdr_t*)packet);
+
+	print_hdr_icmp((sr_icmp_hdr_t*)packet);
+	/* If it does not have in the ARP cache, then ARP rep again?*/
+	/* For internet protocol, if there exists any destination in the interface then send the message otherwise drop it....*/
+	if(sr_interface_exist(sr_get_interface(sr, interface), ip_orig_header->ip_dst)){
+		if(ip_orig_header->ip_p == ip_protocol_icmp){
+			if(ip_orig_header->ip_ttl > 0){
+				ip_orig_header->ip_ttl--;
+				/* checksum validation */
+
+				/* Send the packet to the destination. The router needs to change the source and the destination. Also, need to consider the checksum */
+				/* IP packet is sent */
+				/* Consider check sum*/
+
+			}else{
+				/* icmp time out , need to send a packet indicating icmp time out*/
+			}
+		}else{
+			fprintf(stderr, "Received Unsupported Packet from ");
+			print_addr_ip_int(ip_orig_header->ip_src);
+			fprintf(stderr, "\n");
+			/* send back the packet to the source */
+		}
+
+
+	}else{
+		/*drop?*/
+		if(ip_orig_header->ip_ttl > 0){
+			ip_orig_header->ip_ttl--;
+			/*ip_orig_header->ip_sum = checksum*/
+			/*send_packet*/
+
+		}
+	}
+
 }/* end sr_handlepacket_ip */
+
+int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
+	while(interfaces){
+		if(interfaces->ip == dest_ip){
+			return 1;
+		}
+		interfaces = interfaces->next;
+	}
+	return 0;
+}/* end sr_get_interface_by_ip */
