@@ -155,10 +155,10 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				arp_packet->ar_tip = arp_header->ar_sip;
 
 				/*print_hdr_arp((uint8_t*)_packet);*/
-				print_hdr_eth(packet);
-				print_hdr_ip(packet);
-				print_hdr_icmp(packet);
-				print_hdr_arp(packet);
+				print_hdr_eth(_packet);
+				print_hdr_ip(_packet);
+				print_hdr_icmp(_packet);
+				print_hdr_arp(_packet);
 
 				sr_send_packet(sr, _packet, length, if_walker->name);
 
