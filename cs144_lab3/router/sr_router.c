@@ -132,32 +132,20 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     			sr_arp_hdr_t* rx_arp_hdr = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
     			sr_arp_hdr_t* tx_arp_hdr = ((sr_arp_hdr_t*)(malloc(sizeof(sr_arp_hdr_t))));
 
-				for (i = 0; i < ETHER_ADDR_LEN; i++){
-				}
-
-				tx_e_hdr->ether_dhost = rx_e_hdr->ether_shost;
-				for (i = 0; i < ETHER_ADDR_LEN; i++){
-				}
-
-				tx_e_hdr->ether_shost = ((uint8_t)(rx_if->addr));
-
 				tx_e_hdr->ether_type = rx_e_hdr->ether_type;
-				tx_arp_hdr->ar_hrd = rx_arp_hdr->ar_hrd;
-				tx_arp_hdr->ar_pro = rx_arp_hdr->ar_pro;
-				tx_arp_hdr->ar_hln = rx_arp_hdr->ar_hln;
-				tx_arp_hdr->ar_pln = rx_arp_hdr->ar_pln;
-				tx_arp_hdr->ar_op = arp_op_reply;
+				tx_arp_hdr->ar_hrd = htons(rx_arp_hdr->ar_hrd);
+				tx_arp_hdr->ar_pro = htons(rx_arp_hdr->ar_pro);
+				tx_arp_hdr->ar_hln = htons(rx_arp_hdr->ar_hln);
+				tx_arp_hdr->ar_pln = htons(rx_arp_hdr->ar_pln);
+				tx_arp_hdr->ar_op = htons(arp_op_reply);
+				tx_arp_hdr->ar_tip = htons(rx_arp_hdr->ar_sip);
 				for (i = 0; i < ETHER_ADDR_LEN; i++){
-
-				}
-				tx_arp_hdr->ar_sha = ((uint8_t)(rx_if->addr));
-
-				tx_arp_hdr->ar_sip = rx_arp_hdr->ar_tip;
-				for (i = 0; i < ETHER_ADDR_LEN; i++){
+					tx_e_hdr->ether_dhost[i] = rx_e_hdr->ether_shost[i];
+					tx_e_hdr->ether_shost[i] = ((uint8_t)(rx_if->addr[i]));
+					tx_arp_hdr->ar_tha[i] = rx_arp_hdr->ar_sha[i];
+					tx_arp_hdr->ar_sha[i] = ((uint8_t)(rx_if->addr[i]));
 				}
 
-				tx_arp_hdr->ar_tha = rx_arp_hdr->ar_sha;
-				tx_arp_hdr->ar_tip = rx_arp_hdr->ar_sip;
 				memcpy(tx_packet, tx_e_hdr, sizeof(sr_ethernet_hdr_t));
 				memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(sr_arp_hdr_t));
 
