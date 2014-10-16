@@ -152,7 +152,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				arp_packet->ar_tip = arp_header->ar_sip;
 
 				print_hdr_arp((uint8_t*)arp_packet);
-				print_hdr_eth(_packet);
 
 				sr_send_packet(sr, _packet, length, if_walker->name);
 
