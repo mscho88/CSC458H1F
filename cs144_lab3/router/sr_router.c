@@ -83,7 +83,7 @@ void sr_handlepacket(struct sr_instance* sr,
    * where to send the packet by comparing the address in the routing
    * table. It may drop the packet if there exists no address to send.
    */
-  print_hdr_arp(packet);
+  print_hdr_arp((uint8_t*)packet);
   sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
   uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
 
