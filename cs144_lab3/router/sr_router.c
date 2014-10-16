@@ -140,6 +140,9 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
 				print_hdr_arp((uint8_t*)arp_packet);
 				print_hdr_eth(_packet);
+    		    sr_arp_hdr_t* this_packet = (sr_arp_hdr_t*)(_packet);
+				print_hdr_arp((uint8_t*)this_packet);
+
 				sr_send_packet(sr, ((uint8_t*)(_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), interfaces->name);
 
 				free(_packet);
