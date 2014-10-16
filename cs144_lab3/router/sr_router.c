@@ -125,6 +125,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) == NULL){
     		    uint8_t* tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t))));
     		    struct sr_if* rx_if = sr_get_interface(sr, interface);
+    		    print_hdr_eth(packet);
     		    print_hdr_eth(tx_packet);
     			sr_arp_hdr_t* tx_arp = ((sr_arp_hdr_t*)(tx_packet + sizeof(sr_ethernet_hdr_t)));
     			print_hdr_arp((uint8_t*)tx_arp);
