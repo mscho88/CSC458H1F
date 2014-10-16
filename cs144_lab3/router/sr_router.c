@@ -125,13 +125,23 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) == NULL){
     		    struct sr_if* rx_if = sr_get_interface(sr, interface);
     		    int i;
-    		    sr_ethernet_hdr_t* rx_e_hdr = (sr_ethernet_hdr_t*)packet;
+    		    /*sr_ethernet_hdr_t* rx_e_hdr = (sr_ethernet_hdr_t*)packet;*/
     		    sr_ethernet_hdr_t* tx_e_hdr = ((sr_ethernet_hdr_t*)(malloc(sizeof(sr_ethernet_hdr_t))));
     			uint8_t* tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t))));
-    			print_hdr_eth(packet);
-    			print_hdr_eth(tx_packet);
+    			/*print_hdr_eth(packet);
+    			print_hdr_eth(tx_packet);*/
     			sr_arp_hdr_t* tx_arp = ((sr_arp_hdr_t*)(tx_packet + sizeof(sr_ethernet_hdr_t)));
     			print_hdr_arp((uint8_t*)tx_arp);
+    			tx_arp->ar_hln = arp_header->ar_hln;
+				tx_arp->ar_hrd = arp_header->ar_hrd;
+				tx_arp->ar_op = arp_header->ar_op;
+				tx_arp->ar_pln = arp_header->ar_pln;
+				tx_arp->ar_pro = arp_header->ar_pro;
+				memcpy(tx_arp->ar_sha, arp_header->ar_sha, ETHER_ADDR_LEN);
+				tx_arp->ar_sip = arp_header->ar_sip;
+				memcpy(tx_arp->ar_tha, arp_header->ar_tha, ETHER_ADDR_LEN);
+				tx_arp->ar_tip = arp_header->ar_tip;
+				print_hdr_arp((uint8_t*)tx_arp);
                 sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
 
 				free(tx_packet);
