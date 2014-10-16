@@ -138,7 +138,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
 void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface){
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t *)packet;
-	sr_arp_hdr_t* arp_orig_header = (sr_arp_hdr_t *)packet;
+	sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
 
