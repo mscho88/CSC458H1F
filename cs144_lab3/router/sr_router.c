@@ -144,8 +144,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		    build_ether_header((sr_ethernet_hdr_t *)_packet, eth_orig_header, if_walker);
     		    build_arp_header((sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), arp_orig_header, if_walker);
 
-    		    print_hdr_arp((sr_arp_hdr_t*)_packet);
-
    				sr_send_packet(sr, (uint8_t*)_packet, length, if_walker->name);
 
 				free(_packet);
