@@ -116,52 +116,54 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	assert(interface);
 
 	/* Set the packet to the ARP header */
-	sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+
+    sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t *)packet;
+	sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
 
-    if(htons(arp_header->ar_op) == arp_op_request){
+    if(htons(arp_orig_header->ar_op) == arp_op_request){
     	struct sr_arpentry *arp_entry;
-    	if((arp_entry = sr_arpcache_lookup(&(sr->cache), arp_header->ar_sip)) == NULL){
+    	if((arp_entry = sr_arpcache_lookup(&(sr->cache), arp_orig_header->ar_sip)) == NULL){
     		/* If no ARP cache is saved, the router caches the sender. */
     		struct sr_arpreq *arp_cache;
-    		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) == NULL){
+    		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_orig_header->ar_sha, arp_orig_header->ar_sip)) == NULL){
 
     			unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-    		    uint8_t* _packet = (uint8_t*)malloc(length);
     		    struct sr_if *interfaces = sr_get_interface(sr, interface);
     		    /* -----------------------*/
     		    struct sr_if* if_walker = 0;
     		    if_walker = sr->if_list;
 
     		    while(if_walker){
-    		    	if(if_walker->ip == arp_header->ar_tip){
+    		    	if(if_walker->ip == arp_orig_header->ar_tip){
     		    		break;
     		    	}
     		    	if_walker = if_walker->next;
     		    }
+    		    uint8_t* _packet = (uint8_t*)malloc(length);
 
-    		    sr_ethernet_hdr_t* eth_header = (sr_ethernet_hdr_t *)_packet;
-    		    sr_arp_hdr_t* arp_packet = (sr_arp_hdr_t*)_packet;
+    		    sr_ethernet_hdr_t* eth_tmp_header = (sr_ethernet_hdr_t *)_packet;
+    		    sr_arp_hdr_t* arp_tmp_header = (sr_arp_hdr_t*)_packet;
 
-    		    memcpy(eth_header->ether_dhost, eth_header->ether_shost, ETHER_ADDR_LEN);
-    		    memcpy(eth_header->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
-    		    eth_header->ether_type = htons(ethertype_arp);
+    		    memcpy(eth_tmp_header->ether_dhost, eth_orig_header->ether_shost, ETHER_ADDR_LEN);
+    		    memcpy(eth_tmp_header->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
+    		    eth_tmp_header->ether_type = htons(ethertype_arp);
     		    print_hdr_eth((sr_ethernet_hdr_t*)_packet);
 
-    		    arp_packet->ar_hrd = arp_header->ar_hrd;
-				arp_packet->ar_pro = htons(ethertype_arp);
-				arp_packet->ar_hln = ETHER_ADDR_LEN;
-    		    arp_packet->ar_pln = arp_header->ar_pln;
-				arp_packet->ar_op = htons(arp_op_reply);
-				memcpy(arp_packet->ar_sha, if_walker->addr, ETHER_ADDR_LEN);
-    		    arp_packet->ar_sip = if_walker->ip;
-				memcpy(arp_packet->ar_tha, arp_header->ar_sha, ETHER_ADDR_LEN);
-				arp_packet->ar_tip = arp_header->ar_sip;
+    		    arp_tmp_header->ar_hrd = arp_orig_header->ar_hrd;
+    		    arp_tmp_header->ar_pro = htons(ethertype_arp);
+    		    arp_tmp_header->ar_hln = ETHER_ADDR_LEN;
+    		    arp_tmp_header->ar_pln = arp_orig_header->ar_pln;
+    		    arp_tmp_header->ar_op = htons(arp_op_reply);
+				memcpy(arp_tmp_header->ar_sha, if_walker->addr, ETHER_ADDR_LEN);
+				arp_tmp_header->ar_sip = if_walker->ip;
+				memcpy(arp_tmp_header->ar_tha, arp_orig_header->ar_sha, ETHER_ADDR_LEN);
+				arp_tmp_header->ar_tip = arp_orig_header->ar_sip;
 
 				print_hdr_eth((sr_ethernet_hdr_t *)_packet);
 				print_hdr_arp((sr_arp_hdr_t *)_packet);
 
-				sr_send_packet(sr, (uint8_t*)arp_packet, length, if_walker->name);
+				sr_send_packet(sr, (uint8_t*)_packet, length, if_walker->name);
 
 				free(_packet);
 
@@ -171,7 +173,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	}else{
     		/*send back the arp_reply*/
     	}
-    }else if(htons(arp_header->ar_op) == arp_op_reply){
+    }else if(htons(arp_orig_header->ar_op) == arp_op_reply){
     	Debug("*** -> Address Resolution Protocol reply \n");
 
     }
