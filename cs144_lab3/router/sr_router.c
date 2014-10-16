@@ -133,7 +133,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     			sr_arp_hdr_t* rx_arp_hdr = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
     			sr_arp_hdr_t* tx_arp_hdr = ((sr_arp_hdr_t*)(malloc(sizeof(sr_arp_hdr_t))));
 
-    			Debug("Success on caching the sender information. \n");
 				for (i = 0; i < ETHER_ADDR_LEN; i++){
 					tx_e_hdr->ether_dhost[i] = rx_e_hdr->ether_shost[i];
 				}
@@ -161,12 +160,11 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				memcpy(tx_packet + sizeof(sr_ethernet_hdr_t), tx_arp_hdr, sizeof(sr_arp_hdr_t));
 
 				Debug("-> Sending ARP REPLY Packet, length = %d\n", sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t));
-				sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
+				sr_send_packet(&sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
 
 				free(tx_packet);
 				free(tx_arp_hdr);
 				free(tx_e_hdr);
-				printf("Reached end of the line\n");
     		}else{
     			Debug("Error on caching the sender information. \n");
     		}
