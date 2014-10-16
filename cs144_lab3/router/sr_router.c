@@ -171,7 +171,7 @@ void build_ether_header(sr_ethernet_hdr_t* eth_tmp_header, sr_ethernet_hdr_t* et
 
 void build_arp_header(sr_arp_hdr_t* arp_tmp_header, sr_arp_hdr_t* arp_orig_header, struct sr_if* if_walker){
 	arp_tmp_header->ar_hrd = arp_orig_header->ar_hrd;
-	arp_tmp_header->ar_pro = htons(ethertype_arp);
+	arp_tmp_header->ar_pro = htons(ethertype_ip);
 	arp_tmp_header->ar_hln = ETHER_ADDR_LEN;
 	arp_tmp_header->ar_pln = arp_orig_header->ar_pln;
 	arp_tmp_header->ar_op = htons(arp_op_reply);
