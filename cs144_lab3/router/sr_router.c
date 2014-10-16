@@ -138,7 +138,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				arp_packet->ar_tip = htons(arp_header->ar_sip);
 
 				print_hdr_arp((uint8_t*)arp_packet);
-				sr_send_packet(sr, ((uint8_t*)(_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), interfaces->name);
+				sr_send_packet(sr, ((uint8_t*)(arp_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), interfaces->name);
 
 				free(_packet);
 
