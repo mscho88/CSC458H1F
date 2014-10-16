@@ -118,12 +118,14 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	/* Set the packet to the ARP header */
 	sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
+
     if(htons(arp_header->ar_op) == arp_op_request){
     	struct sr_arpentry *arp_entry;
     	if((arp_entry = sr_arpcache_lookup(&(sr->cache), arp_header->ar_sip)) == NULL){
     		/* If no ARP cache is saved, the router caches the sender. */
     		struct sr_arpreq *arp_cache;
     		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) == NULL){
+
     			unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
     		    uint8_t* _packet = (uint8_t*)malloc(length);
     		    struct sr_if *interfaces = sr_get_interface(sr, interface);
@@ -138,13 +140,14 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		    	if_walker = if_walker->next;
     		    }
 
-    		    sr_ethernet_hdr_t* eth_packet = (sr_ethernet_hdr_t *)_packet;
-    		    memcpy(eth_packet->ether_dhost, arp_header->ar_sha, ETHER_ADDR_LEN);
-    		    memcpy(eth_packet->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
-    		    eth_packet->ether_type = htons(ethertype_arp);
+    		    sr_ethernet_hdr_t* eth_header = (sr_ethernet_hdr_t *)_packet;
+    		    sr_arp_hdr_t* arp_packet = (sr_arp_hdr_t*)_packet;
+
+    		    memcpy(eth_header->ether_dhost, eth_header->ether_shost, ETHER_ADDR_LEN);
+    		    memcpy(eth_header->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
+    		    eth_header->ether_type = htons(ethertype_arp);
     		    print_hdr_eth((sr_ethernet_hdr_t*)_packet);
 
-    		    sr_arp_hdr_t* arp_packet = (sr_arp_hdr_t*)_packet;
     		    arp_packet->ar_hrd = arp_header->ar_hrd;
 				arp_packet->ar_pro = htons(ethertype_arp);
 				arp_packet->ar_hln = ETHER_ADDR_LEN;
