@@ -126,6 +126,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		    uint8_t* _packet = malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t));
     		    struct sr_if *interfaces = sr_get_interface(sr, interface);
 
+    		    print_hdr_arp((uint8_t*)arp_header);
     		    sr_arp_hdr_t* arp_packet = (sr_arp_hdr_t*)(_packet + sizeof(sr_ethernet_hdr_t));
     		    arp_packet->ar_hrd = arp_header->ar_hrd;
 				arp_packet->ar_pro = htons(ethertype_ip);
