@@ -142,7 +142,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		    memcpy(eth_packet->ether_dhost, arp_header->ar_sha, ETHER_ADDR_LEN);
     		    memcpy(eth_packet->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
     		    eth_packet->ether_type = htons(ethertype_arp);
-
+    		    print_hdr_eth(eth_packet);
     		    sr_arp_hdr_t* arp_packet = (sr_arp_hdr_t*)_packet;
     		    arp_packet->ar_hrd = arp_header->ar_hrd;
 				arp_packet->ar_pro = htons(ethertype_ip);
