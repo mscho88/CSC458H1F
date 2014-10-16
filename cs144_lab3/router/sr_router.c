@@ -130,21 +130,12 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
     			unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
     		    struct sr_if *interfaces = sr_get_interface(sr, interface);
-    		    /* -----------------------*/
-    		    struct sr_if* if_walker = 0;
-    		    if_walker = sr->if_list;
 
-    		    while(if_walker){
-    		    	if(if_walker->ip == arp_orig_header->ar_tip){
-    		    		break;
-    		    	}
-    		    	if_walker = if_walker->next;
-    		    }
     		    uint8_t* _packet = (uint8_t*)malloc(length);
-    		    build_ether_header((sr_ethernet_hdr_t *)_packet, eth_orig_header, if_walker);
-    		    build_arp_header((sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), arp_orig_header, if_walker);
+    		    build_ether_header((sr_ethernet_hdr_t *)_packet, eth_orig_header, interfaces);
+    		    build_arp_header((sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), arp_orig_header, interfaces);
 
-   				sr_send_packet(sr, (uint8_t*)_packet, length, if_walker->name);
+   				sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
 
 				free(_packet);
 
