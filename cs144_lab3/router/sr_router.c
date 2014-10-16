@@ -117,7 +117,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
 	/* Set the packet to the ARP header */
     sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-
+    print_hdr_arp((uint8_t*)arp_orig_header);
 	if(htons(arp_orig_header->ar_op) == arp_op_request){
     	struct sr_arpentry *arp_entry;
     	if((arp_entry = sr_arpcache_lookup(&(sr->cache), arp_orig_header->ar_sip)) == NULL){
@@ -180,7 +180,7 @@ void build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, st
 void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr_if* if_walker){
 	sr_arp_hdr_t *arp_tmp_header = (sr_arp_hdr_t *)_packet;
 	arp_tmp_header->ar_hrd = arp_orig_header->ar_hrd;
-	arp_tmp_header->ar_pro = htons(ethertype_arp);
+	arp_tmp_header->ar_pro = htons(ethertype_ip);
 	arp_tmp_header->ar_hln = ETHER_ADDR_LEN;
 	arp_tmp_header->ar_pln = arp_orig_header->ar_pln;
 	arp_tmp_header->ar_op = htons(arp_op_reply);
