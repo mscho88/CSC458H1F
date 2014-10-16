@@ -128,7 +128,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		struct sr_arpreq *arp_cache;
     		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_orig_header->ar_sha, arp_orig_header->ar_sip)) == NULL){
 
-    			unsigned int length = sizeof(packet) + sizeof(sr_ethernet_hdr_t*) + sizeof(sr_arp_hdr_t*);
+    			unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
     		    struct sr_if *interfaces = sr_get_interface(sr, interface);
     		    /* -----------------------*/
     		    struct sr_if* if_walker = 0;
@@ -141,12 +141,12 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		    	if_walker = if_walker->next;
     		    }
     		    uint8_t* _packet = (uint8_t*)malloc(length);
+    		    build_arp_header((sr_arp_hdr_t*)_packet + sizeof(sr_ethernet_hdr_t), arp_orig_header, if_walker);
 
     		    build_ether_header((sr_ethernet_hdr_t *)_packet, eth_orig_header, if_walker);
 
     		    print_hdr_eth((sr_ethernet_hdr_t*)_packet);
 
-    		    build_arp_header((sr_arp_hdr_t*)_packet + sizeof(sr_ethernet_hdr_t), arp_orig_header, if_walker);
 
 				print_hdr_eth((sr_ethernet_hdr_t *)_packet);
 				print_hdr_arp((sr_arp_hdr_t *)_packet);
