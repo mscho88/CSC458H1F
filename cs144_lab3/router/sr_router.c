@@ -116,40 +116,39 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	assert(interface);
 
 	/* Set the packet to the ARP header */
+    sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-    sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t *)packet;
-	sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-
-
-    if(htons(arp_orig_header->ar_op) == arp_op_request){
+	if(htons(arp_orig_header->ar_op) == arp_op_request){
     	struct sr_arpentry *arp_entry;
     	if((arp_entry = sr_arpcache_lookup(&(sr->cache), arp_orig_header->ar_sip)) == NULL){
     		/* If no ARP cache is saved, the router caches the sender. */
     		struct sr_arpreq *arp_cache;
     		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_orig_header->ar_sha, arp_orig_header->ar_sip)) == NULL){
-
-    			unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-    		    struct sr_if *interfaces = sr_get_interface(sr, interface);
-
-    		    uint8_t* _packet = (uint8_t*)malloc(length);
-    		    build_ether_header((sr_ethernet_hdr_t *)_packet, eth_orig_header, interfaces);
-    		    build_arp_header((sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), arp_orig_header, interfaces);
-
-   				sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
-
-				free(_packet);
-
+        		send_packet(sr, packet, interface);
     		}else{
     			Debug("Error on caching the sender information. \n");
     		}
     	}else{
-    		/*send back the arp_reply*/
+    		send_packet(sr, packet, interface);
     	}
     }else if(htons(arp_orig_header->ar_op) == arp_op_reply){
     	Debug("*** -> Address Resolution Protocol reply \n");
-
     }
 }/* end sr_handlepacket_arp */
+
+void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface){
+	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t *)packet;
+	sr_arp_hdr_t* arp_orig_header = (sr_arp_hdr_t *)packet;
+	unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+	struct sr_if *interfaces = sr_get_interface(sr, interface);
+
+	uint8_t* _packet = (uint8_t*)malloc(length);
+	build_ether_header((sr_ethernet_hdr_t *)_packet, eth_orig_header, interfaces);
+	build_arp_header((sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), arp_orig_header, interfaces);
+
+	sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
+	free(_packet);
+}
 
 void build_ether_header(sr_ethernet_hdr_t *eth_tmp_header/*uint8_t *_packet*/, sr_ethernet_hdr_t* eth_orig_header, struct sr_if* if_walker){
 	/*sr_ethernet_hdr_t *eth_tmp_header = (sr_ethernet_hdr_t *)_packet;*/
