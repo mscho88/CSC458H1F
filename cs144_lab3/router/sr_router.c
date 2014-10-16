@@ -142,8 +142,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		    print_hdr_arp((uint8_t*)arp_header);
     		    sr_arp_hdr_t* arp_packet = (sr_arp_hdr_t*)(_packet);
     		    arp_packet->ar_hrd = arp_header->ar_hrd;
-				arp_packet->ar_pro = htons(arp_hrd_ethernet);
-    		    /*arp_packet->ar_pro = htons(ethertype_ip); */
+				arp_packet->ar_pro = htons(ethertype_ip);
 				arp_packet->ar_hln = ETHER_ADDR_LEN;
     		    arp_packet->ar_pln = arp_header->ar_pln;
 				arp_packet->ar_op = htons(arp_op_reply);
