@@ -147,7 +147,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				tx_arp_hdr->ar_pro = rx_arp_hdr->ar_pro;
 				tx_arp_hdr->ar_hln = rx_arp_hdr->ar_hln;
 				tx_arp_hdr->ar_pln = rx_arp_hdr->ar_pln;
-				tx_arp_hdr->ar_op = htons(arp_header->ar_op);
+				tx_arp_hdr->ar_op = arp_op_reply;
 				for (i = 0; i < ETHER_ADDR_LEN; i++){
 					tx_arp_hdr->ar_sha[i] = ((uint8_t)(rx_if->addr[i]));
 				}
