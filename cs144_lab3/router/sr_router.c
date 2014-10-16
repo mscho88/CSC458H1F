@@ -123,27 +123,23 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		/* If no ARP cache is saved, the router caches the sender. */
     		struct sr_arpreq *arp_cache;
     		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) == NULL){
-    		    uint8_t* tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t))));
-    		    struct sr_if* rx_if = sr_get_interface(sr, interface);
-    		    print_hdr_eth(packet);
-    		    memcpy(tx_packet, packet, sizeof(sr_arp_hdr_t));
-    		    print_hdr_eth(tx_packet);
-    			sr_arp_hdr_t* tx_arp = ((sr_arp_hdr_t*)(tx_packet + sizeof(sr_ethernet_hdr_t)));
-    			print_hdr_arp((uint8_t*)tx_arp);
-    			tx_arp->ar_hln = arp_header->ar_hln;
-				tx_arp->ar_hrd = arp_header->ar_hrd;
-				tx_arp->ar_op = arp_header->ar_op;
-				tx_arp->ar_pln = arp_header->ar_pln;
-				tx_arp->ar_pro = arp_header->ar_pro;
-				memcpy(tx_arp->ar_sha, arp_header->ar_sha, ETHER_ADDR_LEN);
-				tx_arp->ar_sip = arp_header->ar_sip;
-				memcpy(tx_arp->ar_tha, arp_header->ar_tha, ETHER_ADDR_LEN);
-				tx_arp->ar_tip = arp_header->ar_tip;
-				/*print_hdr_arp((uint8_t*)tx_arp);*/
-				print_hdr_eth(tx_packet);
-				sr_send_packet(sr, ((uint8_t*)(tx_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), rx_if->name);
+    		    uint8_t* _packet = malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t));
+    		    struct sr_if *interfaces = sr_get_interface(sr, interface);
 
-				free(tx_packet);
+    		    sr_arp_hdr_t* arp_packet = (sr_arp_hdr_t*)(_packet + sizeof(sr_ethernet_hdr_t));
+    		    arp_packet->ar_hrd = arp_header->ar_hrd;
+				arp_packet->ar_pro = htons(ethertype_ip);
+				arp_packet->ar_hln = ETHER_ADDR_LEN;
+    		    arp_packet->ar_pln = arp_header->ar_pln;
+				arp_packet->ar_op = htons(arp_op_reply);
+				memcpy(arp_packet->ar_sha, interfaces->addr, ETHER_ADDR_LEN);
+    		    arp_packet->ar_sip = interfaces->ip;
+				memcpy(arp_packet->ar_tha, arp_header->ar_sha, ETHER_ADDR_LEN);
+				arp_packet->ar_tip = htons(arp_header->ar_sip);
+
+				sr_send_packet(sr, ((uint8_t*)(_packet)), sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t), interfaces->name);
+
+				free(_packet);
 
     		}else{
     			Debug("Error on caching the sender information. \n");
