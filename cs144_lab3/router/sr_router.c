@@ -128,6 +128,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		    sr_ethernet_hdr_t* rx_e_hdr = (sr_ethernet_hdr_t*)packet;
     		    sr_ethernet_hdr_t* tx_e_hdr = ((sr_ethernet_hdr_t*)(malloc(sizeof(sr_ethernet_hdr_t))));
     			uint8_t* tx_packet = ((uint8_t*)(malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t))));
+    			print_hdr_eth(packet);
     			print_hdr_eth(tx_packet);
 
 				free(tx_packet);
