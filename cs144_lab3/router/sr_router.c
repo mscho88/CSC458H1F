@@ -85,6 +85,7 @@ void sr_handlepacket(struct sr_instance* sr,
    */
   print_hdr_arp((	sr_arp_hdr_t*)packet);
   sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
+
   uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
 
   if(ethernet_protocol_type == ethertype_arp){
@@ -141,6 +142,11 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
     		    /* --------------------------*/
     		    print_hdr_arp((uint8_t*)arp_header);
+    		    sr_ethernet_hdr_t * eth_packet = (sr_ethernet_hdr_t *) _packet;
+    		    memcpy(eth_packet->ether_dhost, arp_header->ar_tha, ETHER_ADDR_LEN);
+    		    memcpy(eth_packet->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
+    		    eth_packet->ether_type = htons(ethertype_arp);
+
     		    sr_arp_hdr_t* arp_packet = (sr_arp_hdr_t*)(_packet);
     		    arp_packet->ar_hrd = arp_header->ar_hrd;
 				arp_packet->ar_pro = htons(ethertype_ip);
