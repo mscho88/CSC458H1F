@@ -151,7 +151,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				memcpy(arp_packet->ar_tha, arp_header->ar_sha, ETHER_ADDR_LEN);
 				arp_packet->ar_tip = arp_header->ar_sip;
 
-				print_hdr_arp((uint8_t*)arp_packet);
+				print_hdr_arp((uint8_t*)_packet);
 
 				sr_send_packet(sr, _packet, length, if_walker->name);
 
