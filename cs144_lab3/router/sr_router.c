@@ -235,6 +235,17 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	struct sr_if *dest;
 	if(sr_interface_exist_by_ip(sr->if_list, ip_orig_header->ip_dst)){
 		/* In the routing table, the destination can be verified.*/
+		if(icmp_header->icmp_type == icmp_protocol_type1){
+			printf("icmppppppppppppppp11111\n");
+		}else if(icmp_header->icmp_type == icmp_protocol_type8){
+			printf("icmppppppppppppppp88888\n");
+		}else if(icmp_header->icmp_type == icmp_protocol_type11){
+			printf("icmppppppppppppppp121212\n");
+		}else if(icmp_header->icmp_type == icmp_protocol_type30){
+			printf("icmppppppppppppppp30303030\n");
+		}else{
+
+		}
 		if(htons(ip_orig_header->ip_p) == ip_protocol_icmp){
 			printf("icmppppppppppppppp\n");
 			if(ip_orig_header->ip_ttl > 0){
