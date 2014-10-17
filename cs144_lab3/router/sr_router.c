@@ -225,7 +225,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	printf("you have this %u\n", htons(ip_orig_header->ip_sum));
 	printf("you get this %u\n", htons(cksum(ip_orig_header, ip_orig_header->ip_len*4)));
-	printf("you get this %u\n", header_checksum_m((uint8_t *)ip_orig_header, (uint16_t)(ip_orig_header->ip_hl * IPv4_WORD_SIZE), (uint16_t)IPv4_CHECKSUM_OFFSET, (uint16_t)IPv4_CHECKSUM_LENGTH));
+	printf("you get this %u\n", header_checksum_m((uint8_t *)ip_orig_header, ip_orig_header->ip_hl * IPv4_WORD_SIZE, IPv4_CHECKSUM_OFFSET, IPv4_CHECKSUM_LENGTH));
 	if(htons(ip_orig_header->ip_sum) != cksum(ip_orig_header, ip_orig_header->ip_len)) {
 	        printf("!!! Invalid checksum. \n");
 	        return;
@@ -275,7 +275,7 @@ int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
 	return 0;
 }/* end sr_get_interface_by_ip */
 
-uint16_t *header_checksum_m(uint8_t *buf, uint16_t len, uint16_t cksum_offset, uint16_t cksum_length){
+uint16_t header_checksum_m(uint8_t *buf, int len, int cksum_offset, int cksum_length){
     uint32_t sum = 0;
     uint8_t *header = malloc(sizeof(uint8_t) * len);
 
