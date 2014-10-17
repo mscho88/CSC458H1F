@@ -309,13 +309,13 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	}else{
 		/* USE LPM */
-		struct sr_rt *match_dest = malloc(sizeof(struct sr_rt));
+		struct sr_rt *match_dest = 0;/*malloc(sizeof(struct sr_rt));*/
 		sr_longest_prefix_match(sr, match_dest, ip_orig_header);
 		print_addr_ip(match_dest->dest);
 		print_addr_ip(match_dest->gw);
 		print_addr_ip(match_dest->mask);
 
-		free(match_dest);
+
 	}
 }/* end sr_handlepacket_ip */
 
