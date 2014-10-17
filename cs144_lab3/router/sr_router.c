@@ -314,9 +314,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			print_addr_ip(match_dest->gw);
 			print_addr_ip(match_dest->mask);
 			/* */
-			if(sr_arpcache_lookup(sr->cache, ip_orig_header->ip_dst) != NULL){
 
-			}
 		}else{
 			/* no match found error */
 			/* ICMP net unreachable */
