@@ -231,18 +231,18 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	print_hdr_icmp((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 
 	struct sr_if *dest;
-	if((dest = find_dest_interface(sr->routing_table, ip_orig_header->ip_dst)) != NULL){
-		/* In the routing table, the destination can be verified. */
+	/*if((dest = find_dest_interface(sr->routing_table, ip_orig_header->ip_dst)) != NULL){
+		/* In the routing table, the destination can be verified.
 		if(ip_orig_header->ip_ttl > 0){
 			ip_orig_header->ip_ttl--;
 		}else{
-			/* TTL is over*/
+			/* TTL is over
 
 		}
 	}else{
-		/* In the routing table, the destination cannot be verified. */
+		/* In the routing table, the destination cannot be verified.
 
-	}
+	}*/
 
 	/* If it does not have in the ARP cache, then ARP rep again?*/
 	/* For internet protocol, if there exists any destination in the interface then send the message otherwise drop it....*/
