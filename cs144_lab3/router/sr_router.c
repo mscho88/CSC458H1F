@@ -235,7 +235,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	/* If it does not have in the ARP cache, then ARP rep again?*/
 	/* For internet protocol, if there exists any destination in the interface then send the message otherwise drop it....*/
-	if(is_in_rtable(sr->routing_table, interface)){
+	if(sr_interface_exist(sr->routing_table, interface)){
 		if(ip_orig_header->ip_p == ip_protocol_icmp){
 			if(ip_orig_header->ip_ttl > 0){
 				ip_orig_header->ip_ttl--;
@@ -277,3 +277,13 @@ int is_in_rtable(struct sr_rt *rtable, char* interface){
 	}
 	return 0;
 }
+
+int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
+	while(interfaces){
+		if(interfaces->ip == dest_ip){
+			return 1;
+		}
+		interfaces = interfaces->next;
+	}
+	return 0;
+}/* end sr_get_interface_by_ip */
