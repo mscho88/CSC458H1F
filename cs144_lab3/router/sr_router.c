@@ -218,7 +218,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-   	print_hdr_eip((uint8_t*)ip_orig_header);
+   	print_hdr_ip((uint8_t*)ip_orig_header);
 
 
 	/* Check whether there exists the destination from the packet is in the route table.*/
