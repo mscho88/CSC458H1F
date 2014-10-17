@@ -227,7 +227,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	print_hdr_icmp((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 
 	struct sr_if *dest;
-	if((dest = find_dest_interface(sr->routing_table, ip_orig_header->ip_dst)) != NULL){
+	if((dest = find_dest_interface(sr, ip_orig_header->ip_dst)) != NULL){
 		/* In the routing table, the destination can be verified.*/
 		if(ip_orig_header->ip_ttl > 0){
 			ip_orig_header->ip_ttl--;
@@ -275,7 +275,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 }/* end sr_handlepacket_ip */
 
-struct sr_if *find_dest_interface(struct sr_instance* sr, struct sr_rt* rtable, uint32_t* destination){
+struct sr_if *find_dest_interface(struct sr_instance* sr, uint32_t* destination){
+	struct sr_rt* rtable = sr->routing_table;
 	while(rtable){
 		if((uint32_t*)rtable->dest->s_addr == destination){
 			return sr_get_interface(sr, rtable->interface);
