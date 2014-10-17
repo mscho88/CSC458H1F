@@ -223,8 +223,20 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr
 }
 
 void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* if_walker){
-
+	sr_ip_hdr_t *ip_tmp_header = (sr_ip_hdr_t *)_packet;
+	ip_tmp_header->ip_hl = ip_header->ip_hl;
+	ip_tmp_header->ip_v = ip_header->ip_v;
+	ip_tmp_header->ip_tos = ip_header->ip_tos;
+	ip_tmp_header->ip_len = ip_header->ip_len;
+	ip_tmp_header->ip_id = ip_header->ip_id;
+	ip_tmp_header->ip_off = ip_header->ip_off;
+	ip_tmp_header->ip_ttl = ip_header->ip_ttl;
+	ip_tmp_header->ip_p = ip_header->ip_p;
+	ip_tmp_header->ip_sum = 0;
+	ip_tmp_header->ip_src = /*myself*/ip_header->ip_src;
+	ip_tmp_header->ip_dst = ip_header->ip_dst;
 }
+
 void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_if* if_walker){
 
 }
