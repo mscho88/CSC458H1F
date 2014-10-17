@@ -214,8 +214,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	assert(interface);
 
 	sr_print_routing_table(sr);
+	print_addr_ip_int((uint32_t*)sr->routing_table->dest->s_addr);
+
+
    	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	struct sr_arpentry *ip_entry;
+
+	/* Check whether there exists the destination from the packet is in the route table.*/
+	ip_orig_header->ip_dst;
 
 	/* Check the routing table */
 	if(is_in_rtable(sr->routing_table, interface)){
