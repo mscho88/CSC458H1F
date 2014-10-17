@@ -217,7 +217,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t*)packet;
 	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-	if(ip_orig_header->ip_sum != cksum(ip_orig_header, ip_orig_header->ip_len*4)) {
+	if(ip_orig_header->ip_sum != cksum(ip_orig_header, ip_orig_header->ip_len)) {
 	        printf("!!! Invalid checksum. \n");
 	        return;
 	}
