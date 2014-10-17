@@ -276,31 +276,3 @@ int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
 	}
 	return 0;
 }/* end sr_get_interface_by_ip */
-
-uint16_t header_checksum_m(uint8_t *buf, int len, int cksum_offset, int cksum_length){
-    uint32_t sum = 0;
-    uint8_t *header = malloc(sizeof(uint8_t) * len);
-
-    /* Copy over buffer */
-    memcpy(header, buf, len);
-
-    /* Set header checksum to zero */
-    memset(header + cksum_offset, 0x0, cksum_length);
-
-    /* Calculate 16 bit sum */
-    for(int i=0; i < len; i+=2) {
-        sum += (uint32_t)(header[i] << 8 | header[i+1]);
-    }
-
-    /* Fold 32 bit number to 16 bit */
-    while(sum >> 16)
-        sum = (sum >> 16) + (sum & 0xffff);
-
-    /* One's Complement */
-    sum = ~sum;
-
-    /* Free up allocated buffer */
-    free(header);
-
-    return sum;
-}
