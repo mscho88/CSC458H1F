@@ -219,7 +219,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	print_hdr_ip(ip_orig_header);
 
 	printf("you have this %u\n", htons(ip_orig_header->ip_sum));
-	printf("you get this %u\n", htons(cksum(ip_orig_header, ip_orig_header->ip_len)));
+	printf("you get this %u\n", htons(cksum(ip_orig_header, ip_orig_header->ip_len*4)));
 	if(htons(ip_orig_header->ip_sum) != cksum(ip_orig_header, ip_orig_header->ip_len)) {
 	        printf("!!! Invalid checksum. \n");
 	        return;
