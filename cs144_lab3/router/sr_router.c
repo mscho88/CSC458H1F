@@ -231,6 +231,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	        return;
 	}
 
+	printf("you get this %u\n", cksum((uint8_t*)ip_orig_header, IPV4_HEADER_LEN));
+
 	/* Check whether there exists the destination from the packet is in the route table.*/
 	/*sr_print_routing_table(sr);
 	print_hdr_eth(eth_orig_header);
