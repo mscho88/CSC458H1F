@@ -221,7 +221,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
    	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-   	print_hdr_ip((uint8_t*)ip_orig_header);
+   	print_hdr_eip((uint8_t*)ip_orig_header);
 
 
 	/* Check whether there exists the destination from the packet is in the route table.*/
@@ -271,16 +271,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}
 
 }/* end sr_handlepacket_ip */
-
-int is_in_rtable(struct sr_rt *rtable, char* interface){
-	while(rtable){
-		if(strcmp(rtable->interface, interface)){
-			return 1;
-		}
-		rtable = rtable->next;
-	}
-	return 0;
-}
 
 int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
 	while(interfaces){
