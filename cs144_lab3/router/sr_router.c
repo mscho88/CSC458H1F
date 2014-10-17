@@ -218,10 +218,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t*)packet;
 	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-	if(cksum(ip_orig_header, ip_orig_header->ip_hl+1) != 0){
-		printf("lets hav dinner\n");
-	}
-
 	/* Check whether there exists the destination from the packet is in the route table.*/
 	ip_orig_header->ip_dst;
 
@@ -231,7 +227,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	print_hdr_icmp((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 
 	struct sr_if *dest;
-	/*if((dest = find_dest_interface(sr->routing_table, ip_orig_header->ip_dst)) != NULL){
+	if((dest = find_dest_interface(sr->routing_table, ip_orig_header->ip_dst)) != NULL){
 		/* In the routing table, the destination can be verified.
 		if(ip_orig_header->ip_ttl > 0){
 			ip_orig_header->ip_ttl--;
@@ -242,7 +238,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}else{
 		/* In the routing table, the destination cannot be verified.
 
-	}*/
+	}
 
 	/* If it does not have in the ARP cache, then ARP rep again?*/
 	/* For internet protocol, if there exists any destination in the interface then send the message otherwise drop it....*/
@@ -280,12 +276,12 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 }/* end sr_handlepacket_ip */
 
 struct sr_if *find_dest_interface(struct sr_instance* sr, struct sr_rt* rtable, uint32_t* destination){
-	/*while(rtable){
-		if(rtable->dest->s_addr == destination){
+	while(rtable){
+		if((uint32_t*)rtable->dest->s_addr == destination){
 			return sr_get_interface(sr, rtable->interface);
 		}
 		rtable = rtable->next;
-	}*/
+	}
 	return NULL;
 }/* end find_dest_interface */
 
