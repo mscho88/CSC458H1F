@@ -309,15 +309,26 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	}else{
 		/* USE LPM */
-		struct sr_if *match_if = malloc(sizeof(struct sr_if));
-		sr_longest_prefix_match(sr, match_if, ip_orig_header);
+		struct sr_rt *match_dest = malloc(sizeof(struct sr_rt));
+		sr_longest_prefix_match(sr, match_dest, ip_orig_header);
+		print_addr_ip(match_dest->dest);
+		print_addr_ip(match_dest->gw);
+		print_addr_ip(match_dest->mask);
+
+		free(match_dest);
 	}
 }/* end sr_handlepacket_ip */
 
-void sr_longest_prefix_match(struct sr_instance *sr, struct sr_if *match_if, sr_ip_hdr_t *ip_header){
+void sr_longest_prefix_match(struct sr_instance *sr, struct sr_rt *match_dest, sr_ip_hdr_t *ip_header){
 	struct sr_rt *rtable = sr->routing_table;
-	while(rtable){
-		printf("%s\n", inet_aton(rtable->mask));
+
+	while(rtable != 0){
+		if((ip_header->ip_dst & rtable->mask.s_addr) == (rtable->dest.s_addr & rtable->mask.s_addr)){
+			if(match_dest == 0)
+				match_dest = rtable;
+			else if(match_dest->mask.s_addr < rtable->mask.s_addr)
+				match_dest = rtable;
+		}
 		rtable = rtable->next;
 	}
 }
