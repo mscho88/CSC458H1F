@@ -218,7 +218,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	print_hdr_ip((sr_ip_hdr_t*)(packet+sizeof(sr_ethernet_hdr_t)));
 
-	print_hdr_icmp((sr_icmp_hdr_t*)(packet+sizeof(sr_ethernet_hdr_t)));
+	print_hdr_icmp((sr_icmp_hdr_t*)(packet+sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)));
 	/* If it does not have in the ARP cache, then ARP rep again?*/
 	/* For internet protocol, if there exists any destination in the interface then send the message otherwise drop it....*/
 	if(sr_interface_exist(sr_get_interface(sr, interface), ip_orig_header->ip_dst)){
