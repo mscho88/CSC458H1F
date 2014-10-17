@@ -275,7 +275,7 @@ int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
 	return 0;
 }/* end sr_get_interface_by_ip */
 
-uint16_t header_checksum_m(uint8_t *buf, uint16_t len, uint16_t cksum_offset, uint16_t cksum_length){
+uint16_t *header_checksum_m(uint8_t *buf, uint16_t len, uint16_t cksum_offset, uint16_t cksum_length){
     uint32_t sum = 0;
     uint8_t *header = malloc(sizeof(uint8_t) * len);
 
