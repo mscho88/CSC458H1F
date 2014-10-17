@@ -309,12 +309,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	}else{
 		/* USE LPM */
-		struct sr_rt *match_dest = malloc(sizeof(struct sr_rt));
-		print_addr_ip(match_dest->dest);
-		print_addr_ip(match_dest->gw);
-		print_addr_ip(match_dest->mask);
-
-		sr_longest_prefix_match(sr, match_dest, ip_orig_header);
+		struct sr_rt *match_dest = sr_longest_prefix_match(sr, ip_orig_header);
 		print_addr_ip(match_dest->dest);
 		print_addr_ip(match_dest->gw);
 		print_addr_ip(match_dest->mask);
@@ -323,8 +318,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}
 }/* end sr_handlepacket_ip */
 
-void sr_longest_prefix_match(struct sr_instance *sr, struct sr_rt *match_dest, sr_ip_hdr_t *ip_header){
+struct sr_rt* sr_longest_prefix_match(struct sr_instance *sr, sr_ip_hdr_t *ip_header){
 	struct sr_rt *rtable = sr->routing_table;
+	struct sr_rt *match_dest = 0;
 
 	while(rtable){
 		if((ip_header->ip_dst & rtable->mask.s_addr) == (rtable->dest.s_addr & rtable->mask.s_addr)){
@@ -335,6 +331,7 @@ void sr_longest_prefix_match(struct sr_instance *sr, struct sr_rt *match_dest, s
 		}
 		rtable = rtable->next;
 	}
+	return match_dest;
 }
 
 int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
