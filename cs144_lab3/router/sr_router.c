@@ -218,7 +218,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t*)packet;
 	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-	if(cksum(ip_orig_header, ip_orig_header->ip_hl) != 0){
+	if(cksum(ip_orig_header, ip_orig_header->ip_hl+1) != 0){
 		printf("lets hav dinner\n");
 	}
 
