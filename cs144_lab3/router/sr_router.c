@@ -215,11 +215,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 
 	sr_print_routing_table(sr);
-	print_addr_ip_int((uint32_t*)sr->routing_table->dest->s_addr);
 
-
-
-   	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
    	print_hdr_eip((uint8_t*)ip_orig_header);
 
