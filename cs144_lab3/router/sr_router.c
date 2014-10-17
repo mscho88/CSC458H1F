@@ -216,12 +216,20 @@ void sr_handlepacket_ip(struct sr_instance* sr,
    	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	struct sr_arpentry *ip_entry;
 
-	print_hdr_ip((sr_ip_hdr_t*)(packet+sizeof(sr_ethernet_hdr_t)));
+	/* Check the routing table */
+	if(is_in_rtable(sr->routing_table, interface)){
 
-	print_hdr_icmp((sr_icmp_hdr_t*)(packet+sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)));
+		return;
+	}
+
+
+	sr_print_routing_table(sr);
+	print_hdr_ip((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+	print_hdr_icmp((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
+
 	/* If it does not have in the ARP cache, then ARP rep again?*/
 	/* For internet protocol, if there exists any destination in the interface then send the message otherwise drop it....*/
-	if(sr_interface_exist(sr_get_interface(sr, interface), ip_orig_header->ip_dst)){
+	if(is_in_rtable(sr->routing_table, interface)){
 		if(ip_orig_header->ip_p == ip_protocol_icmp){
 			if(ip_orig_header->ip_ttl > 0){
 				ip_orig_header->ip_ttl--;
@@ -253,6 +261,16 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}
 
 }/* end sr_handlepacket_ip */
+
+int is_in_rtable(struct sr_rt *rtable, char* interface){
+	while(rtable){
+		if(strcmp(rtable->interface, interface)){
+			return 1;
+		}
+		rtable = rtable->next;
+	}
+	return 0;
+}
 
 int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
 	while(interfaces){
