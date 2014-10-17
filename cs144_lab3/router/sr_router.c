@@ -317,7 +317,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 void sr_longest_prefix_match(struct sr_instance *sr, struct sr_if *match_if, sr_ip_hdr_t *ip_header){
 	struct sr_rt *rtable = sr->routing_table;
 	while(rtable){
-		printf("%u\n", rtable->mask->s_addr);
+		printf("%u\n", rtable->mask);
 		rtable = rtable->next;
 	}
 }
