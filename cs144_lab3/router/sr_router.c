@@ -223,14 +223,10 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	print_hdr_ip(ip_orig_header);
 
-	printf("you have this ip %u\n", ip_orig_header->ip_sum);
-	printf("you have this icmp %u\n", icmp_header->ip_sum);
 
 	printf("you have this %u\n", htons(ip_orig_header->ip_sum));
-	printf("you get this %u\n", cksum(ip_orig_header, ip_orig_header->ip_len*16));
 
-	printf("you get this %u\n", cksum(ip_orig_header, 0));
-	printf("you get this %u\n", htons(cksum(ip_orig_header, ip_orig_header->ip_len*4)));
+	printf("you get this %u\n", cksum(ip_orig_header, 20));
 	if(htons(ip_orig_header->ip_sum) != cksum(ip_orig_header, ip_orig_header->ip_len)) {
 	        printf("!!! Invalid checksum. \n");
 	        return;
