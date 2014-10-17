@@ -262,6 +262,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}else{
 		/* In the routing table, the destination cannot be verified.*/
 		/* you need to broadcast to all interfaces */
+		printf("hohohoho");
 		struct sr_if* interfaces = sr->if_list;
 		while(interfaces){
 			if(dest->ip != ip_orig_header->ip_src){
