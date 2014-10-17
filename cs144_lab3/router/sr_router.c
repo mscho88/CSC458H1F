@@ -283,7 +283,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}else if(icmp_header->icmp_type == icmp_protocol_type8){
 			/* ICMP Echo Request */
 			printf("ICMP Echo Request\n");
-			/*send_icmp_message(sr, eth_orig_header, ip_orig_header, icmp_header, icmp_protocol_type8);*/
+
 		}else if(icmp_header->icmp_type == icmp_protocol_type11){
 			/* Time Exceeded */
 			printf("ICMP Time Exceeded\n");
@@ -308,18 +308,19 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}
 
 	}else{
-		/* In the routing table, the destination cannot be verified.*/
-		/* you need to broadcast to all interfaces */
-		printf("hohohoho");
-		struct sr_if* interfaces = sr->if_list;
-		while(interfaces){
-			if(dest->ip != ip_orig_header->ip_src){
-				/*send packet must be arp reply to all the interfaces */
-			}
-			interfaces = interfaces->next;
-		}
+		/* USE LPM */
+		struct sr_if *match_if = malloc(sizeof(struct sr_if));
+		sr_longest_prefix_match(sr, match_if, ip_orig_header);
 	}
 }/* end sr_handlepacket_ip */
+
+void sr_longest_prefix_match(struct sr_instance *sr, struct sr_if *match_if, sr_ip_hdr_t *ip_header){
+	struct sr_rt *rtable = sr->routing_table;
+	while(rtable){
+		printf("%u\n", rtable->mask->s_addr);
+		rtable = rtable->next;
+	}
+}
 
 int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
 	while(interfaces){
