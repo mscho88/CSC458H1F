@@ -280,12 +280,12 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 }/* end sr_handlepacket_ip */
 
 struct sr_if *find_dest_interface(struct sr_instance* sr, struct sr_rt* rtable, uint32_t* destination){
-	while(rtable){
+	/*while(rtable){
 		if(rtable->dest->s_addr == destination){
 			return sr_get_interface(sr, rtable->interface);
 		}
 		rtable = rtable->next;
-	}
+	}*/
 	return NULL;
 }/* end find_dest_interface */
 
