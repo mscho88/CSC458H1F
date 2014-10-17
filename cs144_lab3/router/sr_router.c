@@ -323,7 +323,7 @@ struct sr_rt sr_longest_prefix_match(struct sr_instance *sr, struct sr_rt match_
 	while(temp){
 		if((ip_header->ip_dst & temp->mask.s_addr) == (temp->dest.s_addr & temp->mask.s_addr)){
 			if(match_dest == 0 || match_dest->mask.s_addr < temp->mask.s_addr){
-				match_dest = temp;
+				match_dest = *temp;
 			}
 		}
 		temp = temp->next;
