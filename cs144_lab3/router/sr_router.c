@@ -118,6 +118,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	assert(interface);
 
 	/* Set the packet to the ARP header */
+	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *) packet;
     sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
     if(htons(arp_orig_header->ar_op) == arp_op_request){
@@ -130,13 +131,13 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		struct sr_arpreq *arp_cache;
     		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_orig_header->ar_sha, arp_orig_header->ar_sip)) == NULL){
     			/* Send ARP reply message */
-        		send_packet(sr, packet, interface);
+        		send_packet(sr, packet, interface, htons(eth_header->ether_type), 0);
     		}else{
     			Debug("Error on caching the sender information. \n");
     		}
     	}else{
     		/* Send ARP reply message */
-    		send_packet(sr, packet, interface);
+    		send_packet(sr, packet, interface, htons(eth_header->ether_type), 0);
     	}
     }else if(htons(arp_orig_header->ar_op) == arp_op_reply){
     	/* If the packet is ARP reply, then the router ....*/
@@ -151,19 +152,41 @@ void sr_handlepacket_arp(struct sr_instance* sr,
  * This method is called when the router needs to send a packet.
  *
  *---------------------------------------------------------------------*/
-void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface){
-	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t *)packet;
+void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t protocol, int type){
+	unsigned int length;
 
-	sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-	unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-	struct sr_if *interfaces = sr_get_interface(sr, interface);
+	sr_ethernet_hdr_t* eth_header = (sr_ethernet_hdr_t *)packet;
+	if(protocol == ethertype_arp){
+		sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-	uint8_t* _packet = (uint8_t*)malloc(length);
-	build_ether_header(_packet, eth_orig_header, interfaces);
-	build_arp_header(_packet + sizeof(sr_ethernet_hdr_t), arp_orig_header, interfaces);
+		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 
-	sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
-	free(_packet);
+		struct sr_if *interfaces = sr_get_interface(sr, interface);
+
+		uint8_t* _packet = (uint8_t*)malloc(length);
+
+		build_ether_header(_packet, eth_header, interfaces);
+		build_arp_header(_packet + sizeof(sr_ethernet_hdr_t), arp_header, interfaces);
+
+		sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
+		free(_packet);
+	}else if(protocol == ethertype_ip){
+		sr_ip_hdr_t* ip_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+		sr_icmp_hdr_t* icmp_header =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
+
+		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t);
+
+		struct sr_if *interfaces = sr_get_interface(sr, interface);
+
+		uint8_t* _packet = (uint8_t*)malloc(length);
+
+		build_ether_header(_packet, eth_header, interfaces);
+		build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
+		build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), icmp_header, interfaces);
+
+		sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
+		free(_packet);
+	}
 }
 
 /*---------------------------------------------------------------------
@@ -233,18 +256,24 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	/* Check whether there exists the destination from the packet is in the route table.*/
 	struct sr_if *dest;
-	if(sr_interface_exist_by_ip(sr->if_list, ip_orig_header->ip_dst)){
+	if(is_for_me(sr->if_list, ip_orig_header->ip_dst)){
 		/* In the routing table, the destination can be verified.*/
 		if(icmp_header->icmp_type == icmp_protocol_type1){
-			printf("icmppppppppppppppp11111\n");
+			/* ICMP Echo Reply */
+			printf("ICMP Echo Reply\n");
 		}else if(icmp_header->icmp_type == icmp_protocol_type8){
-			printf("icmppppppppppppppp88888\n");
+			/* ICMP Echo Request */
+			printf("ICMP Echo Request\n");
+			send_icmp_message(sr, eth_orig_header, ip_orig_header, icmp_header, icmp_protocol_type8);
 		}else if(icmp_header->icmp_type == icmp_protocol_type11){
-			printf("icmppppppppppppppp121212\n");
+			/* Time Exceeded */
+			printf("ICMP Time Exceeded\n");
 		}else if(icmp_header->icmp_type == icmp_protocol_type30){
-			printf("icmppppppppppppppp30303030\n");
+			/* Traceroute */
+			printf("ICMP Traceroute\n");
 		}else{
-			printf("aaaaaaa");
+			/* ICMP Port Unreachable */
+			fprintf(stderr, "ICMP port unreachable. \n");
 		}
 		if(htons(ip_orig_header->ip_p) == ip_protocol_icmp){
 			printf("icmppppppppppppppp\n");
@@ -273,7 +302,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}
 }/* end sr_handlepacket_ip */
 
-int sr_interface_exist_by_ip(struct sr_if* interfaces, uint32_t* dest_ip){
+int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
 	while(interfaces){
 		if(interfaces->ip == dest_ip){
 			return 1;
@@ -282,3 +311,18 @@ int sr_interface_exist_by_ip(struct sr_if* interfaces, uint32_t* dest_ip){
 	}
 	return 0;
 }/* end sr_get_interface_by_ip */
+
+void send_icmp_message(struct sr_instance *sr, sr_ethernet_hdr_t eth_orig_header, sr_ip_hdr_t ip_orig_header, icmp_header, sr_icmp_hdr_t icmp_protocol_type8){
+	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t *)packet;
+
+	sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+	unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+	struct sr_if *interfaces = sr_get_interface(sr, interface);
+
+	uint8_t* _packet = (uint8_t*)malloc(length);
+	build_ether_header(_packet, eth_orig_header, interfaces);
+	build_arp_header(_packet + sizeof(sr_ethernet_hdr_t), arp_orig_header, interfaces);
+
+	sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
+	free(_packet);
+}/* end send_icmp_message */
