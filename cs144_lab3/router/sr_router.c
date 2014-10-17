@@ -219,7 +219,10 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	print_hdr_ip(ip_orig_header);
 
 	printf("you have this %u\n", ip_orig_header->ip_sum);
+
+	printf("you have this %u\n", htons(ip_orig_header->ip_sum));
 	printf("you get this %u\n", htons(cksum(ip_orig_header, ip_orig_header->ip_len*4)));
+	printf("you get this %u\n", header_checksum((uint8_t*)ip_orig_header, ip_orig_header->ip_hl * 4, 10, 2));
 	if(htons(ip_orig_header->ip_sum) != cksum(ip_orig_header, ip_orig_header->ip_len)) {
 	        printf("!!! Invalid checksum. \n");
 	        return;
@@ -269,4 +272,31 @@ int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
 	return 0;
 }/* end sr_get_interface_by_ip */
 
+uint16_t header_checksum(uint8_t *buf, uint16_t len, uint16_t cksum_offset, uint16_t cksum_length)
+{
+    uint32_t sum = 0;
+    uint8_t *header = malloc(sizeof(uint8_t) * len);
 
+    /* Copy over buffer */
+    memcpy(header, buf, len);
+
+    /* Set header checksum to zero */
+    memset(header + cksum_offset, 0x0, cksum_length);
+
+    /* Calculate 16 bit sum */
+    for(int i=0; i < len; i+=2) {
+        sum += (uint32_t)(header[i] << 8 | header[i+1]);
+    }
+
+    /* Fold 32 bit number to 16 bit */
+    while(sum >> 16)
+        sum = (sum >> 16) + (sum & 0xffff);
+
+    /* One's Complement */
+    sum = ~sum;
+
+    /* Free up allocated buffer */
+    free(header);
+
+    return sum;
+}
