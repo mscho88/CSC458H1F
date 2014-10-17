@@ -213,8 +213,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	assert(packet);
 	assert(interface);
 
+
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t*)packet;
 	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+
+	if(ntohs(ip_orig_header->ip_sum) != cksum(ip_orig_header, ip_orig_header->ip_hl)) {
+	        printf("!!! Invalid checksum. \n");
+	        return;
+	}
 
 	/* Check whether there exists the destination from the packet is in the route table.*/
 	ip_orig_header->ip_dst;
@@ -225,15 +231,20 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	print_hdr_icmp((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 
 	struct sr_if *dest;
-	if((dest = find_dest_interface(sr, ip_orig_header->ip_dst)) != NULL){
+	if(sr_interface_exist(sr->if_list, ip_orig_header->ip_dst)){
 		/* In the routing table, the destination can be verified.*/
-		if(ip_orig_header->ip_ttl > 0){
-			ip_orig_header->ip_ttl--;
-			/*send the packet to the destination */
+		if(ip_orig_header->ip_p == ip_protocol_icmp){
+			if(ip_orig_header->ip_ttl > 0){
+				ip_orig_header->ip_ttl--;
+					/*send the packet to the destination */
+			}else{
+					/* TTL is over. Hence, drop the packet and send the TTL is over. */
+			}
 		}else{
-			/* TTL is over*/
-
+			fprintf(stderr, "ICMP port unreachable. \n");
+			/* send packet that icmp is unreachable*/
 		}
+
 	}else{
 		/* In the routing table, the destination cannot be verified.*/
 		/* you need to broadcast to all interfaces */
@@ -246,17 +257,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}
 	}
 }/* end sr_handlepacket_ip */
-
-struct sr_if *find_dest_interface(struct sr_instance* sr, uint32_t* destination){
-	struct sr_rt* rtable = sr->routing_table;
-	while(rtable){
-		if((uint32_t*)rtable->dest->s_addr == destination){
-			return sr_get_interface(sr, rtable->interface);
-		}
-		rtable = rtable->next;
-	}
-	return NULL;
-}/* end find_dest_interface */
 
 int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
 	while(interfaces){
