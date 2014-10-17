@@ -213,16 +213,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	assert(packet);
 	assert(interface);
 
-	sr_print_routing_table(sr);
-
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t*)packet;
 	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
 	/* Check whether there exists the destination from the packet is in the route table.*/
 	ip_orig_header->ip_dst;
 
+	sr_print_routing_table(sr);
 	print_hdr_eth(eth_orig_header);
-
 	print_hdr_ip((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	print_hdr_icmp((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 
@@ -231,48 +229,22 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		/* In the routing table, the destination can be verified.*/
 		if(ip_orig_header->ip_ttl > 0){
 			ip_orig_header->ip_ttl--;
+			/*send the packet to the destination */
 		}else{
 			/* TTL is over*/
 
 		}
 	}else{
 		/* In the routing table, the destination cannot be verified.*/
-
-	}
-
-	/* If it does not have in the ARP cache, then ARP rep again?*/
-	/* For internet protocol, if there exists any destination in the interface then send the message otherwise drop it....*/
-	if(sr_interface_exist(sr->routing_table, interface)){
-		if(ip_orig_header->ip_p == ip_protocol_icmp){
-			if(ip_orig_header->ip_ttl > 0){
-				ip_orig_header->ip_ttl--;
-				/* checksum validation */
-
-				/* Send the packet to the destination. The router needs to change the source and the destination. Also, need to consider the checksum */
-				/* IP packet is sent */
-				/* Consider check sum*/
-
-			}else{
-				/* icmp time out , need to send a packet indicating icmp time out*/
+		/* you need to broadcast to all interfaces */
+		struct sr_if* interfaces = sr->if_list;
+		while(interfaces){
+			if(dest->ip != ip_orig_header->ip_src){
+				/*send packet must be arp reply to all the interfaces */
 			}
-		}else{
-			fprintf(stderr, "Received Unsupported Packet from ");
-			print_addr_ip_int(ip_orig_header->ip_src);
-			fprintf(stderr, "\n");
-			/* send back the packet to the source */
-		}
-
-
-	}else{
-		/*drop?*/
-		if(ip_orig_header->ip_ttl > 0){
-			ip_orig_header->ip_ttl--;
-			/*ip_orig_header->ip_sum = checksum*/
-			/*send_packet*/
-
+			interfaces = interfaces->next;
 		}
 	}
-
 }/* end sr_handlepacket_ip */
 
 struct sr_if *find_dest_interface(struct sr_instance* sr, uint32_t* destination){
