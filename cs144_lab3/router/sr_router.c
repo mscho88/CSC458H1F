@@ -22,6 +22,9 @@
 #include "sr_arpcache.h"
 #include "sr_utils.h"
 
+#define IPv4_CHECKSUM_OFFSET 10
+#define IPv4_CHECKSUM_LENGTH 2
+#define IPv4_WORD_SIZE 4
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
  * Scope:  Global
@@ -222,7 +225,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	printf("you have this %u\n", htons(ip_orig_header->ip_sum));
 	printf("you get this %u\n", htons(cksum(ip_orig_header, ip_orig_header->ip_len*4)));
-	printf("you get this %u\n", header_checksum((uint8_t*)ip_orig_header, ip_orig_header->ip_hl * 4, 10, 2));
+	printf("you get this %u\n", header_checksum((uint8_t*)ip_orig_header, ip_orig_header->ip_hl * IPv4_WORD_SIZE, IPv4_CHECKSUM_OFFSET, IPv4_CHECKSUM_LENGTH));
 	if(htons(ip_orig_header->ip_sum) != cksum(ip_orig_header, ip_orig_header->ip_len)) {
 	        printf("!!! Invalid checksum. \n");
 	        return;
