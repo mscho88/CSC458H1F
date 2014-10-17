@@ -116,7 +116,10 @@ struct sr_ip_hdr
     unsigned int ip_v:4;		/* version */
     unsigned int ip_hl:4;		/* header length */
 #else
-#error "Byte ordering ot specified " 
+/*#error "Byte ordering ot specified "*/
+    /* Mac OS X Hack Fix*/
+    unsigned int ip_v:4;		/* version */
+    unsigned int ip_hl:4;		/* header length */
 #endif 
     uint8_t ip_tos;			/* type of service */
     uint16_t ip_len;			/* total length */
