@@ -222,10 +222,11 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	print_hdr_ip(ip_orig_header);
 
-
+	uint16_t t = ip_orig_header->ip_sum;
+	ip_orig_header->ip_sum = 0;
 	printf("you get this %u\n", cksum((uint8_t*)ip_orig_header, IPV4_HEADER_LEN));
 
-	if(ip_orig_header->ip_sum != cksum((uint8_t*)ip_orig_header, IPV4_HEADER_LEN)) {
+	if(t != cksum((uint8_t*)ip_orig_header, IPV4_HEADER_LEN)) {
 	        printf("!!! Invalid checksum. \n");
 	        return;
 	}
