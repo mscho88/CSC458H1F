@@ -222,10 +222,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	print_hdr_ip(ip_orig_header);
 
-	printf("you have this %u\n", htons(ip_orig_header->ip_sum));
 	ip_orig_header->ip_sum = 0;
 
-	printf("you have this %u\n", htons(ip_orig_header->ip_sum));
 	printf("you get this %u\n", cksum((uint8_t*)ip_orig_header, IPV4_HEADER_LEN));
 
 	if(ip_orig_header->ip_sum != cksum((uint8_t*)ip_orig_header, IPV4_HEADER_LEN)) {
