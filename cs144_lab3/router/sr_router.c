@@ -219,13 +219,15 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t*)packet;
 	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
+	sr_ip_hdr_t* icmp_header =  ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
+
 	print_hdr_ip(ip_orig_header);
 
-	printf("you have this %u\n", ip_orig_header->ip_sum);
+	printf("you have this ip %u\n", ip_orig_header->ip_sum);
+	printf("you have this icmp %u\n", icmp_header->ip_sum);
 
 	printf("you have this %u\n", htons(ip_orig_header->ip_sum));
 	printf("you get this %u\n", htons(cksum(ip_orig_header, ip_orig_header->ip_len*4)));
-	printf("you get this %u\n", header_checksum_m((uint8_t *)ip_orig_header, ip_orig_header->ip_hl * IPv4_WORD_SIZE, IPv4_CHECKSUM_OFFSET, IPv4_CHECKSUM_LENGTH));
 	if(htons(ip_orig_header->ip_sum) != cksum(ip_orig_header, ip_orig_header->ip_len)) {
 	        printf("!!! Invalid checksum. \n");
 	        return;
