@@ -308,23 +308,27 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}
 
 	}else{
-		/* USE LPM */
 		struct sr_rt *match_dest;
 		if((match_dest = sr_longest_prefix_match(sr->routing_table, ip_orig_header)) != 0){
+			print_addr_ip(match_dest->dest);
+			print_addr_ip(match_dest->gw);
+			print_addr_ip(match_dest->mask);
+			/* */
+			if(sr_arpcache_lookup(sr->cache, ip_orig_header->ip_dst) != NULL){
 
+			}
+		}else{
+			/* no match found error */
+			/* ICMP net unreachable */
 		}
-		print_addr_ip(match_dest->dest);
-		print_addr_ip(match_dest->gw);
-		print_addr_ip(match_dest->mask);
-
 	}
 }/* end sr_handlepacket_ip */
 
 struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_header){
 	struct sr_rt *best = 0;
-	while(rtable != 0){
+	while(rtable){
 		if((rtable->dest.s_addr & rtable->mask.s_addr) == (ip_header->ip_dst & rtable->mask.s_addr)){
-			if(best == 0 || best->mask.s_addr < rtable->mask.s_addr){
+			if(best == 0 || rtable->mask.s_addr > best->mask.s_addr){
 				best = rtable;
 			}
 		}
