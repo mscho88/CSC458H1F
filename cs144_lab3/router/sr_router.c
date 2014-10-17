@@ -244,7 +244,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}else if(icmp_header->icmp_type == icmp_protocol_type30){
 			printf("icmppppppppppppppp30303030\n");
 		}else{
-
+			printf("aaaaaaa");
 		}
 		if(htons(ip_orig_header->ip_p) == ip_protocol_icmp){
 			printf("icmppppppppppppppp\n");
