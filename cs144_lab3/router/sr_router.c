@@ -225,9 +225,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 
 	printf("you have this %u\n", htons(ip_orig_header->ip_sum));
-
 	printf("you get this %u\n", cksum(ip_orig_header, 20));
-	if(htons(ip_orig_header->ip_sum) != cksum(ip_orig_header, ip_orig_header->ip_len)) {
+
+	if(htons(ip_orig_header->ip_sum) != cksum(ip_orig_header, 20)) {
 	        printf("!!! Invalid checksum. \n");
 	        return;
 	}
