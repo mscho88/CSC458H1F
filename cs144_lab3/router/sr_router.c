@@ -220,7 +220,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 
 
-	if(htons(ip_orig_header->ip_sum) != cksum(ip_orig_header, ip_orig_header->ip_hl)) {
+	if(htons(ip_orig_header->ip_sum) != cksum(ip_orig_header, ip_orig_header->ip_len)) {
 	        printf("!!! Invalid checksum. \n");
 	        return;
 	}
