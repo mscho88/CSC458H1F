@@ -222,6 +222,13 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr
 	arp_tmp_header->ar_tip = arp_orig_header->ar_sip;
 }
 
+void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* if_walker){
+
+}
+void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_if* if_walker){
+
+}
+
 /*---------------------------------------------------------------------
  * Method: sr_handlepacket(uint8_t* p,char* interface)
  * Scope:  Global
@@ -264,7 +271,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}else if(icmp_header->icmp_type == icmp_protocol_type8){
 			/* ICMP Echo Request */
 			printf("ICMP Echo Request\n");
-			send_icmp_message(sr, eth_orig_header, ip_orig_header, icmp_header, icmp_protocol_type8);
+			/*send_icmp_message(sr, eth_orig_header, ip_orig_header, icmp_header, icmp_protocol_type8);*/
 		}else if(icmp_header->icmp_type == icmp_protocol_type11){
 			/* Time Exceeded */
 			printf("ICMP Time Exceeded\n");
@@ -311,18 +318,3 @@ int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
 	}
 	return 0;
 }/* end sr_get_interface_by_ip */
-
-void send_icmp_message(struct sr_instance *sr, sr_ethernet_hdr_t eth_orig_header, sr_ip_hdr_t ip_orig_header, icmp_header, sr_icmp_hdr_t icmp_protocol_type8){
-	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t *)packet;
-
-	sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-	unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-	struct sr_if *interfaces = sr_get_interface(sr, interface);
-
-	uint8_t* _packet = (uint8_t*)malloc(length);
-	build_ether_header(_packet, eth_orig_header, interfaces);
-	build_arp_header(_packet + sizeof(sr_ethernet_hdr_t), arp_orig_header, interfaces);
-
-	sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
-	free(_packet);
-}/* end send_icmp_message */
