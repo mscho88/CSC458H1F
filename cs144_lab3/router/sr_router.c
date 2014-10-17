@@ -219,7 +219,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	sr_ip_hdr_t* icmp_header =  ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 
-	print_hdr_ip(icmp_header);
+	print_hdr_icmp(icmp_header);
 
 	/* Check Sum */
 	uint16_t given_len = ip_orig_header->ip_sum;
