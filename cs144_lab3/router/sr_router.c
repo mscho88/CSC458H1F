@@ -235,7 +235,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	struct sr_if *dest;
 	if(sr_interface_exist_by_ip(sr->if_list, ip_orig_header->ip_dst)){
 		/* In the routing table, the destination can be verified.*/
-		if(ip_orig_header->ip_p == ip_protocol_icmp){
+		if(htons(ip_orig_header->ip_p) == ip_protocol_icmp){
 			printf("icmppppppppppppppp\n");
 			if(ip_orig_header->ip_ttl > 0){
 				ip_orig_header->ip_ttl--;
