@@ -22,7 +22,7 @@
 #include "sr_arpcache.h"
 #include "sr_utils.h"
 
-#define IPV4_HEADER_LEN 20
+#define IPv4_MIN_LEN 20
 
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
@@ -217,38 +217,29 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t*)packet;
 	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-
 	sr_ip_hdr_t* icmp_header =  ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 
-	print_hdr_ip(ip_orig_header);
+	print_hdr_ip(icmp_header);
 
-	uint16_t t = ip_orig_header->ip_sum;
+	/* Check Sum */
+	uint16_t given_len = ip_orig_header->ip_sum;
 	ip_orig_header->ip_sum = 0;
-	printf("you get this %u\n", cksum((uint8_t*)ip_orig_header, IPV4_HEADER_LEN));
-	printf("you get this %u\n", cksum((uint8_t*)ip_orig_header, ip_orig_header->ip_hl));
-
-	if(t != cksum((uint8_t*)ip_orig_header, IPV4_HEADER_LEN)) {
-	        printf("!!! Invalid checksum. \n");
-	        return;
+	if(given_len != cksum((uint8_t*)ip_orig_header, IPv4_MIN_LEN)) {
+		printf("The Received Packet is corrupted. Checksum Failed. \n");
+		return;
 	}
-
-	printf("you get this %u\n", cksum((uint8_t*)ip_orig_header, IPV4_HEADER_LEN));
+	ip_orig_header->ip_sum = given_len;
 
 	/* Check whether there exists the destination from the packet is in the route table.*/
-	/*sr_print_routing_table(sr);
-	print_hdr_eth(eth_orig_header);
-	print_hdr_ip((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-	print_hdr_icmp((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));*/
-
 	struct sr_if *dest;
-	if(sr_interface_exist(sr->if_list, ip_orig_header->ip_dst)){
+	if(sr_interface_exist_by_ip(sr->if_list, ip_orig_header->ip_dst)){
 		/* In the routing table, the destination can be verified.*/
 		if(ip_orig_header->ip_p == ip_protocol_icmp){
 			if(ip_orig_header->ip_ttl > 0){
 				ip_orig_header->ip_ttl--;
-					/*send the packet to the destination */
+				/*send the packet to the destination */
 			}else{
-					/* TTL is over. Hence, drop the packet and send the TTL is over. */
+				/* TTL is over. Hence, drop the packet and send the TTL is over. */
 			}
 		}else{
 			fprintf(stderr, "ICMP port unreachable. \n");
@@ -268,7 +259,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}
 }/* end sr_handlepacket_ip */
 
-int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
+int sr_interface_exist_by_ip(struct sr_if* interfaces, uint32_t* dest_ip){
 	while(interfaces){
 		if(interfaces->ip == dest_ip){
 			return 1;
