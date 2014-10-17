@@ -277,13 +277,3 @@ int is_in_rtable(struct sr_rt *rtable, char* interface){
 	}
 	return 0;
 }
-
-int sr_interface_exist(struct sr_if* interfaces, uint32_t* dest_ip){
-	while(interfaces){
-		if(interfaces->ip == dest_ip){
-			return 1;
-		}
-		interfaces = interfaces->next;
-	}
-	return 0;
-}/* end sr_get_interface_by_ip */
