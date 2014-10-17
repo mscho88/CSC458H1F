@@ -319,19 +319,21 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 }/* end sr_handlepacket_ip */
 
 struct sr_rt* sr_longest_prefix_match(struct sr_instance *sr, sr_ip_hdr_t *ip_header){
-	struct sr_rt *rtable = sr->routing_table;
-	struct sr_rt *match_dest = 0;
+	struct sr_rt *temp = sr->routing_table;
+	  struct sr_rt *best = 0;
+	  while(temp != 0)
+	  {
+	    if((ip_header->ip_dst & temp->mask.s_addr) == (temp->dest.s_addr & temp->mask.s_addr))
+	    {
+	      if(best == 0)
+	        best = temp;
+	      else if(best->mask.s_addr < temp->mask.s_addr)
+	        best = temp;
+	    }
+	    temp = temp->next;
+	  }
 
-	while(rtable){
-		if((ip_header->ip_dst & rtable->mask.s_addr) == (rtable->dest.s_addr & rtable->mask.s_addr)){
-			if(match_dest == 0)
-				match_dest = rtable;
-			else if(match_dest->mask.s_addr < rtable->mask.s_addr)
-				match_dest = rtable;
-		}
-		rtable = rtable->next;
-	}
-	return match_dest;
+	  return best;
 }
 
 int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
