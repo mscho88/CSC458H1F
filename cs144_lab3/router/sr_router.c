@@ -213,6 +213,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	assert(packet);
 	assert(interface);
 
+	sr_print_routing_table(sr);
    	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	struct sr_arpentry *ip_entry;
 
@@ -223,7 +224,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}
 
 
-	sr_print_routing_table(sr);
 	print_hdr_ip((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	print_hdr_icmp((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 
