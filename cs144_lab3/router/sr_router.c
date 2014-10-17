@@ -228,15 +228,15 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	struct sr_if *dest;
 	if((dest = find_dest_interface(sr->routing_table, ip_orig_header->ip_dst)) != NULL){
-		/* In the routing table, the destination can be verified.
+		/* In the routing table, the destination can be verified.*/
 		if(ip_orig_header->ip_ttl > 0){
 			ip_orig_header->ip_ttl--;
 		}else{
-			/* TTL is over
+			/* TTL is over*/
 
 		}
 	}else{
-		/* In the routing table, the destination cannot be verified.
+		/* In the routing table, the destination cannot be verified.*/
 
 	}
 
