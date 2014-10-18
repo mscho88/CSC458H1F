@@ -121,7 +121,7 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* int
 	ip_tmp_header->ip_dst = ip_header->ip_src;
 	ip_tmp_header->ip_id = 0;
 	ip_tmp_header->ip_off = ip_header->ip_off;
-	ip_tmp_header->ip_ttl = ip_header->ip_ttl;
+	ip_tmp_header->ip_ttl = 64;/*ip_header->ip_ttl;*/
 	ip_tmp_header->ip_p = ip_protocol_icmp;
 	ip_tmp_header->ip_sum = 0;
 	ip_tmp_header->ip_sum = cksum(ip_tmp_header, sizeof(sr_ip_hdr_t));
