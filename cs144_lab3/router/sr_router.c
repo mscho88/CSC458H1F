@@ -399,7 +399,7 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 					free(arp_entry);
 				}else{
 					/*send_packet(); arp request send*/
-					Debug("")
+					Debug("");
 					fprintf(stderr, "IP->MAC mapping not in ARP cache %u \n", ip_orig_header->ip_dst);
 					/*Case where ip->mapping is not in cache*/
 					/***************/
