@@ -23,8 +23,6 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 	struct sr_arpreq *prevreq = cache->requests;
 	time_t cur_time;
 	while(req) {
-		printf("111\n");
-
 		prevreq = req;
 		cur_time = time(NULL);
 		if (difftime(cur_time, req->sent) > 1.0) {
@@ -51,19 +49,14 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 	}
 }
 struct sr_if *next_hop(struct sr_instance *sr, char *intfc, uint32_t dest) {
+	int m = 0, cur = 0;
 	struct sr_if* interface = sr->if_list;
-	int max = 0, cur = 0;
-	struct sr_if *nxt_hop_ip = (struct sr_if *) malloc(sizeof(sr->if_list));
+
+	struct sr_if *nxt_hop_ip = (struct sr_if *) malloc(sizeof(interface));
 	while (interface) {
 		if (strncmp(interface->name, intfc, sr_IFACE_NAMELEN) != 0) {
-			cur = 0;
-			while (memcmp(&(dest), &(interface->ip), cur) == 0) {
-				cur = cur + 1;
-			}
-			if (max < cur) {
-				max = cur;
-				nxt_hop_ip = interface;
-			}
+			for(cur = 0; memcmp(&(interface->ip), &(dest), cur) != 0; cur++);
+			if (m < cur) { m = cur; nxt_hop_ip = interface; }
 		}
 		interface = interface->next;
 	}
