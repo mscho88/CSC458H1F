@@ -122,11 +122,12 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	send_arp_packet(sr, packet, len, interface);
     }else if(htons(arp_header->ar_op) == arp_op_reply){
 		if (get_interface_for_ip(sr->if_list, arp_header->ar_tip)) {
-			printf("333\n");
 			struct sr_arpreq *request;
 			if((request = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) != NULL) {
+				printf("333\n");
 				struct sr_packet *cur_packet = request->packets;
 				while(cur_packet) {
+					printf("4444\n");
 					forward_packet(sr, cur_packet->iface, arp_header->ar_sha, cur_packet->len, cur_packet->buf);
 					cur_packet = cur_packet->next;
 				}
