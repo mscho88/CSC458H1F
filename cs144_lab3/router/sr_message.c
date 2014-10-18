@@ -46,43 +46,9 @@ void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, ui
 	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
 	build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), packet, ip_header, icmp_header, interfaces, type, code);
 
-	sr_send_packet(sr, (uint8_t *)_packet, length, interfaces->name);
+	sr_send_packet(sr, (uint8_t *)_packet, length, interface);
 	free(_packet);
 }
-
-/*---------------------------------------------------------------------
- * Method: sr_handlepacket_arp(struct sr_instance* sr,
- *      						uint8_t*  packet,
- *      						unsigned int len,
- *								char* interface)
- * Scope:  Local
- *
- * When the ethernet type is Address Resolution Protocol
- *
- *---------------------------------------------------------------------*/
-void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* interfaces){
-	sr_ip_hdr_t* ip_tmp_header = (sr_ip_hdr_t *)_packet;
-	ip_tmp_header->ip_src = interfaces->ip;
-	ip_tmp_header->ip_dst = ip_header->ip_src;
-	ip_tmp_header->ip_len = htons(56);
-	ip_tmp_header->ip_id = 0;
-	ip_tmp_header->ip_hl = 5;
-	ip_tmp_header->ip_off = 0;
-	ip_tmp_header->ip_ttl = 64;
-	ip_tmp_header->ip_p = ip_protocol_icmp;
-	ip_tmp_header->ip_sum = 0;
-	ip_tmp_header->ip_sum = cksum(ip_header, sizeof(sr_ip_hdr_t));
-}
-/*
-void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_if* if_walker){
-	sr_icmp_hdr_t *icmp_tmp_header = (sr_icmp_hdr_t *)_packet;
-	icmp_tmp_header->icmp_code = icmp_header->icmp_code;
-	icmp_tmp_header->icmp_type = 0;
-	icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, (IPv4_MIN_LEN + 8 > temporary_len - ETHER_HEADER_LEN ? IPv4_MIN_LEN + 8 : temporary_len - ETHER_HEADER_LEN));
-}*/
-
-
-
 
 /*---------------------------------------------------------------------
  * Method: build_ether_header(uint8_t *_packet,
@@ -121,6 +87,30 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr
 	memcpy(arp_tmp_header->ar_tha, arp_orig_header->ar_sha, ETHER_ADDR_LEN);
 	arp_tmp_header->ar_tip = arp_orig_header->ar_sip;
 }/* end build_arp_header */
+
+/*---------------------------------------------------------------------
+ * Method: sr_handlepacket_arp(struct sr_instance* sr,
+ *      						uint8_t*  packet,
+ *      						unsigned int len,
+ *								char* interface)
+ * Scope:  Local
+ *
+ * When the ethernet type is Address Resolution Protocol
+ *
+ *---------------------------------------------------------------------*/
+void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* interfaces){
+	sr_ip_hdr_t* ip_tmp_header = (sr_ip_hdr_t *)_packet;
+	ip_tmp_header->ip_src = interfaces->ip;
+	ip_tmp_header->ip_dst = ip_header->ip_src;
+	ip_tmp_header->ip_len = htons(56);
+	ip_tmp_header->ip_id = 0;
+	ip_tmp_header->ip_hl = 5;
+	ip_tmp_header->ip_off = 0;
+	ip_tmp_header->ip_ttl = 64;
+	ip_tmp_header->ip_p = ip_protocol_icmp;
+	ip_tmp_header->ip_sum = 0;
+	ip_tmp_header->ip_sum = cksum(ip_header, sizeof(sr_ip_hdr_t));
+}
 
 void build_icmp_header(uint8_t *_packet, uint8_t *packet, sr_ip_hdr_t *ip_header, sr_icmp_hdr_t* icmp_orig_header, struct sr_if* interfaces, uint8_t type, uint8_t code){
 	sr_icmp_t3_hdr_t *icmp_tmp_hdr = (sr_icmp_t3_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
