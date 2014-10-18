@@ -22,9 +22,7 @@
 #include "sr_arpcache.h"
 #include "sr_utils.h"
 
-#define IPv4_MIN_LEN 20
-#define ICMP_MIN_LEN 8
-#define ETHER_HEADER_LEN 14
+
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
  * Scope:  Global
@@ -63,7 +61,7 @@ void sr_init(struct sr_instance* sr)
  * ethernet headers.
  *
  * Note: Both the packet buffer and the character's memory are handled
- * by sr_vns_comm.c that means do NOT delete either.  Make a copy of the
+ * by sr_vns_comm.c that means do NOT delete either. Make a copy of the
  * packet instead if you intend to keep it around beyond the scope of
  * the method call.
  *
@@ -120,12 +118,9 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     if(htons(arp_header->ar_op) == arp_op_request){
     	/* If the packet is ARP request, then the router tries to caches
     	 * the information of the sender. */
-    	printf("arp request success\n");
     	send_packet(sr, packet, len, interface, htons(eth_header->ether_type));
-
     }else if(htons(arp_header->ar_op) == arp_op_reply){
     	/* If the packet is ARP reply, then the router ....*/
-    	Debug("*** -> Address Resolution Protocol reply \n");
     	/* Send ARP reply message */
 		fprintf(stderr, "We got an ARP Reply, need to check for intfc tho \n");
 		/* arp reply */
@@ -163,38 +158,34 @@ void sr_handlepacket_arp(struct sr_instance* sr,
  *---------------------------------------------------------------------*/
 void send_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface, uint16_t protocol){
 	unsigned int length;
-
+	uint8_t* _packet;
 	sr_ethernet_hdr_t* eth_header = (sr_ethernet_hdr_t *)packet;
+	struct sr_if *interfaces = sr_get_interface(sr, interface);
+
 	if(protocol == ethertype_arp){
+		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+		_packet = (uint8_t*)malloc(length);
+
 		sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-
-		struct sr_if *interfaces = sr_get_interface(sr, interface);
-
-		uint8_t* _packet = (uint8_t*)malloc(length);
-
+		/* Build ARP Packet */
 		build_ether_header(_packet, eth_header, interfaces, protocol);
 		build_arp_header(_packet + sizeof(sr_ethernet_hdr_t), arp_header, interfaces);
-
-		sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
-		free(_packet);
 	}else if(protocol == ethertype_ip){
-		sr_ip_hdr_t* ip_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-		sr_icmp_hdr_t* icmp_header;
-
-		icmp_header =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t);
+		_packet = (uint8_t*)malloc(length);
 
-		struct sr_if *interfaces = sr_get_interface(sr, interface);
-		uint8_t* _packet = (uint8_t*)malloc(length);
+		sr_ip_hdr_t* ip_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+		sr_icmp_hdr_t* icmp_header = ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
+
+		/* Build IP Packet */
 		build_ether_header(_packet, eth_header, interfaces, protocol);
 		build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
 		/*build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), icmp_header, interfaces);*/
-
-		sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
-		free(_packet);
 	}
+
+	sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
+	free(_packet);
 }
 
 /*---------------------------------------------------------------------
@@ -215,7 +206,6 @@ void build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, st
 		eth_tmp_header->ether_type = htons(ethertype_arp);
 	}else if(protocol == ethertype_ip){
 		eth_tmp_header->ether_type = htons(ethertype_ip);
-
 	}
 }
 
@@ -379,41 +369,44 @@ void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_i
 }*/
 
 /*---------------------------------------------------------------------
- * Method: sr_handlepacket(uint8_t* p,char* interface)
+ * Method: sr_handlepacket_ip(struct sr_instance* sr,
+								uint8_t * packet,
+								unsigned int len,
+								char* interface)
  * Scope:  Global
  *
- * This method is called when the ethernet type is Internet Protocol.
+ * When the ethernet type is Internet Protocol
  *
  *---------------------------------------------------------------------*/
-void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
-		unsigned int len, char* interface){
+void sr_handlepacket_ip(struct sr_instance* sr,
+		uint8_t * packet,
+		unsigned int len,
+		char* interface){
 	/* REQUIRES */
 	assert(sr);
 	assert(packet);
 	assert(interface);
 
-	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t*)packet;
-	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+	sr_ip_hdr_t* ip_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	sr_icmp_hdr_t* icmp_header =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 
 	/* Check Sum */
-	uint16_t given_len = ip_orig_header->ip_sum;
-	ip_orig_header->ip_sum = 0;
-	if(given_len != cksum((uint8_t*)ip_orig_header, IPv4_MIN_LEN)) {
+	uint16_t given_len = ip_header->ip_sum;
+	ip_header->ip_sum = 0;
+	if(given_len != cksum((uint8_t*)ip_header, IPv4_MIN_LEN)) {
 		printf(" The Received Packet is corrupted. Checksum Failed. \n");
 		return;
 	}
-	ip_orig_header->ip_sum = given_len;
+	ip_header->ip_sum = given_len;
 
 	struct sr_if *dest;
-	if(is_for_me(&(sr->if_list), ip_orig_header->ip_dst)){
+	if(is_for_me(&(sr->if_list), ip_header->ip_dst)){
 		/* Check whether the packet is in the interfaces of the router. */
-		if(ip_orig_header->ip_p == ip_protocol_tcp ||
-				ip_orig_header->ip_p == ip_protocol_udp){
+
+		if(ip_header->ip_p == ip_protocol_tcp || ip_header->ip_p == ip_protocol_udp){
 			/* If the router receives TCP or UDP packet, then send back the
 			 * ICMP error packet to the sender. */
-			fprintf(stderr, " Received Unsupported %s Packet \n",
-					ip_orig_header->ip_p == ip_protocol_tcp ? "TCP" : "UDP");
+			fprintf(stderr, " Received Unsupported %s Packet \n", ip_header->ip_p == ip_protocol_tcp ? "TCP" : "UDP");
 			/***************/
 			send_icmp_error(icmp_type3, icmp_code3, sr, interface, packet);
 		}else{
@@ -428,15 +421,15 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 	}else{
 		/* If the packet is not in the interfaces of the router, the router
 		 * needs to find the longest prefix match interface to send the packet.*/
-		if(ip_orig_header->ip_ttl > 0){
+		if(ip_header->ip_ttl > 0){
 			/* Since the packet is going through the router, TTL should be deducted. */
-			ip_orig_header->ip_ttl--;
+			ip_header->ip_ttl--;
 
 			/* Find the longest prefix match from the routing table. */
 			struct sr_rt *dest;
-			if((dest = sr_longest_prefix_match(sr->routing_table, ip_orig_header)) != 0){
+			if((dest = sr_longest_prefix_match(sr->routing_table, ip_header)) != 0){
 				struct sr_arpentry *arp_entry;
-				if((arp_entry = sr_arpcache_lookup(&(sr->cache), ip_orig_header->ip_dst)) != NULL){
+				if((arp_entry = sr_arpcache_lookup(&(sr->cache), ip_header->ip_dst)) != NULL){
 					Debug("Transmitting the packet to the destination : %s. \n", arp_entry->mac);
 					/***************/
 					forward_packet(sr, dest->interface, arp_entry->mac, len, packet);
@@ -444,10 +437,10 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 				}else{
 					/*send_packet(); arp request send*/
 					Debug("");
-					fprintf(stderr, "IP->MAC mapping not in ARP cache %u \n", ip_orig_header->ip_dst);
+					fprintf(stderr, "IP->MAC mapping not in ARP cache %u \n", ip_header->ip_dst);
 					/*Case where ip->mapping is not in cache*/
 					/***************/
-					sr_arpcache_queuereq(&(sr->cache), ip_orig_header->ip_dst, packet, len, dest->interface);
+					sr_arpcache_queuereq(&(sr->cache), ip_header->ip_dst, packet, len, dest->interface);
 					fprintf(stderr, "Added Arp Req to queu \n");
 				}
 			}else{
@@ -456,13 +449,13 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 				/* important*/
 				/*send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), 3);*/
 				fprintf(stderr, "Can Not Transmit The Packet To ");
-				print_addr_ip_int(ip_orig_header->ip_dst);
+				print_addr_ip_int(ip_header->ip_dst);
 				fprintf(stderr, "Sending The Packet Back To ");
-				print_addr_ip_int(ip_orig_header->ip_src);
+				print_addr_ip_int(ip_header->ip_src);
 				send_icmp_error(icmp_type3, icmp_code, sr, interface, packet);
 			}
 		}else{
-			fprintf(stderr, "Received Packet TTL(%u) Expired in Transit \n", ip_orig_header->ip_ttl);
+			fprintf(stderr, "Received Packet TTL(%u) Expired in Transit \n", ip_header->ip_ttl);
 			send_icmp_error(icmp_type11, 0, sr, interface, packet);
 		}
 	}
@@ -543,19 +536,16 @@ void send_icmp_echo(struct sr_instance *sr, char *interface, unsigned int len, u
 
 
 /*---------------------------------------------------------------------
- * Method: is_for_me(struct sr_if*, uint32_t*)
+ * Method: is_for_me(struct sr_if* interfaces, uint32_t* dest_ip)
  * Scope:  Global
  *
- * This method is called to check whether the destination ip address
- * in the received packet is for the router or not. returns 1 if it
- * is, and 0 otherwise.
+ * Check whether the given destination ip address is provided for
+ * one of the interfaces of the router
  *
  *---------------------------------------------------------------------*/
 int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
 	while(interfaces){
-		if(interfaces->ip == dest_ip){
-			return 1;
-		}
+		if(interfaces->ip == dest_ip){ return 1; }
 		interfaces = interfaces->next;
 	}
 	return 0;

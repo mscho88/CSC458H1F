@@ -101,8 +101,9 @@ struct sr_icmp_t3_hdr {
 } __attribute__ ((packed)) ;
 typedef struct sr_icmp_t3_hdr sr_icmp_t3_hdr_t;
 
-
-
+#define IPv4_MIN_LEN 20
+#define ICMP_MIN_LEN 8
+#define ETHER_HEADER_LEN 14
 
 /*
  * Structure of an internet header, naked of options.
