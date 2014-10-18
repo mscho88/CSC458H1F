@@ -179,7 +179,7 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint1
 		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t);
 
 		struct sr_if *interfaces = sr_get_interface(sr, interface);
-
+		printf("%sasdojfoiasdjoif\n", interface);
 		uint8_t* _packet = (uint8_t*)malloc(length);
 
 		build_ether_header(_packet, eth_header, interfaces);
