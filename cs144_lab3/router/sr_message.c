@@ -55,7 +55,7 @@ void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, ui
 	print_hdr_icmp(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 	printf("**********\n");*/
 	ip_header->ip_sum= 0;
-	_packet->ip_sum=0;
+	((sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)))->ip_sum = 0;
 	print_hdr_ip(ip_header);
 	printf("%u =? %u\n", cksum(ip_header, sizeof(sr_ip_hdr_t)), cksum(_packet, sizeof(sr_ip_hdr_t)));
 	sr_send_packet(sr, (uint8_t *)_packet, length, interfaces->name);
