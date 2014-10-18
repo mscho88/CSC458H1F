@@ -407,15 +407,17 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 					fprintf(stderr, "Added Arp Req to queu \n");
 				}
 			}else{
+				print_addr_ip(dest->dest);
+				print_addr_ip(dest->gw);
+				print_addr_ip(dest->mask);
 				/* no match found error */
 				/* ICMP net unreachable */
 				/* important*/
 				/*send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), 3);*/
 				fprintf(stderr, "Could Not Be Determined To Transmit The Packet To ");
 				print_addr_ip_int(ip_orig_header->ip_dst);
-				fprintf(stderr, "\n Sending The Packet Back To ");
+				fprintf(stderr, "Sending The Packet Back To ");
 				print_addr_ip_int(ip_orig_header->ip_src);
-				fprintf(stderr, "\n");
 				send_icmp_error(icmp_type3, icmp_code, sr, interface, len, packet);
 			}
 		}else{
