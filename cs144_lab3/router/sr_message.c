@@ -119,6 +119,14 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* int
 	ip_tmp_header->ip_sum = cksum(ip_tmp_header, sizeof(sr_ip_hdr_t));
 }
 
+void build_icmp_header(uint8_t *_packet, uint8_t type, uint8_t code){
+	sr_icmp_t3_hdr_t *icmp_tmp_hdr = (sr_icmp_t3_hdr_t *)_packet;
+	icmp_tmp_hdr->icmp_type = type;
+	icmp_tmp_hdr->icmp_code = code;
+	icmp_tmp_hdr->icmp_sum = 0;
+	icmp_tmp_hdr->icmp_sum = cksum(icmp_tmp_hdr, sizeof(sr_icmp_hdr_t));
+}
+
 void build_icmp_t3_header(uint8_t *_packet, uint8_t *packet, sr_ip_hdr_t *ip_header, sr_icmp_hdr_t* icmp_orig_header, struct sr_if* interfaces, uint8_t type, uint8_t code){
 	sr_icmp_t3_hdr_t *icmp_tmp_hdr = (sr_icmp_t3_hdr_t *)_packet;
 	icmp_tmp_hdr->icmp_type = type;
@@ -129,10 +137,27 @@ void build_icmp_t3_header(uint8_t *_packet, uint8_t *packet, sr_ip_hdr_t *ip_hea
 	icmp_tmp_hdr->icmp_sum = cksum(icmp_tmp_hdr, sizeof(sr_icmp_t3_hdr_t));
 }
 
-void build_icmp_header(uint8_t *_packet, uint8_t type, uint8_t code){
-	sr_icmp_t3_hdr_t *icmp_tmp_hdr = (sr_icmp_t3_hdr_t *)_packet;
-	icmp_tmp_hdr->icmp_type = type;
-	icmp_tmp_hdr->icmp_code = code;
-	icmp_tmp_hdr->icmp_sum = 0;
-	icmp_tmp_hdr->icmp_sum = cksum(icmp_tmp_hdr, sizeof(sr_icmp_hdr_t));
+void send_icmp_echo_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface) {
+
+	uint8_t *_packet = (uint8_t *) malloc(len);
+	memcpy(_packet, packet, len);
+	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
+
+	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *)_packet;
+	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
+
+	eth_header->ether_type = htons(ethertype_ip);
+	uint8_t shost[ETHER_ADDR_LEN];
+	memcpy(shost, interfaces->addr, ETHER_ADDR_LEN);
+	uint8_t dhost[ETHER_ADDR_LEN];
+	memcpy(dhost, eth_header->ether_shost, ETHER_ADDR_LEN);
+
+	memcpy(eth_header->ether_shost, shost, ETHER_ADDR_LEN);
+	memcpy(eth_header->ether_dhost, dhost, ETHER_ADDR_LEN);
+
+	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
+	build_icmp_header((_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)), icmp_type0, icmp_code);
+
+	sr_send_packet(sr, _packet, len, interface);
+	free(_packet);
 }

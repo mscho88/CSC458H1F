@@ -154,7 +154,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	assert(sr);
 	assert(packet);
 	assert(interface);
-	Debug("IP\n");
 
 	sr_ip_hdr_t* ip_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	sr_icmp_hdr_t* icmp_header =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
@@ -170,8 +169,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	struct sr_if *dest;
 	if(is_for_me(&(sr->if_list), ip_header->ip_dst)){
-
-		Debug("IP packet is for me\n");
 		/* Check whether the packet is in the interfaces of the router. */
 
 		if(ip_header->ip_p == ip_protocol_tcp || ip_header->ip_p == ip_protocol_udp){
@@ -195,7 +192,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			/* Since the packet is going through the router, TTL should be deducted. */
 			ip_header->ip_ttl--;
 
-			Debug("IP packet ttl succeed \n");
 			/* Find the longest prefix match from the routing table. */
 			struct sr_rt *dest;
 			if((dest = sr_longest_prefix_match(sr->routing_table, ip_header)) != 0){
@@ -204,16 +200,12 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					forward_packet(sr, dest->interface, arp_entry->mac, len, packet);
 					free(arp_entry);
 				}else{
-					fprintf(stderr, "IP->MAC mapping not in ARP cache %u \n", ip_header->ip_dst);
 					sr_arpcache_queuereq(&(sr->cache), ip_header->ip_dst, packet, len, dest->interface);
-					fprintf(stderr, "Added Arp Req to queu \n");
 				}
 			}else{
-				Debug("Cannot transmit the packet\n");
 				send_ip_error_packet(sr, packet, interface, icmp_type3, icmp_code);
 			}
 		}else{
-			fprintf(stderr, "Received Packet TTL(%u) Expired in Transit \n", ip_header->ip_ttl);
 			send_ip_error_packet(sr, packet, interface, icmp_type11, icmp_code);
 		}
 	}
@@ -273,30 +265,6 @@ void forward_packet(struct sr_instance *sr, char *interface,
 	free(packet);
 }
 
-void send_icmp_echo_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface) {
-
-	uint8_t *_packet = (uint8_t *) malloc(len);
-	memcpy(_packet, packet, len);
-	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
-
-	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *)_packet;
-	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
-
-	eth_header->ether_type = htons(ethertype_ip);
-	uint8_t shost[ETHER_ADDR_LEN];
-	memcpy(shost, interfaces->addr, ETHER_ADDR_LEN);
-	uint8_t dhost[ETHER_ADDR_LEN];
-	memcpy(dhost, eth_header->ether_shost, ETHER_ADDR_LEN);
-
-	memcpy(eth_header->ether_shost, shost, ETHER_ADDR_LEN);
-	memcpy(eth_header->ether_dhost, dhost, ETHER_ADDR_LEN);
-
-	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
-	build_icmp_header((_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)), icmp_type0, icmp_code);
-
-	sr_send_packet(sr, _packet, len, interface);
-	free(_packet);
-}
 
 /*---------------------------------------------------------------------
  * Method: is_for_me(struct sr_if* interfaces, uint32_t* dest_ip)

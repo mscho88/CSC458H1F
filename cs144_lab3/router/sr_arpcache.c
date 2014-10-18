@@ -24,7 +24,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 	struct sr_arpreq *req = cache->requests;
 	struct sr_arpreq *prevreq = cache->requests;
 	time_t cur_time;
-	/*while(req) {
+	while(req) {
 		prevreq = req;
 		cur_time = time(NULL);
 		if (difftime(cur_time, req->sent) > 1.0) {
@@ -37,7 +37,6 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 					send_ip_packet(sr, src_if->name, cur_packet->buf, icmp_type3, icmp_code1);
 					cur_packet = cur_packet->next;
 				}
-
 				sr_arpreq_destroy(cache, req);
 			}else{
 				if(cur_packet) {
@@ -48,7 +47,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 			}
 		}
 		req = prevreq->next;
-	}*/
+	}
 }
 struct sr_if *next_hop(struct sr_instance *sr, char *intfc, uint32_t dest) {
 	struct sr_if* interface = sr->if_list;
