@@ -228,13 +228,6 @@ void build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, st
 	}
 }
 
-/*---------------------------------------------------------------------
- * Method: sr_handlepacket(uint8_t* p,char* interface)
- * Scope:  Global
- *
- * This method is called when the ethernet type is Internet Protocol.
- *
- *---------------------------------------------------------------------*/
 void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr_if* if_walker){
 	sr_arp_hdr_t *arp_tmp_header = (sr_arp_hdr_t *)_packet;
 	arp_tmp_header->ar_hrd = arp_orig_header->ar_hrd;
@@ -270,7 +263,6 @@ void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_i
 	icmp_tmp_header->icmp_type = 0;
 	icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, (IPv4_MIN_LEN + 8 > temporary_len - ETHER_HEADER_LEN ? IPv4_MIN_LEN + 8 : temporary_len - ETHER_HEADER_LEN));
 }*/
-
 
 void send_icmp_error(uint8_t type, uint8_t code, struct sr_instance *sr,
 		char *interface, unsigned int len, uint8_t *pkt) {

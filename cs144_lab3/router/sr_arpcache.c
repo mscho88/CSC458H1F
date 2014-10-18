@@ -27,6 +27,52 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 	}
 }
 
+void handle_arpreq(struct sr_instance *sr, struct sr_arpcache *cache, struct sr_arpreq *request) {
+
+	time_t curtime = time(NULL);
+	if (difftime(curtime, request->sent) > 1.0) {
+		fprintf(stderr, "1\n");
+		struct sr_packet *cur_packet = (struct sr_packet *)(request->packets);
+		fprintf(stderr, "2\n");
+    	if (request->times_sent >= 5) {
+
+    		fprintf(stderr, "3\n");
+    		fprintf(stderr,"About to send ICMP errors to all packets \n");
+				while (cur_packet) {
+
+					fprintf(stderr, "4\n");
+					/*Find the interface that the packet came in on*/
+					struct sr_if *src_if = (struct sr_if *)malloc(sizeof(struct sr_if));
+					sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(cur_packet->buf + sizeof(sr_ethernet_hdr_t));
+					src_if = next_hop(sr, cur_packet->iface, ip_hdr->ip_src);
+
+					/*Send icmp host unreachable to each packet*/
+					send_icmp_error(3, 1, sr, src_if->name, cur_packet->len, cur_packet->buf);
+					fprintf(stderr,"Sent Error packets throug \n");
+
+					cur_packet = cur_packet->next;
+				}
+
+        sr_arpreq_destroy(cache, request);
+
+      }else{
+      	fprintf(stderr, "The IP we are wating on is %u \n", request->ip);
+      	fprintf(stderr, cur_packet->iface);
+      	if(cur_packet) {
+      		/*fprintf(stderr, "srry i Tried \n");*/
+      		/*We send an Arp request*/;
+      		fprintf(stderr, "5\n");
+
+      		send_arp_request(sr, request->ip, cur_packet->iface);
+      		fprintf(stderr, "6\n");
+					request->sent = curtime;
+					request->times_sent++;
+      	}
+
+
+		}
+	}
+}
 /* You should not need to touch the rest of this code. */
 
 /* Checks if an IP->MAC mapping is in the cache. IP is in network byte order.
