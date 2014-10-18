@@ -116,16 +116,16 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr
  *---------------------------------------------------------------------*/
 void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* interfaces){
 	sr_ip_hdr_t* ip_tmp_header = (sr_ip_hdr_t *)_packet;
-	ip_tmp_header->ip_v = htons(ip_header->ip_v);
-	ip_tmp_header->ip_hl = htons(ip_header->ip_hl);
-	ip_tmp_header->ip_tos = htons(ip_header->ip_tos);
-	ip_tmp_header->ip_len = htons(ip_header->ip_len);
+	ip_tmp_header->ip_v = ip_header->ip_v;
+	ip_tmp_header->ip_hl = ip_header->ip_hl;
+	ip_tmp_header->ip_tos = ip_header->ip_tos;
+	ip_tmp_header->ip_len = ip_header->ip_len;
 
 	ip_tmp_header->ip_src = interfaces->ip;
 	ip_tmp_header->ip_dst = ip_header->ip_src;
-	ip_tmp_header->ip_id = htons(0);
+	ip_tmp_header->ip_id = 0;
 	ip_tmp_header->ip_off = htons(ip_header->ip_off);
-	ip_tmp_header->ip_ttl = htons(64);/*ip_header->ip_ttl;*/
+	ip_tmp_header->ip_ttl = 64;/*ip_header->ip_ttl;*/
 	ip_tmp_header->ip_p = htons(ip_protocol_icmp);
 	ip_tmp_header->ip_sum = 0;
 	ip_tmp_header->ip_sum = cksum(ip_tmp_header, sizeof(sr_ip_hdr_t));
