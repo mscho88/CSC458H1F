@@ -122,16 +122,17 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* int
 	ip_tmp_header->ip_p = ip_protocol_icmp;
 	ip_tmp_header->ip_sum = 0;
 	ip_header->ip_sum = 0;
-	ip_tmp_header->ip_sum = cksum(ip_header, sizeof(sr_icmp_t3_hdr_t));
+	ip_tmp_header->ip_sum = cksum(ip_tmp_header, sizeof(sr_ip_hdr_t));
 }
 
 void build_icmp_header(uint8_t *_packet, uint8_t *packet, sr_ip_hdr_t *ip_header, sr_icmp_hdr_t* icmp_orig_header, struct sr_if* interfaces, uint16_t type, uint16_t code){
 	sr_icmp_t3_hdr_t *icmp_tmp_hdr = (sr_icmp_t3_hdr_t *)_packet;
 	icmp_tmp_hdr->icmp_type = type;
 	icmp_tmp_hdr->icmp_code = code;
-	icmp_tmp_hdr->icmp_sum = 0;
 	memcpy(icmp_tmp_hdr->data, ip_header, 20);
 	memcpy(icmp_tmp_hdr->data + 20, packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), 8);
-	icmp_tmp_hdr->icmp_sum = cksum(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
-							sizeof(sr_icmp_t3_hdr_t));
+	icmp_tmp_hdr->icmp_sum = 0;
+	/*icmp_tmp_hdr->icmp_sum = cksum(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
+							sizeof(sr_icmp_t3_hdr_t));*/
+	icmp_tmp_hdr->icmp_sum = cksum(icmp_tmp_hdr, sizeof(sr_icmp_t3_hdr_t));
 }
