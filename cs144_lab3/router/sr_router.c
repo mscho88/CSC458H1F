@@ -123,7 +123,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *) packet;
     sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-    printf("%s came in\n", interface);
     if(htons(arp_orig_header->ar_op) == arp_op_request){
     	/* If the packet is ARP request, then the router tries to caches
     	 * the information of the sender. */
@@ -188,8 +187,7 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint1
 		build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), icmp_header, interfaces);
 
 		print_hdr_eth(_packet);
-		print_hdr_ip(_packet + sizeof(sr_ethernet_hdr_t));
-		print_hdr_icmp(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+		print_hdr_eth(eth_header);
 		sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
 		free(_packet);
 	}
