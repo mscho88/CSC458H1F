@@ -76,6 +76,7 @@ void sr_print_if_list(struct sr_instance* );
 
 struct sr_rt *sr_longest_prefix_match(struct sr_rt*, sr_ip_hdr_t*);
 void build_icmp_header(uint8_t *, sr_icmp_hdr_t* , struct sr_if* , int );
+struct sr_if* get_interface_for_ip(struct sr_instance *, uint32_t );
 
 
 #endif /* SR_ROUTER_H */
