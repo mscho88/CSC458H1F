@@ -181,8 +181,15 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint1
 		struct sr_if *interfaces = sr_get_interface(sr, interface);
 		uint8_t* _packet = (uint8_t*)malloc(length);
 
+		ip_header->ip_sum = 0;
+		ip_header->ip_sum = cksum((uint8_t*)ip_header, IPv4_MIN_LEN);
+
 		build_ether_header(_packet, eth_header, interfaces, protocol);
 		build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
+
+		icmp_header->icmp_sum = 0;
+		icmp_header->icmp_sum = cksum((uint8_t*)icmp_header, (IPv4_MIN_LEN + 8 > temporary_len - ETHER_HEADER_LEN ? IPv4_MIN_LEN + 8 : temporary_len - ETHER_HEADER_LEN));
+
 		build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), icmp_header, interfaces);
 
 		print_hdr_eth(_packet);
