@@ -31,7 +31,7 @@ void send_arp_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, 
 	sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
 	free(_packet);
 }/* end send_arp_packet */
-void send_ip_error_packet(struct sr_instance *sr, uint8_t *pkt, char *interface, uint8_t type, uint8_t code) {
+void send_ip_error_packet2(struct sr_instance *sr, uint8_t *pkt, char *interface, uint8_t type, uint8_t code) {
 
 	int new_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	uint8_t *packet = (uint8_t *) malloc(new_len);
@@ -75,7 +75,7 @@ void send_ip_error_packet(struct sr_instance *sr, uint8_t *pkt, char *interface,
 	/* Send the ICMP error packet. */
 	sr_send_packet(sr, packet, new_len, interface);
 }
-void send_ip_error_packet1(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t type, uint16_t code){
+void send_ip_error_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t type, uint16_t code){
 	int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	uint8_t *_packet = (uint8_t *) malloc(length);
 	struct sr_if *interfaces = (struct sr_if *)malloc(sizeof(struct sr_if));
