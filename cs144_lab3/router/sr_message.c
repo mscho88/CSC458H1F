@@ -78,18 +78,16 @@ void send_ip_error_packet2(struct sr_instance *sr, uint8_t *pkt, char *interface
 void send_ip_error_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t type, uint16_t code){
 	int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	uint8_t *_packet = (uint8_t *) malloc(length);
-	struct sr_if *interfaces = (struct sr_if *)malloc(sizeof(struct sr_if));
-	interfaces = (struct sr_if *)sr_get_interface(sr, interface);
+	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
 
 	sr_ethernet_hdr_t *eth_new_header = (sr_ethernet_hdr_t *)_packet;
-	sr_ip_hdr_t *ip_new_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
-	sr_icmp_t3_hdr_t *icmp_new_header = (sr_icmp_t3_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
 	eth_new_header->ether_type = htons(ethertype_ip);
 	memcpy(eth_new_header->ether_shost, interfaces->addr, ETHER_ADDR_LEN);
 	memcpy(eth_new_header->ether_dhost, ((sr_ethernet_hdr_t *)packet)->ether_shost, ETHER_ADDR_LEN);
 
 	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+	sr_ip_hdr_t *ip_new_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
 	memcpy(ip_new_header, ip_header, sizeof(sr_ip_hdr_t));
 	ip_new_header->ip_src = interfaces->ip;
 	ip_new_header->ip_dst = ip_header->ip_src;
@@ -102,12 +100,13 @@ void send_ip_error_packet(struct sr_instance* sr, uint8_t* packet, char* interfa
 	ip_new_header->ip_sum = 0;
 	ip_new_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
+	sr_icmp_t3_hdr_t *icmp_new_header = (sr_icmp_t3_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+
 	icmp_new_header->icmp_type = type;
 	icmp_new_header->icmp_code = code;
-	icmp_new_header->icmp_sum = 0;
 	memcpy(icmp_new_header->data,  ip_header, sizeof(sr_ip_hdr_t));
 	memcpy(icmp_new_header->data + 20, packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), 8);
-
+	icmp_new_header->icmp_sum = 0;
 	icmp_new_header->icmp_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), sizeof(sr_icmp_t3_hdr_t));
 
 	sr_send_packet(sr, _packet, length, interface);
