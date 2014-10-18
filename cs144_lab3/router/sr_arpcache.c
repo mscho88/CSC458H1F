@@ -27,6 +27,62 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 	}
 }
 
+/*
+ * Send ARP request.
+ */
+void send_arp_request(struct sr_instance *sr, uint32_t dst_ip, char *interface) {
+
+	uint8_t *packet = (uint8_t *)malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t));
+	unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+	struct sr_if *rt_if = (struct sr_if *)sr_get_interface(sr, interface);
+	uint8_t brdcst_addr[ETHER_ADDR_LEN];
+
+	int i = 0;
+	for(i; i < ETHER_ADDR_LEN; i++){
+		brdcst_addr[i] = 255;
+	}
+
+	/* Prepare ethernet header. */
+	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *)(packet);
+	ether_hdr->ether_type = htons(ethertype_arp);
+	memcpy(ether_hdr->ether_shost, rt_if->addr, ETHER_ADDR_LEN);
+	memcpy(ether_hdr->ether_dhost, brdcst_addr, ETHER_ADDR_LEN);
+
+	/* Prepare ARP header. */
+	sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+	arp_hdr->ar_hrd = htons(arp_hrd_ethernet);
+	arp_hdr->ar_pro = htons(ethertype_ip);
+	arp_hdr->ar_hln = ETHER_ADDR_LEN;
+	arp_hdr->ar_pln = 4;
+	arp_hdr->ar_op = htons(arp_op_request);
+	memcpy(arp_hdr->ar_sha, rt_if->addr, ETHER_ADDR_LEN);
+	arp_hdr->ar_sip = rt_if->ip;
+	memcpy(arp_hdr->ar_tha, brdcst_addr, ETHER_ADDR_LEN);
+	arp_hdr->ar_tip = dst_ip;
+
+	/* Send the packet. */
+	sr_send_packet(sr, packet, len, interface);
+}
+struct sr_if *next_hop(struct sr_instance *sr, char *intfc, uint32_t dest) {
+	struct sr_if* interface = sr->if_list;
+	int max_match = 0;
+	int cur_match = 0;
+	struct sr_if *nxt_hop_ip = (struct sr_if *) malloc(sizeof(sr->if_list));
+	while (interface) {
+		if (strncmp(interface->name, intfc, sr_IFACE_NAMELEN) != 0) {
+			cur_match = 0;
+			while (memcmp(&(dest), &(interface->ip), cur_match) == 0) {
+				cur_match = cur_match + 1;
+			}
+			if (max_match < cur_match) {
+				max_match = cur_match;
+				nxt_hop_ip = interface;
+			}
+		}
+		interface = interface->next;
+	}
+	return nxt_hop_ip;
+}
 void handle_arpreq(struct sr_instance *sr, struct sr_arpcache *cache, struct sr_arpreq *request) {
 
 	time_t curtime = time(NULL);
