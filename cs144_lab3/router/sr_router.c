@@ -251,47 +251,51 @@ void forward_packet(struct sr_instance *sr, char *interface, unsigned char *dest
 	memcpy(_packet, packet, len);
 	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
 
-	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *)_packet;
-	ether_hdr->ether_type = htons(ethertype_ip);
-	memcpy(ether_hdr->ether_shost, interfaces->addr, ETHER_ADDR_LEN);
-	memcpy(ether_hdr->ether_dhost, &(dest_mac), ETHER_ADDR_LEN);
-
 	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t));
 	sr_icmp_hdr_t *icmp_header = (sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
-	print_hdr_ip(ip_header);
-	print_hdr_icmp(icmp_header);
+	if(icmp_header->icmp_type == icmp_type8){
+		sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *)_packet;
+		ether_hdr->ether_type = htons(ethertype_ip);
+		memcpy(ether_hdr->ether_shost, interfaces->addr, ETHER_ADDR_LEN);
+		memcpy(ether_hdr->ether_dhost, &(dest_mac), ETHER_ADDR_LEN);
+
+		print_hdr_ip(ip_header);
+		print_hdr_icmp(icmp_header);
 
 
-	sr_ip_hdr_t *ip_tmp_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
-	ip_tmp_header->ip_sum = 0;
-	ip_tmp_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
+		sr_ip_hdr_t *ip_tmp_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
+		ip_tmp_header->ip_sum = 0;
+		ip_tmp_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
-	ip_tmp_header->ip_v = ip_header->ip_v;
-	ip_tmp_header->ip_hl = 5;/*ip_header->ip_hl;*/
-	ip_tmp_header->ip_tos = 0;/*ip_header->ip_tos;*/
-	ip_tmp_header->ip_len = ip_header->ip_len;
+		ip_tmp_header->ip_v = ip_header->ip_v;
+		ip_tmp_header->ip_hl = 5;/*ip_header->ip_hl;*/
+		ip_tmp_header->ip_tos = 0;/*ip_header->ip_tos;*/
+		ip_tmp_header->ip_len = ip_header->ip_len;
 
-	ip_tmp_header->ip_src = interfaces->ip;
-	ip_tmp_header->ip_dst = ip_header->ip_dst;
-	ip_tmp_header->ip_id = 0;
-	ip_tmp_header->ip_off = 0;
-	ip_tmp_header->ip_ttl = ip_header->ip_ttl;
-	ip_tmp_header->ip_p = ip_protocol_icmp;
-	ip_tmp_header->ip_sum = 0;
-	ip_tmp_header->ip_sum = cksum(ip_tmp_header, sizeof(sr_ip_hdr_t));
+		ip_tmp_header->ip_src = interfaces->ip;
+		ip_tmp_header->ip_dst = ip_header->ip_dst;
+		ip_tmp_header->ip_id = 0;
+		ip_tmp_header->ip_off = 0;
+		ip_tmp_header->ip_ttl = ip_header->ip_ttl;
+		ip_tmp_header->ip_p = ip_protocol_icmp;
+		ip_tmp_header->ip_sum = 0;
+		ip_tmp_header->ip_sum = cksum(ip_tmp_header, sizeof(sr_ip_hdr_t));
 
 
-	sr_icmp_hdr_t *icmp_tmp_hdr = (sr_icmp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
-	icmp_tmp_hdr->icmp_type = icmp_header->icmp_type;
-	icmp_tmp_hdr->icmp_code = icmp_header->icmp_code;
-	icmp_tmp_hdr->icmp_sum = 0;
-	icmp_tmp_hdr->icmp_sum = cksum(icmp_tmp_hdr, sizeof(sr_icmp_hdr_t));
-	print_hdr_ip(ip_tmp_header);
+		sr_icmp_hdr_t *icmp_tmp_hdr = (sr_icmp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+		icmp_tmp_hdr->icmp_type = icmp_type0;
+		icmp_tmp_hdr->icmp_code = icmp_header->icmp_code;
+		icmp_tmp_hdr->icmp_sum = 0;
+		icmp_tmp_hdr->icmp_sum = cksum(icmp_tmp_hdr, sizeof(sr_icmp_hdr_t));
+		print_hdr_ip(ip_tmp_header);
 
-	print_hdr_icmp(icmp_tmp_hdr);
-	sr_send_packet(sr, _packet, len, interface);
-	free(_packet);
+		print_hdr_icmp(icmp_tmp_hdr);
+		sr_send_packet(sr, _packet, len, interface);
+		free(_packet);
+	}else{
+
+	}
 }
 
 
