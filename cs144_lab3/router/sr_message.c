@@ -52,7 +52,7 @@ void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, ui
 
 	printf("***new***\n");
 	print_hdr_ip(_packet + sizeof(sr_ethernet_hdr_t));
-	print_hdr_icmp(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_icmp_t3_hdr_t));
+	print_hdr_icmp(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 	printf("**********\n");
 	sr_send_packet(sr, (uint8_t *)_packet, length, interfaces->name);
 	free(_packet);
