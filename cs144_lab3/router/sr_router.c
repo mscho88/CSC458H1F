@@ -216,7 +216,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				}
 			}else{
 				Debug("Cannot transmit the packet\n");
-				print_addr_ip_int(ip_header->ip_src);
 				send_ip_error_packet(sr, packet, interface, icmp_type3, icmp_code);
 				/*send_icmp_error(sr, interface, len, packet, icmp_type3, icmp_code);*/
 			}
