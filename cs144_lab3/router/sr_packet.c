@@ -161,3 +161,28 @@ void send_icmp_echo_packet(struct sr_instance* sr, uint8_t* packet, unsigned int
 	sr_send_packet(sr, _packet, len, interface);
 	free(_packet);
 }
+
+void send_arp_request(struct sr_instance *sr, uint32_t dst_ip, char *interface) {
+	unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
+	uint8_t *_packet = (uint8_t *)malloc(len);
+	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
+
+	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *)(_packet);
+	ether_hdr->ether_type = htons(ethertype_arp);
+	memcpy(ether_hdr->ether_shost, interfaces->addr, ETHER_ADDR_LEN);
+	memcpy(ether_hdr->ether_dhost, Broadcast, ETHER_ADDR_LEN);
+
+	sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
+	arp_hdr->ar_hrd = htons(arp_hrd_ethernet);
+	arp_hdr->ar_pro = htons(ethertype_ip);
+	arp_hdr->ar_pln = 4;
+	arp_hdr->ar_hln = ETHER_ADDR_LEN;
+	arp_hdr->ar_op = htons(arp_op_request);
+	arp_hdr->ar_sip = interfaces->ip;
+	memcpy(arp_hdr->ar_sha, interfaces->addr, ETHER_ADDR_LEN);
+	memcpy(arp_hdr->ar_tha, Broadcast, ETHER_ADDR_LEN);
+	arp_hdr->ar_tip = dst_ip;
+
+	sr_send_packet(sr, _packet, len, interface);
+	free(_packet);
+}

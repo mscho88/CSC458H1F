@@ -35,6 +35,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 					sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(cur_packet->buf + sizeof(sr_ethernet_hdr_t));
 					src_if = next_hop(sr, cur_packet->iface, ip_hdr->ip_src);
 					send_ip_error_packet(sr, src_if->name, cur_packet->buf, icmp_type3, icmp_code1);
+					free(src_if);
 					cur_packet = cur_packet->next;
 				}
 				sr_arpreq_destroy(cache, req);
@@ -51,55 +52,22 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 }
 struct sr_if *next_hop(struct sr_instance *sr, char *intfc, uint32_t dest) {
 	struct sr_if* interface = sr->if_list;
-	int max_match = 0;
-	int cur_match = 0;
+	int max = 0, cur = 0;
 	struct sr_if *nxt_hop_ip = (struct sr_if *) malloc(sizeof(sr->if_list));
 	while (interface) {
 		if (strncmp(interface->name, intfc, sr_IFACE_NAMELEN) != 0) {
-			cur_match = 0;
-			while (memcmp(&(dest), &(interface->ip), cur_match) == 0) {
-				cur_match = cur_match + 1;
+			cur = 0;
+			while (memcmp(&(dest), &(interface->ip), cur) == 0) {
+				cur = cur + 1;
 			}
-			if (max_match < cur_match) {
-				max_match = cur_match;
+			if (max < cur) {
+				max = cur;
 				nxt_hop_ip = interface;
 			}
 		}
 		interface = interface->next;
 	}
 	return nxt_hop_ip;
-}
-
-void send_arp_request(struct sr_instance *sr, uint32_t dst_ip, char *interface) {
-
-	uint8_t *packet = (uint8_t *)malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t));
-	unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-	struct sr_if *rt_if = (struct sr_if *)sr_get_interface(sr, interface);
-	uint8_t brdcst_addr[ETHER_ADDR_LEN] = {255, 255, 255, 255, 255, 255};
-
-/*	int i;
-	for(i = 0; i < ETHER_ADDR_LEN; i++){
-		brdcst_addr[i] = 255;
-	}*/
-
-	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *)(packet);
-	ether_hdr->ether_type = htons(ethertype_arp);
-	memcpy(ether_hdr->ether_shost, rt_if->addr, ETHER_ADDR_LEN);
-	memcpy(ether_hdr->ether_dhost, brdcst_addr, ETHER_ADDR_LEN);
-
-	sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
-	arp_hdr->ar_hrd = htons(arp_hrd_ethernet);
-	arp_hdr->ar_pro = htons(ethertype_ip);
-	arp_hdr->ar_hln = ETHER_ADDR_LEN;
-	arp_hdr->ar_pln = 4;
-	arp_hdr->ar_op = htons(arp_op_request);
-	memcpy(arp_hdr->ar_sha, rt_if->addr, ETHER_ADDR_LEN);
-	arp_hdr->ar_sip = rt_if->ip;
-	memcpy(arp_hdr->ar_tha, brdcst_addr, ETHER_ADDR_LEN);
-	arp_hdr->ar_tip = dst_ip;
-
-	/* Send the packet. */
-	sr_send_packet(sr, packet, len, interface);
 }
 
 /* You should not need to touch the rest of this code. */
