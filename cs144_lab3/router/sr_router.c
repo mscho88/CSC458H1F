@@ -155,7 +155,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	assert(sr);
 	assert(packet);
 	assert(interface);
-
+	sr_ethernet_hdr_t* eth_header = (sr_ethernet_hdr_t *)packet;
 	sr_ip_hdr_t* ip_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	sr_icmp_hdr_t* icmp_header =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
 
@@ -179,8 +179,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			send_ip_error_packet(sr, packet, interface, icmp_type3, icmp_code3);
 		}else{
 			/* If the router receives the packet, consider the packet with the Type 0(Echo). */
-			if(icmp_header->icmp_type == icmp_type0){
-				send_icmp_echo_packet(sr, packet, len, interface);
+			if(icmp_header->icmp_type == icmp_type8){
+				/*send_icmp_echo_packet(sr, packet, len, interface);*/
+				forward_packet(sr, interface, eth_header->ether_shost, len, packet);
 			}else{
 				fprintf(stderr, " Received Unknown Type Of ICMP Packet \n");
 			}
