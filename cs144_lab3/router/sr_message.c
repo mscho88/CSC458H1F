@@ -48,7 +48,7 @@ void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, ui
 	printf("**********\n");
 	build_ether_header(_packet, eth_header->ether_shost, interfaces, ethertype_ip);
 	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
-	build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_icmp_t3_hdr_t), packet, ip_header, icmp_header, interfaces, type, code);
+	build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), packet, ip_header, icmp_header, interfaces, type, code);
 
 	printf("***new***\n");
 	print_hdr_ip(_packet + sizeof(sr_ethernet_hdr_t));
