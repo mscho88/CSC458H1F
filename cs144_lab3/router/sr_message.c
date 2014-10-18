@@ -22,7 +22,7 @@ void send_arp_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, 
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
 	uint8_t* _packet = (uint8_t*)malloc(length);
 	sr_ethernet_hdr_t* eth_header = (sr_ethernet_hdr_t *)packet;
-	sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+	sr_arp_hdr_t* arp_header = (sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t));
 
 	/* Build ARP Packet */
 	build_ether_header(_packet, eth_header->ether_shost, interfaces);
@@ -36,7 +36,7 @@ void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, ui
 	int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
 
-	uint8_t *_packet = (uint8_t *) malloc(length);
+	uint8_t *_packet = (uint8_t *)malloc(length);
 
 	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *)packet;
 	sr_ip_hdr_t* ip_header = (sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t));
@@ -132,6 +132,6 @@ void build_icmp_header(uint8_t *_packet, uint8_t *packet, sr_ip_hdr_t *ip_header
 	memcpy(icmp_tmp_hdr->data, ip_header, 20);
 	memcpy(icmp_tmp_hdr->data + 20, packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), 8);
 	icmp_tmp_hdr->icmp_sum = 0;
-	icmp_tmp_hdr->icmp_sum = cksum(icmp_tmp_hdr + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
+	icmp_tmp_hdr->icmp_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
 							sizeof(sr_icmp_t3_hdr_t));
 }
