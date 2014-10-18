@@ -122,12 +122,11 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	send_arp_packet(sr, packet, len, interface);
     }else if(htons(arp_header->ar_op) == arp_op_reply){
     	Debug("ARP reply\n");
-		struct sr_if *interface_for_ip = get_interface_for_ip(sr->if_list, arp_header->ar_tip);
-		if (interface_for_ip) {
-			struct sr_arpreq *request = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip);
-			if (request) {
-				struct sr_packet *cur_packet = request->packets;
-				while(cur_packet) {
+		if (get_interface_for_ip(sr->if_list, arp_header->ar_tip)) {
+			struct sr_arpreq *request;
+			if((request = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) != NULL) {
+				struct sr_packet *cur_packet;
+				while((cur_packet = request->packets)) {
 					forward_packet(sr, cur_packet->iface, arp_header->ar_sha, cur_packet->len, cur_packet->buf);
 					cur_packet = cur_packet->next;
 				}
@@ -244,25 +243,22 @@ struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_head
  * When the ethernet type is Address Resolution Protocol
  *
  *---------------------------------------------------------------------*/
-void forward_packet(struct sr_instance *sr, char *interface,
-					unsigned char *dest_mac, unsigned int len, uint8_t *pkt) {
-
-	uint8_t *packet = (uint8_t *) malloc(len);
-	memcpy(packet, pkt, len);
+void forward_packet(struct sr_instance *sr, char *interface, unsigned char *dest_mac, unsigned int len, uint8_t *packet) {
+	uint8_t *_packet = (uint8_t *) malloc(len);
+	memcpy(_packet, packet, len);
 	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
 
-	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *) packet;
+	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *)_packet;
 	ether_hdr->ether_type = htons(ethertype_ip);
 	memcpy(ether_hdr->ether_shost, interfaces->addr, ETHER_ADDR_LEN);
 	memcpy(ether_hdr->ether_dhost, &(dest_mac), ETHER_ADDR_LEN);
 
-	/* Recompute checksum. */
-	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
 	ip_header->ip_sum = 0;
-	ip_header->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
+	ip_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
-	sr_send_packet(sr, packet, len, interface);
-	free(packet);
+	sr_send_packet(sr, _packet, len, interface);
+	free(_packet);
 }
 
 
