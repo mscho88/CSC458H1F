@@ -257,6 +257,9 @@ void forward_packet(struct sr_instance *sr, char *interface, unsigned char *dest
 	memcpy(ether_hdr->ether_dhost, &(dest_mac), ETHER_ADDR_LEN);
 
 	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t));
+
+	print_hdr_ip(ip_header);
+
 	sr_ip_hdr_t *ip_tmp_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
 	ip_tmp_header->ip_sum = 0;
 	ip_tmp_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
