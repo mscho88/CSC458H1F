@@ -187,7 +187,9 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint1
 		build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), icmp_header, interfaces);
 
 		print_hdr_eth(_packet);
-		print_hdr_eth(eth_header);
+		print_hdr_ip(_packet + sizeof(sr_ethernet_hdr_t));
+		print_hdr_icmp(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+
 		sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
 		free(_packet);
 	}
