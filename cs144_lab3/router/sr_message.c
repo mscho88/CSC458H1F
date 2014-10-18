@@ -112,25 +112,25 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr
  *---------------------------------------------------------------------*/
 void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* interfaces){
 	sr_ip_hdr_t* ip_tmp_header = (sr_ip_hdr_t *)_packet;
-	ip_tmp_header->ip_v = ip_header->ip_v;
-	ip_tmp_header->ip_hl = ip_header->ip_hl;
-	ip_tmp_header->ip_tos = ip_header->ip_tos;
-	ip_tmp_header->ip_len = ip_header->ip_len;
+	ip_tmp_header->ip_v = htons(ip_header->ip_v);
+	ip_tmp_header->ip_hl = htons(ip_header->ip_hl);
+	ip_tmp_header->ip_tos = htons(ip_header->ip_tos);
+	ip_tmp_header->ip_len = htons(ip_header->ip_len);
 
-	ip_tmp_header->ip_src = interfaces->ip;
-	ip_tmp_header->ip_dst = ip_header->ip_src;
-	ip_tmp_header->ip_id = 0;
-	ip_tmp_header->ip_off = ip_header->ip_off;
-	ip_tmp_header->ip_ttl = 64;/*ip_header->ip_ttl;*/
-	ip_tmp_header->ip_p = ip_protocol_icmp;
+	ip_tmp_header->ip_src = htons(interfaces->ip);
+	ip_tmp_header->ip_dst = htons(ip_header->ip_src);
+	ip_tmp_header->ip_id = htons(0);
+	ip_tmp_header->ip_off = htons(ip_header->ip_off);
+	ip_tmp_header->ip_ttl = htons(64);/*ip_header->ip_ttl;*/
+	ip_tmp_header->ip_p = htons(ip_protocol_icmp);
 	ip_tmp_header->ip_sum = 0;
 	ip_tmp_header->ip_sum = cksum(_packet, sizeof(sr_ip_hdr_t));
 }
 
 void build_icmp_header(uint8_t *_packet, uint8_t *packet, sr_ip_hdr_t *ip_header, sr_icmp_hdr_t* icmp_orig_header, struct sr_if* interfaces, uint16_t type, uint16_t code){
 	sr_icmp_t3_hdr_t *icmp_tmp_hdr = (sr_icmp_t3_hdr_t *)_packet;
-	icmp_tmp_hdr->icmp_type = type;
-	icmp_tmp_hdr->icmp_code = code;
+	icmp_tmp_hdr->icmp_type = htons(type);
+	icmp_tmp_hdr->icmp_code = htons(code);
 	memcpy(icmp_tmp_hdr->data, ip_header, 20);
 	memcpy(icmp_tmp_hdr->data + 20, icmp_orig_header, 8);
 	icmp_tmp_hdr->icmp_sum = 0;

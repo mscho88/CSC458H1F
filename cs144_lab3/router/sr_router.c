@@ -304,44 +304,43 @@ void forward_packet(struct sr_instance *sr, char *interface,
  * When the ethernet type is Address Resolution Protocol
  *
  *---------------------------------------------------------------------*/
-void send_icmp_echo(struct sr_instance *sr, char *interface, unsigned int len, uint8_t *pkt) {
+void send_icmp_echo(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface) {
 
-	uint8_t *packet = (uint8_t *) malloc(len);
-	memcpy(packet, pkt, len);
+	uint8_t *_packet = (uint8_t *) malloc(len);
+	memcpy(_packet, packet, len);
 	struct sr_if *rt_if = (struct sr_if *)sr_get_interface(sr, interface);
 
 	/* Prepare ethernet header. */
-	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *) packet;
-	ether_hdr->ether_type = htons(ethertype_ip);
+	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *)_packet;
+	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
+	sr_icmp_hdr_t *icmp_header = (sr_icmp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+
+	eth_header->ether_type = htons(ethertype_ip);
 	uint8_t shost[ETHER_ADDR_LEN];
 	uint8_t dhost[ETHER_ADDR_LEN];
 	memcpy(shost, rt_if->addr, ETHER_ADDR_LEN);
-	memcpy(dhost, ether_hdr->ether_shost, ETHER_ADDR_LEN);
-	memcpy(ether_hdr->ether_shost, shost, ETHER_ADDR_LEN);
-	memcpy(ether_hdr->ether_dhost, dhost, ETHER_ADDR_LEN);
+	memcpy(dhost, eth_header->ether_shost, ETHER_ADDR_LEN);
+	memcpy(eth_header->ether_shost, shost, ETHER_ADDR_LEN);
+	memcpy(eth_header->ether_dhost, dhost, ETHER_ADDR_LEN);
 
 	/* Prepare IP header. */
-	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
-	uint32_t dest = ip_hdr->ip_src;
+	uint32_t dest = ip_header->ip_src;
 	uint32_t src = rt_if->ip;
-	ip_hdr->ip_src = src;
-	ip_hdr->ip_dst = dest;
-	ip_hdr->ip_sum = 0;
-	ip_hdr->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
+	ip_header->ip_src = src;
+	ip_header->ip_dst = dest;
+	ip_header->ip_sum = 0;
+	ip_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
 	/* Prepare the ICMP reply header. */
-	sr_icmp_hdr_t *icmp_hdr_rply = (sr_icmp_hdr_t *)(packet +
-													sizeof(sr_ethernet_hdr_t) +
-													sizeof(sr_ip_hdr_t));
-	icmp_hdr_rply->icmp_type = 0;
-	icmp_hdr_rply->icmp_code = 0;
-	icmp_hdr_rply->icmp_sum = 0;
-	icmp_hdr_rply->icmp_sum = cksum(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
+	icmp_header->icmp_type = 0;
+	icmp_header->icmp_code = 0;
+	icmp_header->icmp_sum = 0;
+	icmp_header->icmp_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
 									sizeof(sr_icmp_hdr_t));
 
 	/* Now send the packet. */
-	sr_send_packet(sr, packet, len, interface);
-	free(packet);
+	sr_send_packet(sr, _packet, len, interface);
+	free(_packet);
 }
 
 /*---------------------------------------------------------------------
