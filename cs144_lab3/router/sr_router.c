@@ -178,8 +178,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			/* If the router receives TCP or UDP packet, then send back the
 			 * ICMP error packet to the sender. */
 			fprintf(stderr, " Received Unsupported %s Packet \n", ip_header->ip_p == ip_protocol_tcp ? "TCP" : "UDP");
-			/*send_ip_packet(sr, packet, interface, icmp_type3, icmp_code3);*/
-			send_icmp_error(sr, interface, len, packet, icmp_type3, icmp_code3);
+			send_ip_packet(sr, packet, interface, icmp_type3, icmp_code3);
+			/*send_icmp_error(sr, interface, len, packet, icmp_type3, icmp_code3);*/
 			/*send_icmp_error(icmp_type3, icmp_code3, sr, interface, packet);*/
 		}else{
 			/* If the router receives the packet, consider the packet with the Type 0(Echo). */
@@ -225,13 +225,13 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				print_addr_ip_int(ip_header->ip_dst);
 				fprintf(stderr, "Sending The Packet Back To ");
 				print_addr_ip_int(ip_header->ip_src);*/
-				/*send_ip_packet(sr, packet, interface, icmp_type3, icmp_code);*/
-				send_icmp_error(sr, interface, len, packet, icmp_type3, icmp_code);
+				send_ip_packet(sr, packet, interface, icmp_type3, icmp_code);
+				/* send_icmp_error(sr, interface, len, packet, icmp_type3, icmp_code);*/
 			}
 		}else{
 			fprintf(stderr, "Received Packet TTL(%u) Expired in Transit \n", ip_header->ip_ttl);
-			/*send_ip_packet(sr, interface, packet, icmp_type11, icmp_code);*/
-			send_icmp_error(sr, interface, len, packet, icmp_type11, icmp_code);
+			send_ip_packet(sr, interface, packet, icmp_type11, icmp_code);
+			/*send_icmp_error(sr, interface, len, packet, icmp_type11, icmp_code);*/
 /*			send_icmp_error(icmp_type11, 0, sr, interface, packet);*/
 		}
 	}
