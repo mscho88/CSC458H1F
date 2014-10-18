@@ -34,7 +34,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 					struct sr_if *src_if = (struct sr_if *)malloc(sizeof(struct sr_if));
 					sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(cur_packet->buf + sizeof(sr_ethernet_hdr_t));
 					src_if = next_hop(sr, cur_packet->iface, ip_hdr->ip_src);
-					send_ip_packet(sr, src_if->name, cur_packet->buf, icmp_type3, icmp_code1);
+					send_ip_error_packet(sr, src_if->name, cur_packet->buf, icmp_type3, icmp_code1);
 					cur_packet = cur_packet->next;
 				}
 				sr_arpreq_destroy(cache, req);
