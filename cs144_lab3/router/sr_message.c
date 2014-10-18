@@ -104,9 +104,10 @@ void send_ip_error_packet(struct sr_instance* sr, uint8_t* packet, char* interfa
 
 	icmp_new_header->icmp_type = type;
 	icmp_new_header->icmp_code = code;
+	icmp_new_header->icmp_sum = 0;
 	memcpy(icmp_new_header->data,  ip_header, sizeof(sr_ip_hdr_t));
 	memcpy(icmp_new_header->data + 20, packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), 8);
-	icmp_new_header->icmp_sum = 0;
+
 	icmp_new_header->icmp_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), sizeof(sr_icmp_t3_hdr_t));
 
 	sr_send_packet(sr, _packet, length, interface);
