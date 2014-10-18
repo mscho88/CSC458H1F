@@ -311,7 +311,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		struct sr_rt *match_dest;
 		if((match_dest = sr_longest_prefix_match(sr->routing_table, ip_orig_header)) != 0){
 			struct sr_arpentry *arp_entry;
-			if((arp_entry = sr_arpcache_lookup(sr->cache, ip_orig_header->ip_dst)) != NULL){
+			if((arp_entry = sr_arpcache_lookup(&sr->cache, ip_orig_header->ip_dst)) != NULL){
 
 			}else{
 				/*send_packet(); arp request send*/
