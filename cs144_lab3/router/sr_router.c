@@ -265,19 +265,18 @@ void forward_packet(struct sr_instance *sr, char *interface, unsigned char *dest
 	ip_tmp_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
 	ip_tmp_header->ip_v = ip_header->ip_v;
-		ip_tmp_header->ip_hl = 5;/*ip_header->ip_hl;*/
-		ip_tmp_header->ip_tos = 0;/*ip_header->ip_tos;*/
-		ip_tmp_header->ip_len = htons(sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t));
+	ip_tmp_header->ip_hl = 5;/*ip_header->ip_hl;*/
+	ip_tmp_header->ip_tos = 0;/*ip_header->ip_tos;*/
+	ip_tmp_header->ip_len = ip_header->ip_len;
 
-		ip_tmp_header->ip_src = interfaces->ip;
-		ip_tmp_header->ip_dst = ip_header->ip_dst;
-		ip_tmp_header->ip_id = 0;
-		ip_tmp_header->ip_off = 0;/*htons(ip_header->ip_off);*/
-		ip_tmp_header->ip_ttl = ip_header->ip_ttl;
-		ip_tmp_header->ip_p = ip_protocol_icmp;
-		ip_tmp_header->ip_sum = 0;
-		ip_tmp_header->ip_sum = cksum(ip_tmp_header, sizeof(sr_ip_hdr_t));
-
+	ip_tmp_header->ip_src = interfaces->ip;
+	ip_tmp_header->ip_dst = ip_header->ip_dst;
+	ip_tmp_header->ip_id = 0;
+	ip_tmp_header->ip_off = 0;
+	ip_tmp_header->ip_ttl = ip_header->ip_ttl;
+	ip_tmp_header->ip_p = ip_protocol_icmp;
+	ip_tmp_header->ip_sum = 0;
+	ip_tmp_header->ip_sum = cksum(ip_tmp_header, sizeof(sr_ip_hdr_t));
 
 	print_hdr_ip(ip_tmp_header);
 
