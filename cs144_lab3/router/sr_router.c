@@ -125,44 +125,32 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     if(htons(arp_orig_header->ar_op) == arp_op_request){
     	/* If the packet is ARP request, then the router tries to caches
     	 * the information of the sender. */
-    	struct sr_arpentry *arp_entry;
-    	if((arp_entry = sr_arpcache_lookup(&(sr->cache), arp_orig_header->ar_sip)) == NULL){
-    		/* If ARP cache is saved, the router sends back the message
-    		 * to the sender. */
-    		struct sr_arpreq *arp_cache;
-    		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_orig_header->ar_sha, arp_orig_header->ar_sip)) == NULL){
-    			/* Send ARP reply message */
-        		send_packet(sr, packet, len, interface, htons(eth_header->ether_type));
-    		}else{
-    			Debug("Error on caching the sender information. \n");
-    		}
-    	}else{
-    		/* Send ARP reply message */
-			fprintf(stderr, "We got an ARP Reply, need to check for intfc tho \n");
-			/* arp reply */
-			struct sr_if *interface_for_ip = get_interface_for_ip(sr, arp_orig_header->ar_tip);
-			if (interface_for_ip) {
-				fprintf(stderr, "We got an ARP Reply for one of our interfaces\n");
-				/*We first want to insert into Arp cache*/
-				struct sr_arpreq *request = sr_arpcache_insert(&(sr->cache),
-						arp_orig_header->ar_sha,
-						arp_orig_header->ar_sip);
-				fprintf(stderr, "Signalling all waiting packets\n");
-				if (request) {
-					struct sr_packet *cur_packet = request->packets;
-					while(cur_packet) {
-						fprintf(stderr, "About to forward \n");
-						print_hdrs(cur_packet->buf, cur_packet->len);
-						forward_packet(sr, cur_packet->iface, arp_orig_header->ar_sha,
-						cur_packet->len, cur_packet->buf);
-						fprintf(stderr, "Packet Forwarded\n");
-						cur_packet = cur_packet->next;
-					}
-				}
-			}    	}
+    	send_packet(sr, packet, len, interface, htons(eth_header->ether_type));
     }else if(htons(arp_orig_header->ar_op) == arp_op_reply){
     	/* If the packet is ARP reply, then the router ....*/
     	Debug("*** -> Address Resolution Protocol reply \n");
+    	/* Send ARP reply message */
+		fprintf(stderr, "We got an ARP Reply, need to check for intfc tho \n");
+		/* arp reply */
+		struct sr_if *interface_for_ip = get_interface_for_ip(sr, arp_orig_header->ar_tip);
+		if (interface_for_ip) {
+			fprintf(stderr, "We got an ARP Reply for one of our interfaces\n");
+			/*We first want to insert into Arp cache*/
+			struct sr_arpreq *request = sr_arpcache_insert(&(sr->cache),
+					arp_orig_header->ar_sha,
+					arp_orig_header->ar_sip);
+			if (request) {
+				struct sr_packet *cur_packet = request->packets;
+				while(cur_packet) {
+					fprintf(stderr, "About to forward \n");
+					print_hdrs(cur_packet->buf, cur_packet->len);
+					forward_packet(sr, cur_packet->iface, arp_orig_header->ar_sha,
+					cur_packet->len, cur_packet->buf);
+					fprintf(stderr, "Packet Forwarded\n");
+					cur_packet = cur_packet->next;
+				}
+			}
+		}
     }
 }/* end sr_handlepacket_arp */
 
@@ -265,7 +253,7 @@ void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_i
 }*/
 
 void send_icmp_error(uint8_t type, uint8_t code, struct sr_instance *sr,
-		char *interface, unsigned int len, uint8_t *pkt) {
+		char *interface, uint8_t *pkt) {
 
 	int new_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	uint8_t *packet = (uint8_t *) malloc(new_len);
@@ -383,7 +371,7 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 			fprintf(stderr, " Received Unsupported %s Packet \n",
 					ip_orig_header->ip_p == ip_protocol_tcp ? "TCP" : "UDP");
 			/***************/
-			send_icmp_error(icmp_type3, icmp_code3, sr, interface, len, packet);
+			send_icmp_error(icmp_type3, icmp_code3, sr, interface, packet);
 		}else{
 			/* If the router receives the packet, consider the packet with the Type 0(Echo). */
 			if(icmp_header->icmp_type == icmp_type0){
@@ -427,11 +415,11 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 				print_addr_ip_int(ip_orig_header->ip_dst);
 				fprintf(stderr, "Sending The Packet Back To ");
 				print_addr_ip_int(ip_orig_header->ip_src);
-				send_icmp_error(icmp_type3, icmp_code, sr, interface, len, packet);
+				send_icmp_error(icmp_type3, icmp_code, sr, interface, packet);
 			}
 		}else{
 			fprintf(stderr, "Received Packet TTL(%u) Expired in Transit \n", ip_orig_header->ip_ttl);
-			send_icmp_error(icmp_type11, 0, sr, interface, len, packet);
+			send_icmp_error(icmp_type11, 0, sr, interface, packet);
 		}
 	}
 }/* end sr_handlepacket_ip */
