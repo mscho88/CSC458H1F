@@ -281,7 +281,6 @@ void send_icmp_echo(struct sr_instance* sr, uint8_t* packet, unsigned int len, c
 
 	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *)_packet;
 	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
-	sr_icmp_hdr_t *icmp_header = (sr_icmp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
 	eth_header->ether_type = htons(ethertype_ip);
 	uint8_t shost[ETHER_ADDR_LEN];
