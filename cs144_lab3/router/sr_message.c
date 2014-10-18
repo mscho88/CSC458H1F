@@ -55,7 +55,7 @@ void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, ui
 	print_hdr_icmp(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_icmp_t3_hdr_t));
 	printf("**********\n");
 	sr_send_packet(sr, (uint8_t *)_packet, length, interfaces->name);
-	/*free(_packet);*/
+	free(_packet);
 }
 
 /*---------------------------------------------------------------------
@@ -132,7 +132,6 @@ void build_icmp_header(uint8_t *_packet, uint8_t *packet, sr_ip_hdr_t *ip_header
 	memcpy(icmp_tmp_hdr->data, ip_header, 20);
 	memcpy(icmp_tmp_hdr->data + 20, packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), 8);
 	icmp_tmp_hdr->icmp_sum = 0;
-	/*icmp_tmp_hdr->icmp_sum = cksum(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
-							sizeof(sr_icmp_t3_hdr_t));*/
-	icmp_tmp_hdr->icmp_sum = cksum(icmp_tmp_hdr, sizeof(sr_icmp_t3_hdr_t));
+	icmp_tmp_hdr->icmp_sum = cksum(icmp_tmp_hdr + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
+							sizeof(sr_icmp_t3_hdr_t));
 }
