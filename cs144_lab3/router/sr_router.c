@@ -127,7 +127,9 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				print_addr_ip_int(request->ip);
 				struct sr_packet *cur_packet = request->packets;
 				while(cur_packet) {
+					/*forward_packet(sr, cur_packet->iface, arp_header->ar_sha, cur_packet->len, cur_packet->buf);*/
 					forward_packet(sr, cur_packet->iface, arp_header->ar_sha, cur_packet->len, cur_packet->buf);
+
 					cur_packet = cur_packet->next;
 				}
 			}
@@ -257,6 +259,8 @@ void forward_packet(struct sr_instance *sr, char *interface, unsigned char *dest
 	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
 	ip_header->ip_sum = 0;
 	ip_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
+	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), packet + sizeof(sr_ethernet_hdr_t),interfaces);
+	print_hdr_ip(ip_header);
 
 	sr_send_packet(sr, _packet, len, interface);
 	free(_packet);
