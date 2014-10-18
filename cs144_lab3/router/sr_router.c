@@ -261,9 +261,7 @@ void forward_packet(struct sr_instance *sr, char *interface, unsigned char *dest
 	ip_tmp_header->ip_sum = 0;
 	ip_tmp_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
-
-	sr_ip_hdr_t* ip_tmp_header = (sr_ip_hdr_t *)_packet;
-		ip_tmp_header->ip_v = ip_header->ip_v;
+	ip_tmp_header->ip_v = ip_header->ip_v;
 		ip_tmp_header->ip_hl = 5;/*ip_header->ip_hl;*/
 		ip_tmp_header->ip_tos = 0;/*ip_header->ip_tos;*/
 		ip_tmp_header->ip_len = htons(sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t));
