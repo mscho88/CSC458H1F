@@ -270,7 +270,7 @@ void forward_packet(struct sr_instance *sr, char *interface, unsigned char *dest
 		ip_tmp_header->ip_len = htons(sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t));
 
 		ip_tmp_header->ip_src = interfaces->ip;
-		ip_tmp_header->ip_dst = ip_header->ip_src;
+		ip_tmp_header->ip_dst = ip_header->ip_dst;
 		ip_tmp_header->ip_id = 0;
 		ip_tmp_header->ip_off = 0;/*htons(ip_header->ip_off);*/
 		ip_tmp_header->ip_ttl = ip_header->ip_ttl;
