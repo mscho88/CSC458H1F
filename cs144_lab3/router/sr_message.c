@@ -100,7 +100,7 @@ void send_ip_error_packet(struct sr_instance* sr, uint8_t* packet, char* interfa
 	ip_new_header->ip_ttl = 64;
 	ip_new_header->ip_p = htons(ip_protocol_icmp);
 	ip_new_header->ip_sum = 0;
-	ip_new_header->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
+	ip_new_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
 	icmp_new_header->icmp_type = type;
 	icmp_new_header->icmp_code = code;
