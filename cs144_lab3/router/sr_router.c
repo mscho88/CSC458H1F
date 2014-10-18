@@ -125,8 +125,8 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		if (get_interface_for_ip(sr->if_list, arp_header->ar_tip)) {
 			struct sr_arpreq *request;
 			if((request = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) != NULL) {
-				struct sr_packet *cur_packet;
-				while((cur_packet = request->packets)) {
+				struct sr_packet *cur_packet = request->packets;
+				while(cur_packet) {
 					forward_packet(sr, cur_packet->iface, arp_header->ar_sha, cur_packet->len, cur_packet->buf);
 					cur_packet = cur_packet->next;
 				}
