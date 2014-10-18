@@ -50,7 +50,26 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 		req = prevreq->next;
 	}
 }
-
+struct sr_if *next_hop(struct sr_instance *sr, char *intfc, uint32_t dest) {
+	struct sr_if* interface = sr->if_list;
+	int max_match = 0;
+	int cur_match = 0;
+	struct sr_if *nxt_hop_ip = (struct sr_if *) malloc(sizeof(sr->if_list));
+	while (interface) {
+		if (strncmp(interface->name, intfc, sr_IFACE_NAMELEN) != 0) {
+			cur_match = 0;
+			while (memcmp(&(dest), &(interface->ip), cur_match) == 0) {
+				cur_match = cur_match + 1;
+			}
+			if (max_match < cur_match) {
+				max_match = cur_match;
+				nxt_hop_ip = interface;
+			}
+		}
+		interface = interface->next;
+	}
+	return nxt_hop_ip;
+}
 void send_arp_request(struct sr_instance *sr, uint32_t dst_ip, char *interface) {
 
 	uint8_t *packet = (uint8_t *)malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t));
