@@ -16,119 +16,28 @@
   checking whether we should resend an request or destroy the arp request.
   See the comments in the header file for an idea of what it should look like.
 */
-void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
-	struct sr_arpcache *cache = &(sr->cache);
-	struct sr_arpreq *req = cache->requests;
-	struct sr_arpreq *prevreq = cache->requests;
-	while(req) {
-		prevreq = req;
-		handle_arpreq(sr, cache, req);
-		req = prevreq->next;
-	}
-}
+void sr_arpcache_sweepreqs(struct sr_instance *sr) {
+	struct sr_arpreq *arp_req = sr->cache->requests;
+	double cur_time;
+	while(arp_req){
+		cur_time = time(NULL);
+		if(difftime(cur_time, arp_req->sent) > 1.0){
+			if (arp_req->times_sent >= 5){
+				/*send icmp host unreachable to source addr of all pkts waiting on this request*/
+				/*arpreq_destroy(req)*/
+				/*struct sr_arpcache *cache, struct sr_arpreq *entry*/
+				sr_arpreq_destroy(sr->cache, sr->cache->entries);
 
-/*
- * Send ARP request.
- */
-void send_arp_request(struct sr_instance *sr, uint32_t dst_ip, char *interface) {
-
-	uint8_t *packet = (uint8_t *)malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t));
-	unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-	struct sr_if *rt_if = (struct sr_if *)sr_get_interface(sr, interface);
-	uint8_t brdcst_addr[ETHER_ADDR_LEN];
-
-	int i = 0;
-	for(i; i < ETHER_ADDR_LEN; i++){
-		brdcst_addr[i] = 255;
-	}
-
-	/* Prepare ethernet header. */
-	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *)(packet);
-	ether_hdr->ether_type = htons(ethertype_arp);
-	memcpy(ether_hdr->ether_shost, rt_if->addr, ETHER_ADDR_LEN);
-	memcpy(ether_hdr->ether_dhost, brdcst_addr, ETHER_ADDR_LEN);
-
-	/* Prepare ARP header. */
-	sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
-	arp_hdr->ar_hrd = htons(arp_hrd_ethernet);
-	arp_hdr->ar_pro = htons(ethertype_ip);
-	arp_hdr->ar_hln = ETHER_ADDR_LEN;
-	arp_hdr->ar_pln = 4;
-	arp_hdr->ar_op = htons(arp_op_request);
-	memcpy(arp_hdr->ar_sha, rt_if->addr, ETHER_ADDR_LEN);
-	arp_hdr->ar_sip = rt_if->ip;
-	memcpy(arp_hdr->ar_tha, brdcst_addr, ETHER_ADDR_LEN);
-	arp_hdr->ar_tip = dst_ip;
-
-	/* Send the packet. */
-	sr_send_packet(sr, packet, len, interface);
-}
-struct sr_if *next_hop(struct sr_instance *sr, char *intfc, uint32_t dest) {
-	struct sr_if* interface = sr->if_list;
-	int max_match = 0;
-	int cur_match = 0;
-	struct sr_if *nxt_hop_ip = (struct sr_if *) malloc(sizeof(sr->if_list));
-	while (interface) {
-		if (strncmp(interface->name, intfc, sr_IFACE_NAMELEN) != 0) {
-			cur_match = 0;
-			while (memcmp(&(dest), &(interface->ip), cur_match) == 0) {
-				cur_match = cur_match + 1;
 			}
-			if (max_match < cur_match) {
-				max_match = cur_match;
-				nxt_hop_ip = interface;
-			}
+		}else{
+			arp_req->sent = cur_time;
+			arp_req->times_sent++;
+			printf("arp request is required\n");
 		}
-		interface = interface->next;
-	}
-	return nxt_hop_ip;
-}
-void handle_arpreq(struct sr_instance *sr, struct sr_arpcache *cache, struct sr_arpreq *request) {
-
-	time_t curtime = time(NULL);
-	if (difftime(curtime, request->sent) > 1.0) {
-		fprintf(stderr, "1\n");
-		struct sr_packet *cur_packet = (struct sr_packet *)(request->packets);
-		fprintf(stderr, "2\n");
-    	if (request->times_sent >= 5) {
-
-    		fprintf(stderr, "3\n");
-    		fprintf(stderr,"About to send ICMP errors to all packets \n");
-				while (cur_packet) {
-
-					fprintf(stderr, "4\n");
-					/*Find the interface that the packet came in on*/
-					struct sr_if *src_if = (struct sr_if *)malloc(sizeof(struct sr_if));
-					sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(cur_packet->buf + sizeof(sr_ethernet_hdr_t));
-					src_if = next_hop(sr, cur_packet->iface, ip_hdr->ip_src);
-
-					/*Send icmp host unreachable to each packet*/
-					send_icmp_error(3, 1, sr, src_if->name, cur_packet->len, cur_packet->buf);
-					fprintf(stderr,"Sent Error packets throug \n");
-
-					cur_packet = cur_packet->next;
-				}
-
-        sr_arpreq_destroy(cache, request);
-
-      }else{
-      	fprintf(stderr, "The IP we are wating on is %u \n", request->ip);
-      	fprintf(stderr, cur_packet->iface);
-      	if(cur_packet) {
-      		/*fprintf(stderr, "srry i Tried \n");*/
-      		/*We send an Arp request*/;
-      		fprintf(stderr, "5\n");
-
-      		send_arp_request(sr, request->ip, cur_packet->iface);
-      		fprintf(stderr, "6\n");
-					request->sent = curtime;
-					request->times_sent++;
-      	}
-
-
-		}
+		arp_req = arp_req->next;
 	}
 }
+
 /* You should not need to touch the rest of this code. */
 
 /* Checks if an IP->MAC mapping is in the cache. IP is in network byte order.
