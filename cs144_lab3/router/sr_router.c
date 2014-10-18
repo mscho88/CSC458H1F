@@ -182,7 +182,7 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint1
 		printf("%sasdojfoiasdjoif\n", interface);
 		uint8_t* _packet = (uint8_t*)malloc(length);
 
-		build_ether_header(_packet, eth_header, interfaces);
+		build_ether_header(_packet, eth_header, interfaces, protocol);
 		build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
 		build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), icmp_header, interfaces);
 
@@ -200,11 +200,16 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint1
  * This method is called when the ethernet type is Internet Protocol.
  *
  *---------------------------------------------------------------------*/
-void build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, struct sr_if* if_walker){
+void build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, struct sr_if* if_walker, uint16_t protocol){
 	sr_ethernet_hdr_t *eth_tmp_header = (sr_ethernet_hdr_t *)_packet;
 	memcpy(eth_tmp_header->ether_dhost, eth_orig_header->ether_shost, ETHER_ADDR_LEN);
 	memcpy(eth_tmp_header->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
-	eth_tmp_header->ether_type = htons(ethertype_arp);
+	if(protocol == ethertype_arp){
+		eth_tmp_header->ether_type = htons(ethertype_arp);
+	}else if(protocol == ethertype_ip){
+		eth_tmp_header->ether_type = htons(ethertype_ip);
+
+	}
 }
 /*---------------------------------------------------------------------
  * Method: sr_handlepacket(uint8_t* p,char* interface)
