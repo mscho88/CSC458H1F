@@ -399,6 +399,7 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 					free(arp_entry);
 				}else{
 					/*send_packet(); arp request send*/
+					Debug("")
 					fprintf(stderr, "IP->MAC mapping not in ARP cache %u \n", ip_orig_header->ip_dst);
 					/*Case where ip->mapping is not in cache*/
 					/***************/
@@ -410,6 +411,11 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 				/* ICMP net unreachable */
 				/* important*/
 				/*send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), 3);*/
+				fprintf(stderr, "Could Not Be Determined To Transmit The Packet To ");
+				print_addr_ip_int(ip_orig_header->ip_dst);
+				frpintf(stderr, "\n Sending The Packet Back To ");
+				print_addr_ip_int(ip_orig_header->ip_src);
+				frpintf(stderr, "\n");
 				send_icmp_error(icmp_type3, icmp_code, sr, interface, len, packet);
 			}
 		}else{
