@@ -12,8 +12,6 @@
 #include "sr_packet.h"
 #include "sr_protocol.h"
 
-#define ETHER_HEADER_LEN 14
-#define IPV4_HEADER_LEN 20
 /* 
   This function gets called every second. For each request sent out, we keep
   checking whether we should resend an request or destroy the arp request.

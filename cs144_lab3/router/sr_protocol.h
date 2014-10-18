@@ -151,7 +151,7 @@ struct sr_ethernet_hdr
 } __attribute__ ((packed)) ;
 typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
-uint8_t Broadcast[ETHER_ADDR_LEN] = {255, 255, 255, 255, 255, 255};
+
 
 enum sr_icmp_code {
 	icmp_code = 0x0000,

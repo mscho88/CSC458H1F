@@ -12,6 +12,8 @@
 #include "sr_arpcache.h"
 #include "sr_utils.h"
 
+static uint8_t Broadcast[ETHER_ADDR_LEN] = {255, 255, 255, 255, 255, 255};
+
 void send_arp_packet(struct sr_instance*, uint8_t*, unsigned int, char*);
 void send_ip_packet(struct sr_instance*, uint8_t*, char*, uint16_t, uint16_t);
 
