@@ -112,8 +112,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	assert(packet);
 	assert(interface);
 
-	Debug("ARP\n");
-
 	/* Set the packet to the ethernet header and ARP header */
 	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *) packet;
     sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
@@ -121,8 +119,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     if(htons(arp_header->ar_op) == arp_op_request){
     	/* If the packet is ARP request, then the router tries to caches
     	 * the information of the sender. */
-    	Debug("ARP request\n");
-
     	send_arp_packet(sr, packet, len, interface);
     }else if(htons(arp_header->ar_op) == arp_op_reply){
     	Debug("ARP reply\n");
@@ -259,7 +255,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					free(arp_entry);
 				}else{
 					/*send_packet(); arp request send*/
-					Debug("");
 					fprintf(stderr, "IP->MAC mapping not in ARP cache %u \n", ip_header->ip_dst);
 					/*Case where ip->mapping is not in cache*/
 					/***************/
@@ -276,7 +271,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				print_addr_ip_int(ip_header->ip_dst);
 				fprintf(stderr, "Sending The Packet Back To ");
 				print_addr_ip_int(ip_header->ip_src);*/
-				send_ip_packet(sr, interface, packet, icmp_type3, icmp_code);
+				send_ip_packet(sr, packet, interface, icmp_type3, icmp_code);
 				/* send_icmp_error(icmp_type3, icmp_code, sr, interface, packet);*/
 			}
 		}else{
