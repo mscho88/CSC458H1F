@@ -167,11 +167,8 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint1
 
 		uint8_t* _packet = (uint8_t*)malloc(length);
 
-		build_ether_header(_packet, eth_header, interfaces);
+		build_ether_header(_packet, eth_header, interfaces, protocol);
 		build_arp_header(_packet + sizeof(sr_ethernet_hdr_t), arp_header, interfaces);
-
-		print_hdr_eth(_packet);
-		print_hdr_arp(_packet + sizeof(sr_ethernet_hdr_t));
 
 		sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
 		free(_packet);
