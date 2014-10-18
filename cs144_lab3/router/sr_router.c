@@ -154,7 +154,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
  * This method is called when the router needs to send a packet.
  *
  *---------------------------------------------------------------------*/
-void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t protocol, int type){
+void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t protocol, uint16_t type){
 	unsigned int length;
 
 	sr_ethernet_hdr_t* eth_header = (sr_ethernet_hdr_t *)packet;
@@ -265,9 +265,9 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* if_
 	ip_tmp_header->ip_sum = cksum((uint8_t*)ip_header, IPv4_MIN_LEN);
 }
 
-void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_if* if_walker, int type){
+void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_if* if_walker, uint16_t type){
 
-	if(type == 3){
+	if(type == icmp_protocol_type3){
 		sr_icmp_t3_hdr_t *icmp_tmp_header = (sr_icmp_t3_hdr_t *)_packet;
 		icmp_tmp_header->icmp_code = icmp_header->icmp_code;
 		icmp_tmp_header->icmp_type = 3;
@@ -333,7 +333,30 @@ void send_icmp_error(uint8_t type, uint8_t code, struct sr_instance *sr,
 	/* Send the ICMP error packet. */
 	sr_send_packet(sr, packet, new_len, interface);
 }
+void forward_packet(struct sr_instance *sr, char *interface,
+					unsigned char *dest_mac, unsigned int len, uint8_t *pkt) {
 
+	uint8_t *packet = (uint8_t *) malloc(len);
+	memcpy(packet, pkt, len);
+	struct sr_if *rt_if = (struct sr_if *)malloc(sizeof(struct sr_if));
+	rt_if = (struct sr_if *)sr_get_interface(sr, interface);
+
+	/* Prepare ethernet header. */
+	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *) packet;
+	ether_hdr->ether_type = htons(ethertype_ip);
+	memcpy(ether_hdr->ether_shost, rt_if->addr, ETHER_ADDR_LEN);
+	memcpy(ether_hdr->ether_dhost, &(dest_mac), ETHER_ADDR_LEN);
+
+	/* Recompute checksum. */
+	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+	ip_hdr->ip_sum = 0;
+	ip_hdr->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
+
+	/* Forward to next hop. */
+	print_hdrs(packet, len);
+	sr_send_packet(sr, packet, len, interface);
+	free(packet);
+}
 
 /*
 void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_if* if_walker){
@@ -379,6 +402,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	/* Check whether there exists the destination from the packet is in the route table.*/
 	struct sr_if *dest;
 	if(is_for_me(sr->if_list, ip_orig_header->ip_dst)){
+		if(ip_orig_header->ip_p == ip_protocol_tcp || ip_orig_header->ip_p == ip_protocol_udp){
+
+		}
 		/* In the routing table, the destination can be verified.*/
 		if(icmp_header->icmp_type == icmp_protocol_type0){
 			/* ICMP Echo Reply */
@@ -402,15 +428,22 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		if((match_dest = sr_longest_prefix_match(sr->routing_table, ip_orig_header)) != 0){
 			struct sr_arpentry *arp_entry;
 			if((arp_entry = sr_arpcache_lookup(&sr->cache, ip_orig_header->ip_dst)) != NULL){
-
+				fprintf(stderr, "Found IP->MAC mapping in ARP cache forwarding packet \n");
+				forward_packet(sr, match_dest->interface, arp_entry->mac, len, packet);
+				free(arp_entry);
 			}else{
 				/*send_packet(); arp request send*/
+				fprintf(stderr, "IP->MAC mapping not in ARP cache %u \n", ip_orig_header->ip_dst);
+				/*Case where ip->mapping is not in cache*/
+				sr_arpcache_queuereq(&sr->cache, ip_orig_header->ip_dst, packet, len, match_dest->interface);
+				fprintf(stderr, "Added Arp Req to queu \n");
 			}
 		}else{
 			/* no match found error */
 			/* ICMP net unreachable */
+			/* important*/
 			/*send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), 3);*/
-			send_icmp_error(3, 0, sr, interface, len, packet);
+			send_icmp_error(icmp_protocol_type3, icmp_protocol_code, sr, interface, len, packet);
 		}
 	}
 }/* end sr_handlepacket_ip */
