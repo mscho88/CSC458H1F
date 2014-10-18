@@ -181,6 +181,7 @@ void forward_packet(struct sr_instance *sr, char *interface,
 	/*print_hdrs(packet, len);*/
 	sr_send_packet(sr, packet, len, interface);
 	free(packet);
+	free(rt_if);
 }
 
 /*---------------------------------------------------------------------
@@ -354,6 +355,7 @@ void send_icmp_echo(struct sr_instance *sr, char *interface, unsigned int len, u
 	/* Now send the packet. */
 	sr_send_packet(sr, packet, len, interface);
 	free(packet);
+	free(rt_if);
 }
 
 
