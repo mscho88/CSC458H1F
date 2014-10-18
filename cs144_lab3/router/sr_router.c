@@ -182,7 +182,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}else{
 			/* If the router receives the packet, consider the packet with the Type 0(Echo). */
 			if(icmp_header->icmp_type == icmp_type0){
-				send_icmp_echo(sr, interface, len, packet);
+				send_icmp_echo_packet(sr, packet, len, interface);
 			}else{
 				fprintf(stderr, " Received Unknown Type Of ICMP Packet \n");
 			}
@@ -273,7 +273,7 @@ void forward_packet(struct sr_instance *sr, char *interface,
 	free(packet);
 }
 
-void send_icmp_echo(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface) {
+void send_icmp_echo_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface) {
 
 	uint8_t *_packet = (uint8_t *) malloc(len);
 	memcpy(_packet, packet, len);
