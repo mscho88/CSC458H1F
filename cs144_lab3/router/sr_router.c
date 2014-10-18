@@ -23,6 +23,7 @@
 #include "sr_utils.h"
 
 #define IPv4_MIN_LEN 20
+#define ICMP_MIN_LEN 8
 
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
@@ -98,7 +99,7 @@ void sr_handlepacket(struct sr_instance* sr,
   }else{
 	  Debug("*** -> Received unknown packet of length %d \n", len);
   }
-}/* end sr_ForwardPacket */
+}/* end sr_handlepacket */
 
 /*---------------------------------------------------------------------
  * Method: sr_handlepacket(uint8_t* p,char* interface)
@@ -184,6 +185,8 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint1
 		build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
 		build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), icmp_header, interfaces);
 
+		print_hdr_ip(ip_header);
+		print_hdr_icmp(icmp_header);
 		sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
 		free(_packet);
 	}
@@ -232,13 +235,23 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* if_
 	ip_tmp_header->ip_off = ip_header->ip_off;
 	ip_tmp_header->ip_ttl = ip_header->ip_ttl;
 	ip_tmp_header->ip_p = ip_header->ip_p;
+	ip_tmp_header->ip_src = if_walker->ip;
+	ip_tmp_header->ip_dst = ip_header->ip_src;
+
 	ip_tmp_header->ip_sum = 0;
-	ip_tmp_header->ip_src = /*myself*/ip_header->ip_src;
-	ip_tmp_header->ip_dst = ip_header->ip_dst;
+	ip_tmp_header->ip_sum = cksum((uint8_t*)ip_header, IPv4_MIN_LEN);
 }
 
 void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_if* if_walker){
+	sr_icmp_hdr_t *icmp_tmp_header = (sr_icmp_hdr_t *)_packet;
 
+	icmp_tmp_header->icmp_code = icmp_header->icmp_code;
+	if(icmp_header->icmp_type == icmp_protocol_type8){
+		icmp_tmp_header->icmp_type = icmp_protocol_type0;
+	}
+	icmp_tmp_header->icmp_sum = 0;
+	icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, ICMP_MIN_LEN);
+	print("icmp %u\n", icmp_tmp_header->icmp_sum);
 }
 
 /*---------------------------------------------------------------------
@@ -277,7 +290,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	struct sr_if *dest;
 	if(is_for_me(sr->if_list, ip_orig_header->ip_dst)){
 		/* In the routing table, the destination can be verified.*/
-		if(icmp_header->icmp_type == icmp_protocol_type1){
+		if(icmp_header->icmp_type == icmp_protocol_type0){
 			/* ICMP Echo Reply */
 			printf("ICMP Echo Reply\n");
 		}else if(icmp_header->icmp_type == icmp_protocol_type8){
@@ -294,34 +307,32 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			/* ICMP Port Unreachable */
 			fprintf(stderr, "ICMP port unreachable. \n");
 		}
-		if(htons(ip_orig_header->ip_p) == ip_protocol_icmp){
-			printf("icmppppppppppppppp\n");
-			if(ip_orig_header->ip_ttl > 0){
-				ip_orig_header->ip_ttl--;
-				/*send the packet to the destination */
-			}else{
-				/* TTL is over. Hence, drop the packet and send the TTL is over. */
-			}
-		}else{
-			fprintf(stderr, "ICMP port unreachable. \n");
-			/* send packet that icmp is unreachable*/
-		}
-
 	}else{
 		struct sr_rt *match_dest;
 		if((match_dest = sr_longest_prefix_match(sr->routing_table, ip_orig_header)) != 0){
-			print_addr_ip(match_dest->dest);
-			print_addr_ip(match_dest->gw);
-			print_addr_ip(match_dest->mask);
-			/* */
+			struct sr_arpentry *arp_entry;
+			if((arp_entry = sr_arpcache_lookup(sr->cache, ip_orig_header->ip_dst)) != NULL){
 
+			}else{
+				/*send_packet(); arp request send*/
+			}
 		}else{
 			/* no match found error */
 			/* ICMP net unreachable */
+			send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), icmp_header->icmp_type);
 		}
 	}
 }/* end sr_handlepacket_ip */
 
+/*---------------------------------------------------------------------
+ * Method: sr_longest_prefix_match(struct sr_rt*, sr_ip_hdr_t*)
+ * Scope:  Global
+ *
+ * This method is called to find the longest prefix match in the
+ * routing table. It returns 0 if there is no matching even one
+ * bit. Otherwise, returns the longest prefix match routing table.
+ *
+ *---------------------------------------------------------------------*/
 struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_header){
 	struct sr_rt *best = 0;
 	while(rtable){
@@ -335,7 +346,15 @@ struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_head
 	return best;
 }/* end sr_longest_prefix_match */
 
-
+/*---------------------------------------------------------------------
+ * Method: is_for_me(struct sr_if*, uint32_t*)
+ * Scope:  Global
+ *
+ * This method is called to check whether the destination ip address
+ * in the received packet is for the router or not. returns 1 if it
+ * is, and 0 otherwise.
+ *
+ *---------------------------------------------------------------------*/
 int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
 	while(interfaces){
 		if(interfaces->ip == dest_ip){

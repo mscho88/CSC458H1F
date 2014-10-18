@@ -152,7 +152,7 @@ struct sr_ethernet_hdr
 typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
 enum sr_icmp_protocol {
-	icmp_protocol_type1 = 0,
+	icmp_protocol_type0 = 0,
 	icmp_protocol_type8 = 8,
 	icmp_protocol_type11 = 11,
 	icmp_protocol_type30 = 30,
