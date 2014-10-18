@@ -138,8 +138,28 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		}
     	}else{
     		/* Send ARP reply message */
-    		send_packet(sr, packet, len, interface, htons(eth_header->ether_type));
-    	}
+			fprintf(stderr, "We got an ARP Reply, need to check for intfc tho \n");
+			/* arp reply */
+			struct sr_if *interface_for_ip = get_interface_for_ip(sr, arp_orig_header->ar_tip);
+			if (interface_for_ip) {
+				fprintf(stderr, "We got an ARP Reply for one of our interfaces\n");
+				/*We first want to insert into Arp cache*/
+				struct sr_arpreq *request = sr_arpcache_insert(&(sr->cache),
+						arp_orig_header->ar_sha,
+						arp_orig_header->ar_sip);
+				fprintf(stderr, "Signalling all waiting packets\n");
+				if (request) {
+					struct sr_packet *cur_packet = request->packets;
+					while(cur_packet) {
+						fprintf(stderr, "About to forward \n");
+						print_hdrs(cur_packet->buf, cur_packet->len);
+						forward_packet(sr, cur_packet->iface, arp_orig_header->ar_sha,
+						cur_packet->len, cur_packet->buf);
+						fprintf(stderr, "Packet Forwarded\n");
+						cur_packet = cur_packet->next;
+					}
+				}
+			}    	}
     }else if(htons(arp_orig_header->ar_op) == arp_op_reply){
     	/* If the packet is ARP reply, then the router ....*/
     	Debug("*** -> Address Resolution Protocol reply \n");
@@ -505,4 +525,18 @@ int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
 		interfaces = interfaces->next;
 	}
 	return 0;
-}/* end sr_get_interface_by_ip */
+}
+
+struct sr_if* get_interface_for_ip(struct sr_instance *sr, uint32_t ip) {
+ 	struct sr_if* interface = sr->if_list;
+
+ 	while (interface) {
+ 		if ((memcmp(&ip, &(interface->ip), sizeof(ip))) == 0) {
+ 			return interface;
+ 		} else {
+ 			interface = interface->next;
+ 		}
+ 	}
+
+  	return 0;
+}
