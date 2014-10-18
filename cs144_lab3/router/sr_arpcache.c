@@ -10,6 +10,8 @@
 #include "sr_router.h"
 #include "sr_if.h"
 #include "sr_protocol.h"
+#include "sr_message.h"
+
 #define ETHER_HEADER_LEN 14
 #define IPV4_HEADER_LEN 20
 /* 
