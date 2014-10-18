@@ -127,7 +127,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	/* Send ARP reply message */
 		fprintf(stderr, "We got an ARP Reply, need to check for intfc tho \n");
 		/* arp reply */
-		struct sr_if *interface_for_ip = get_interface_for_ip(sr, arp_header->ar_tip);
+		struct sr_if *interface_for_ip = get_interface_for_ip(sr->if_list, arp_header->ar_tip);
 		if (interface_for_ip) {
 			fprintf(stderr, "We got an ARP Reply for one of our interfaces\n");
 			/*We first want to insert into Arp cache*/
@@ -381,16 +381,13 @@ int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
  * When the ethernet type is Address Resolution Protocol
  *
  *---------------------------------------------------------------------*/
-struct sr_if* get_interface_for_ip(struct sr_instance *sr, uint32_t ip) {
- 	struct sr_if* interface = sr->if_list;
-
- 	while (interface) {
- 		if ((memcmp(&ip, &(interface->ip), sizeof(ip))) == 0) {
- 			return interface;
+struct sr_if* get_interface_for_ip(struct sr_if* interfaces, uint32_t ip) {
+ 	while (interfaces) {
+ 		if ((memcmp(&ip, &(interfaces->ip), sizeof(ip))) == 0) {
+ 			return interfaces;
  		} else {
- 			interface = interface->next;
+ 			interfaces = interfaces->next;
  		}
  	}
-
   	return 0;
 }
