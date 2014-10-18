@@ -75,6 +75,6 @@ void sr_set_ether_addr(struct sr_instance* , const unsigned char* );
 void sr_print_if_list(struct sr_instance* );
 
 struct sr_rt *sr_longest_prefix_match(struct sr_rt*, sr_ip_hdr_t*);
-struct sr_if* get_interface_for_ip(struct sr_instance *, uint32_t );
+struct sr_if* get_interface_for_ip(struct sr_if *, uint32_t );
 
 #endif /* SR_ROUTER_H */
