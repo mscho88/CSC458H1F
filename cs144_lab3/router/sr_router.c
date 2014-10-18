@@ -123,6 +123,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *) packet;
     sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
+    printf("%s came in\n", interface);
     if(htons(arp_orig_header->ar_op) == arp_op_request){
     	/* If the packet is ARP request, then the router tries to caches
     	 * the information of the sender. */
