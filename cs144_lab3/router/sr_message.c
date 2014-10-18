@@ -32,6 +32,41 @@ void send_arp_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, 
 	free(_packet);
 }/* end send_arp_packet */
 
+void send_ip_error_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t type, uint16_t code){
+	int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
+	uint8_t *_packet = (uint8_t *) malloc(length);
+	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
+
+	sr_ethernet_hdr_t *eth_new_header = (sr_ethernet_hdr_t *)_packet;
+	sr_ip_hdr_t *ip_new_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
+	sr_icmp_t3_hdr_t *icmp_t3_hdr = (sr_icmp_t3_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+
+	eth_new_header->ether_type = htons(ethertype_ip);
+	memcpy(eth_new_header->ether_shost, interfaces->addr, ETHER_ADDR_LEN);
+	memcpy(eth_new_header->ether_dhost, ((sr_ethernet_hdr_t *)packet)->ether_shost, ETHER_ADDR_LEN);
+
+	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+	memcpy(ip_new_header, ip_header, sizeof(sr_ip_hdr_t));
+	ip_new_header->ip_src = interfaces->ip;
+	ip_new_header->ip_dst = ip_header->ip_src;
+	ip_new_header->ip_len = htons(56);
+	ip_new_header->ip_id = 0;
+	ip_new_header->ip_hl = 5;
+	ip_new_header->ip_off = 0;
+	ip_new_header->ip_ttl = 64;
+	ip_new_header->ip_p = ip_protocol_icmp;
+	ip_new_header->ip_sum = 0;
+	ip_new_header->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
+
+	icmp_t3_hdr->icmp_type = type;
+	icmp_t3_hdr->icmp_code = code;
+	icmp_t3_hdr->icmp_sum = 0;
+	memcpy(icmp_t3_hdr->data,  ip_header, 20);
+	memcpy(icmp_t3_hdr->data + 20, packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), 8);
+	icmp_t3_hdr->icmp_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), sizeof(sr_icmp_t3_hdr_t));
+
+	sr_send_packet(sr, _packet, length, interface);
+}
 void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t type, uint16_t code){
 	unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
