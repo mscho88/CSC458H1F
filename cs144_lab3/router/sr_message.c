@@ -47,8 +47,8 @@ void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, ui
 	build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), packet, ip_header, icmp_header, interfaces, type, code);
 
 	print_hdr_eth(_packet);
-	print_hdr_ip(_packet + sizeof(sr_ethernet_hdr_t));
-	print_hdr_icmp(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+	print_hdr_ip(_packet);
+	print_hdr_icmp(_packet);
 	sr_send_packet(sr, (uint8_t *)_packet, length, interfaces->name);
 	free(_packet);
 }
