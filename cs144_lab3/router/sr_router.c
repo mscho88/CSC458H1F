@@ -393,6 +393,7 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 			if((dest = sr_longest_prefix_match(&(sr->routing_table), ip_orig_header)) != 0){
 				struct sr_arpentry *arp_entry;
 				if((arp_entry = sr_arpcache_lookup(&(sr->cache), ip_orig_header->ip_dst)) != NULL){
+					Debug("Transmitting the packet to the destination : %s. \n", arp_entry->mac);
 					/***************/
 					forward_packet(sr, dest->interface, arp_entry->mac, len, packet);
 					free(arp_entry);
@@ -406,9 +407,6 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 					fprintf(stderr, "Added Arp Req to queu \n");
 				}
 			}else{
-				print_addr_ip(dest->dest);
-				print_addr_ip(dest->gw);
-				print_addr_ip(dest->mask);
 				/* no match found error */
 				/* ICMP net unreachable */
 				/* important*/
@@ -438,7 +436,7 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_header){
 	struct sr_rt *best = 0;
 	while(rtable){
-		if((rtable->dest.s_addr & rtable->mask.s_addr) == (ip_header->ip_dst & rtable->mask.s_addr)){
+		if((ip_header->ip_dst & rtable->mask.s_addr) == (rtable->dest.s_addr & rtable->mask.s_addr)){
 			if(best == 0 || rtable->mask.s_addr > best->mask.s_addr){
 				best = rtable;
 			}
