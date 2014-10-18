@@ -390,7 +390,7 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 
 			/* Find the longest prefix match from the routing table. */
 			struct sr_rt *dest;
-			if((dest = sr_longest_prefix_match(&(sr->routing_table), ip_orig_header)) != 0){
+			if((dest = sr_longest_prefix_match(sr->routing_table, ip_orig_header)) != 0){
 				struct sr_arpentry *arp_entry;
 				if((arp_entry = sr_arpcache_lookup(&(sr->cache), ip_orig_header->ip_dst)) != NULL){
 					Debug("Transmitting the packet to the destination : %s. \n", arp_entry->mac);
