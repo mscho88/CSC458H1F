@@ -143,6 +143,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				struct sr_packet *cur_packet = request->packets;
 				while(cur_packet) {
 					fprintf(stderr, "About to forward \n");
+					print_hdrs(cur_packet->buf, cur_packet->len);
 					forward_packet(sr, cur_packet->iface, arp_orig_header->ar_sha,
 					cur_packet->len, cur_packet->buf);
 					fprintf(stderr, "Packet Forwarded\n");
@@ -316,6 +317,7 @@ void forward_packet(struct sr_instance *sr, char *interface,
 	ip_hdr->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
 	/* Forward to next hop. */
+	print_hdrs(packet, len);
 	sr_send_packet(sr, packet, len, interface);
 	free(packet);
 }
