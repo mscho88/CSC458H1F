@@ -43,7 +43,6 @@ void send_ip_error_packet(struct sr_instance *sr, uint8_t *packet, char *interfa
 	memcpy(ether_newhdr->ether_shost, rt_if->addr, ETHER_ADDR_LEN);
 	memcpy(ether_newhdr->ether_dhost, ether_hdr->ether_shost, ETHER_ADDR_LEN);
 
-	/* Prepare IP header. */
 	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 	sr_ip_hdr_t *ip_newhdr = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
 	memcpy(ip_newhdr, ip_hdr, sizeof(sr_ip_hdr_t));
@@ -54,11 +53,10 @@ void send_ip_error_packet(struct sr_instance *sr, uint8_t *packet, char *interfa
 	ip_newhdr->ip_hl = 5;
 	ip_newhdr->ip_off = 0;
 	ip_newhdr->ip_ttl = 64;
-	ip_newhdr->ip_p = ip_protocol_icmp;
+	ip_newhdr->ip_p = htons(ip_protocol_icmp);
 	ip_newhdr->ip_sum = 0;
 	ip_newhdr->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
-	/* Prepare the ICMP t3 header. */
 	sr_icmp_t3_hdr_t *icmp_t3_hdr = (sr_icmp_t3_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 	icmp_t3_hdr->icmp_type = type;
 	icmp_t3_hdr->icmp_code = code;
