@@ -292,7 +292,7 @@ void send_icmp_echo(struct sr_instance* sr, uint8_t* packet, unsigned int len, c
 	memcpy(eth_header->ether_dhost, dhost, ETHER_ADDR_LEN);
 
 	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
-	build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), packet, icmp_type0, icmp_code);
+	build_icmp_header((_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)), icmp_type0, icmp_code);
 
 	sr_send_packet(sr, _packet, len, interface);
 	free(_packet);
