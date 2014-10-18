@@ -23,6 +23,8 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 	struct sr_arpreq *prevreq = cache->requests;
 	time_t cur_time;
 	while(req) {
+		printf("111\n");
+
 		prevreq = req;
 		cur_time = time(NULL);
 		if (difftime(cur_time, req->sent) > 1.0) {
