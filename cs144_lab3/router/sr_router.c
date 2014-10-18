@@ -24,7 +24,7 @@
 
 #define IPv4_MIN_LEN 20
 #define ICMP_MIN_LEN 8
-
+#define ETHER_HEADER_LEN 14
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
  * Scope:  Global
@@ -32,6 +32,7 @@
  * Initialize the routing subsystem
  *
  *---------------------------------------------------------------------*/
+unsigned int temporary_len=0;
 
 void sr_init(struct sr_instance* sr)
 {
@@ -249,8 +250,7 @@ void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_i
 	if(icmp_header->icmp_type == icmp_protocol_type8){
 		icmp_tmp_header->icmp_type = icmp_protocol_type0;
 	}
-	icmp_tmp_header->icmp_sum = 0;
-	icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, IPv4_MIN_LEN + ICMP_MIN_LEN);
+	icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, (IPv4_MIN_LEN + 8 > temporary_len - ETHER_HEADER_LEN ? IPv4_MIN_LEN + 8 : temporary_len - ETHER_HEADER_LEN));
 	printf("icmp %u\n", icmp_tmp_header->icmp_sum);
 }
 
@@ -269,7 +269,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	assert(sr);
 	assert(packet);
 	assert(interface);
-
+	temporary_len = len;
 	sr_ethernet_hdr_t* eth_orig_header = (sr_ethernet_hdr_t*)packet;
 	sr_ip_hdr_t* ip_orig_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	sr_icmp_hdr_t* icmp_header =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
