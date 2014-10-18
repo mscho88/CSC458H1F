@@ -124,10 +124,9 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		if (get_interface_for_ip(sr->if_list, arp_header->ar_tip)) {
 			struct sr_arpreq *request;
 			if((request = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) != NULL) {
-				printf("333\n");
+				print_addr_ip_int(request->ip);
 				struct sr_packet *cur_packet = request->packets;
 				while(cur_packet) {
-					printf("4444\n");
 					forward_packet(sr, cur_packet->iface, arp_header->ar_sha, cur_packet->len, cur_packet->buf);
 					cur_packet = cur_packet->next;
 				}
@@ -246,7 +245,6 @@ struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_head
  *
  *---------------------------------------------------------------------*/
 void forward_packet(struct sr_instance *sr, char *interface, unsigned char *dest_mac, unsigned int len, uint8_t *packet) {
-	printf("555\n");
 	uint8_t *_packet = (uint8_t *) malloc(len);
 	memcpy(_packet, packet, len);
 	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
