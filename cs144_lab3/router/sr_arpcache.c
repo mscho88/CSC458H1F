@@ -26,7 +26,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 				/*send icmp host unreachable to source addr of all pkts waiting on this request*/
 				/*arpreq_destroy(req)*/
 				/*struct sr_arpcache *cache, struct sr_arpreq *entry*/
-				sr_arpreq_destroy(sr->cache, sr->cache->entries);
+				sr_arpreq_destroy(&sr->cache, sr->cache->entries);
 
 			}
 		}else{
