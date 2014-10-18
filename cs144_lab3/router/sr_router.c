@@ -251,7 +251,7 @@ void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_i
 	}
 	icmp_tmp_header->icmp_sum = 0;
 	icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, ICMP_MIN_LEN);
-	print("icmp %u\n", icmp_tmp_header->icmp_sum);
+	printf("icmp %u\n", icmp_tmp_header->icmp_sum);
 }
 
 /*---------------------------------------------------------------------
