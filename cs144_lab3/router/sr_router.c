@@ -74,39 +74,34 @@ void sr_handlepacket(struct sr_instance* sr,
         unsigned int len,
         char* interface/* lent */)
 {
-  /* REQUIRES */
-  assert(sr);
-  assert(packet);
-  assert(interface);
+	/* REQUIRES */
+	assert(sr);
+	assert(packet);
+	assert(interface);
 
-  printf("*** -> Received packet of length %d \n",len);
+	printf("*** -> Received packet of length %d \n",len);
 
-  /* When the router receives any packet, it should be determined what
-   * type of the protocol is. After that, it is required to figure out
-   * where to send the packet by comparing the address in the routing
-   * table. It may drop the packet if there exists no address to send.
-   */
-  sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
+	/* When the router receives any packet, it should be determined what
+	* type of the protocol is.
+	*/
+	sr_ethernet_hdr_t *packet_header = (sr_ethernet_hdr_t *) packet;
+	uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
 
-  uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
-
-  if(ethernet_protocol_type == ethertype_arp){
-  	  Debug("*** -> Received Address Resolution Protocol \n");
-  	  sr_handlepacket_arp(sr, packet, len, interface);
-  }else if(ethernet_protocol_type == ethertype_ip){
-	  Debug("*** -> Received Internet Protocol \n");
-	  sr_handlepacket_ip(sr, packet, len, interface);
-  }else{
-	  Debug("*** -> Received unknown packet of length %d \n", len);
-  }
+	if(ethernet_protocol_type == ethertype_arp){
+		sr_handlepacket_arp(sr, packet, len, interface);
+	}else if(ethernet_protocol_type == ethertype_ip){
+		sr_handlepacket_ip(sr, packet, len, interface);
+	}
 }/* end sr_handlepacket */
 
 /*---------------------------------------------------------------------
- * Method: sr_handlepacket(uint8_t* p,char* interface)
- * Scope:  Global
+ * Method: sr_handlepacket_arp(struct sr_instance* sr,
+ *      						uint8_t*  packet,
+ *      						unsigned int len,
+ *								char* interface)
+ * Scope:  Local
  *
- * This method is called when the ethernet type is Address Resolution
- * Protocol.
+ * When the ethernet type is Address Resolution Protocol
  *
  *---------------------------------------------------------------------*/
 void sr_handlepacket_arp(struct sr_instance* sr,
@@ -118,33 +113,35 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	assert(packet);
 	assert(interface);
 
-	/* Set the packet to the ARP header */
+	/* Set the packet to the ethernet header and ARP header */
 	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *) packet;
-    sr_arp_hdr_t* arp_orig_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
+    sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-    if(htons(arp_orig_header->ar_op) == arp_op_request){
+    if(htons(arp_header->ar_op) == arp_op_request){
     	/* If the packet is ARP request, then the router tries to caches
     	 * the information of the sender. */
+    	printf("arp request success\n");
     	send_packet(sr, packet, len, interface, htons(eth_header->ether_type));
-    }else if(htons(arp_orig_header->ar_op) == arp_op_reply){
+
+    }else if(htons(arp_header->ar_op) == arp_op_reply){
     	/* If the packet is ARP reply, then the router ....*/
     	Debug("*** -> Address Resolution Protocol reply \n");
     	/* Send ARP reply message */
 		fprintf(stderr, "We got an ARP Reply, need to check for intfc tho \n");
 		/* arp reply */
-		struct sr_if *interface_for_ip = get_interface_for_ip(sr, arp_orig_header->ar_tip);
+		struct sr_if *interface_for_ip = get_interface_for_ip(sr, arp_header->ar_tip);
 		if (interface_for_ip) {
 			fprintf(stderr, "We got an ARP Reply for one of our interfaces\n");
 			/*We first want to insert into Arp cache*/
 			struct sr_arpreq *request = sr_arpcache_insert(&(sr->cache),
-					arp_orig_header->ar_sha,
-					arp_orig_header->ar_sip);
+					arp_header->ar_sha,
+					arp_header->ar_sip);
 			if (request) {
 				struct sr_packet *cur_packet = request->packets;
 				while(cur_packet) {
 					fprintf(stderr, "About to forward \n");
 					print_hdrs(cur_packet->buf, cur_packet->len);
-					forward_packet(sr, cur_packet->iface, arp_orig_header->ar_sha,
+					forward_packet(sr, cur_packet->iface, arp_header->ar_sha,
 					cur_packet->len, cur_packet->buf);
 					fprintf(stderr, "Packet Forwarded\n");
 					cur_packet = cur_packet->next;
@@ -155,10 +152,13 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 }/* end sr_handlepacket_arp */
 
 /*---------------------------------------------------------------------
- * Method: send_packet(struct sr_instance* sr, uint8_t* packet, char* interface)
- * Scope:  Global
+ * Method: sr_handlepacket_arp(struct sr_instance* sr,
+ *      						uint8_t*  packet,
+ *      						unsigned int len,
+ *								char* interface)
+ * Scope:  Local
  *
- * This method is called when the router needs to send a packet.
+ * When the ethernet type is Address Resolution Protocol
  *
  *---------------------------------------------------------------------*/
 void send_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface, uint16_t protocol){
@@ -198,10 +198,13 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, char
 }
 
 /*---------------------------------------------------------------------
- * Method: build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, struct sr_if* if_walker)
- * Scope:  Global
+ * Method: sr_handlepacket_arp(struct sr_instance* sr,
+ *      						uint8_t*  packet,
+ *      						unsigned int len,
+ *								char* interface)
+ * Scope:  Local
  *
- * This method is called when the ethernet type is Internet Protocol.
+ * When the ethernet type is Address Resolution Protocol
  *
  *---------------------------------------------------------------------*/
 void build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, struct sr_if* if_walker, uint16_t protocol){
@@ -216,6 +219,16 @@ void build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, st
 	}
 }
 
+/*---------------------------------------------------------------------
+ * Method: sr_handlepacket_arp(struct sr_instance* sr,
+ *      						uint8_t*  packet,
+ *      						unsigned int len,
+ *								char* interface)
+ * Scope:  Local
+ *
+ * When the ethernet type is Address Resolution Protocol
+ *
+ *---------------------------------------------------------------------*/
 void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr_if* if_walker){
 	sr_arp_hdr_t *arp_tmp_header = (sr_arp_hdr_t *)_packet;
 	arp_tmp_header->ar_hrd = arp_orig_header->ar_hrd;
@@ -229,6 +242,16 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr
 	arp_tmp_header->ar_tip = arp_orig_header->ar_sip;
 }
 
+/*---------------------------------------------------------------------
+ * Method: sr_handlepacket_arp(struct sr_instance* sr,
+ *      						uint8_t*  packet,
+ *      						unsigned int len,
+ *								char* interface)
+ * Scope:  Local
+ *
+ * When the ethernet type is Address Resolution Protocol
+ *
+ *---------------------------------------------------------------------*/
 void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* if_walker){
 	sr_ip_hdr_t *ip_tmp_header = (sr_ip_hdr_t *)_packet;
 	ip_tmp_header->ip_hl = ip_header->ip_hl;
@@ -252,6 +275,16 @@ void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_i
 	icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, (IPv4_MIN_LEN + 8 > temporary_len - ETHER_HEADER_LEN ? IPv4_MIN_LEN + 8 : temporary_len - ETHER_HEADER_LEN));
 }*/
 
+/*---------------------------------------------------------------------
+ * Method: sr_handlepacket_arp(struct sr_instance* sr,
+ *      						uint8_t*  packet,
+ *      						unsigned int len,
+ *								char* interface)
+ * Scope:  Local
+ *
+ * When the ethernet type is Address Resolution Protocol
+ *
+ *---------------------------------------------------------------------*/
 void send_icmp_error(uint8_t type, uint8_t code, struct sr_instance *sr,
 		char *interface, uint8_t *pkt) {
 
@@ -297,6 +330,17 @@ void send_icmp_error(uint8_t type, uint8_t code, struct sr_instance *sr,
 	/* Send the ICMP error packet. */
 	sr_send_packet(sr, packet, new_len, interface);
 }
+
+/*---------------------------------------------------------------------
+ * Method: sr_handlepacket_arp(struct sr_instance* sr,
+ *      						uint8_t*  packet,
+ *      						unsigned int len,
+ *								char* interface)
+ * Scope:  Local
+ *
+ * When the ethernet type is Address Resolution Protocol
+ *
+ *---------------------------------------------------------------------*/
 void forward_packet(struct sr_instance *sr, char *interface,
 					unsigned char *dest_mac, unsigned int len, uint8_t *pkt) {
 
@@ -446,6 +490,16 @@ struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_head
 	return best;
 }/* end sr_longest_prefix_match */
 
+/*---------------------------------------------------------------------
+ * Method: sr_handlepacket_arp(struct sr_instance* sr,
+ *      						uint8_t*  packet,
+ *      						unsigned int len,
+ *								char* interface)
+ * Scope:  Local
+ *
+ * When the ethernet type is Address Resolution Protocol
+ *
+ *---------------------------------------------------------------------*/
 void send_icmp_echo(struct sr_instance *sr, char *interface, unsigned int len, uint8_t *pkt) {
 
 	uint8_t *packet = (uint8_t *) malloc(len);
@@ -507,6 +561,16 @@ int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
 	return 0;
 }
 
+/*---------------------------------------------------------------------
+ * Method: sr_handlepacket_arp(struct sr_instance* sr,
+ *      						uint8_t*  packet,
+ *      						unsigned int len,
+ *								char* interface)
+ * Scope:  Local
+ *
+ * When the ethernet type is Address Resolution Protocol
+ *
+ *---------------------------------------------------------------------*/
 struct sr_if* get_interface_for_ip(struct sr_instance *sr, uint32_t ip) {
  	struct sr_if* interface = sr->if_list;
 
