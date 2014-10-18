@@ -119,7 +119,7 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* int
 	ip_tmp_header->ip_v = ip_header->ip_v;
 	ip_tmp_header->ip_hl = ip_header->ip_hl;
 	ip_tmp_header->ip_tos = ip_header->ip_tos;
-	ip_tmp_header->ip_len = 20 + sizeof(sr_icmp_t3_hdr_t);
+	ip_tmp_header->ip_len = htons(20 + sizeof(sr_icmp_t3_hdr_t));
 
 	ip_tmp_header->ip_src = interfaces->ip;
 	ip_tmp_header->ip_dst = ip_header->ip_src;
