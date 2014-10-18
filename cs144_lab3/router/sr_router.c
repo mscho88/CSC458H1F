@@ -308,7 +308,7 @@ void send_icmp_echo(struct sr_instance* sr, uint8_t* packet, unsigned int len, c
  *---------------------------------------------------------------------*/
 int is_for_me(struct sr_if* interfaces, uint32_t* dest_ip){
 	while(interfaces){
-		if(interfaces->ip == dest_ip){ return 1; }
+		if(&interfaces->ip == dest_ip){ return 1; }
 		interfaces = interfaces->next;
 	}
 	return 0;
