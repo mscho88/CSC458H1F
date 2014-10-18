@@ -196,7 +196,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			/* Since the packet is going through the router, TTL should be deducted. */
 			ip_header->ip_ttl--;
 
-			Debug("IP packet ttl failure \n");
+			Debug("IP packet ttl succeed \n");
 			/* Find the longest prefix match from the routing table. */
 			struct sr_rt *dest;
 			if((dest = sr_longest_prefix_match(sr->routing_table, ip_header)) != 0){
@@ -224,7 +224,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			fprintf(stderr, "Received Packet TTL(%u) Expired in Transit \n", ip_header->ip_ttl);
 			send_ip_packet(sr, packet, interface, icmp_type11, icmp_code);
 			/*send_icmp_error(sr, interface, len, packet, icmp_type11, icmp_code);*/
-/*			send_icmp_error(icmp_type11, 0, sr, interface, packet);*/
 		}
 	}
 }/* end sr_handlepacket_ip */
