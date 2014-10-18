@@ -48,6 +48,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 		req = prevreq->next;
 	}
 }
+
 struct sr_if *next_hop(struct sr_instance *sr, char *intfc, uint32_t dest) {
 	int m = 0, cur = 0;
 	struct sr_if* interface = sr->if_list;
