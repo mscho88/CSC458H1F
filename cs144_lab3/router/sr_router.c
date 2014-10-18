@@ -184,7 +184,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			}
 		}
 	}else{
-		Debug("IP is not for me\n");
 		/* If the packet is not in the interfaces of the router, the router
 		 * needs to find the longest prefix match interface to send the packet.*/
 		if(ip_header->ip_ttl > 0){
@@ -199,6 +198,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					forward_packet(sr, dest->interface, arp_entry->mac, len, packet);
 					free(arp_entry);
 				}else{
+					Debug("IP is not for me\n");
+
 					sr_arpcache_queuereq(&(sr->cache), ip_header->ip_dst, packet, len, dest->interface);
 				}
 			}else{
