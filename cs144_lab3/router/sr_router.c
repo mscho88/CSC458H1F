@@ -202,8 +202,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			if((dest = sr_longest_prefix_match(sr->routing_table, ip_header)) != 0){
 				struct sr_arpentry *arp_entry;
 				if((arp_entry = sr_arpcache_lookup(&(sr->cache), ip_header->ip_dst)) != NULL){
-					Debug("Transmitting the packet to the destination : %s. \n", arp_entry->mac);
-					/***************/
 					forward_packet(sr, dest->interface, arp_entry->mac, len, packet);
 					free(arp_entry);
 				}else{
@@ -267,19 +265,16 @@ void forward_packet(struct sr_instance *sr, char *interface,
 	memcpy(packet, pkt, len);
 	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
 
-	/* Prepare ethernet header. */
 	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *) packet;
 	ether_hdr->ether_type = htons(ethertype_ip);
 	memcpy(ether_hdr->ether_shost, interfaces->addr, ETHER_ADDR_LEN);
 	memcpy(ether_hdr->ether_dhost, &(dest_mac), ETHER_ADDR_LEN);
 
 	/* Recompute checksum. */
-	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
-	ip_hdr->ip_sum = 0;
-	ip_hdr->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
+	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+	ip_header->ip_sum = 0;
+	ip_header->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
-	/* Forward to next hop. */
-	/*print_hdrs(packet, len);*/
 	sr_send_packet(sr, packet, len, interface);
 	free(packet);
 }
