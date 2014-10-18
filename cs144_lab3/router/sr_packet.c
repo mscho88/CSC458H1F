@@ -163,6 +163,8 @@ void send_icmp_echo_packet(struct sr_instance* sr, uint8_t* packet, unsigned int
 }
 
 void send_arp_request(struct sr_instance *sr, uint32_t dst_ip, char *interface) {
+	printf(stderr, "2222\n");
+
 	unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 	uint8_t *_packet = (uint8_t *)malloc(len);
 	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
