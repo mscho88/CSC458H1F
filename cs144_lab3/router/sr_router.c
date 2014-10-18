@@ -413,9 +413,9 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 				/*send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), 3);*/
 				fprintf(stderr, "Could Not Be Determined To Transmit The Packet To ");
 				print_addr_ip_int(ip_orig_header->ip_dst);
-				frpintf(stderr, "\n Sending The Packet Back To ");
+				fprintf(stderr, "\n Sending The Packet Back To ");
 				print_addr_ip_int(ip_orig_header->ip_src);
-				frpintf(stderr, "\n");
+				fprintf(stderr, "\n");
 				send_icmp_error(icmp_type3, icmp_code, sr, interface, len, packet);
 			}
 		}else{
