@@ -132,13 +132,13 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     		struct sr_arpreq *arp_cache;
     		if((arp_cache = sr_arpcache_insert(&(sr->cache), arp_orig_header->ar_sha, arp_orig_header->ar_sip)) == NULL){
     			/* Send ARP reply message */
-        		send_packet(sr, packet, interface, htons(eth_header->ether_type), 0);
+        		send_packet(sr, packet, len, interface, htons(eth_header->ether_type));
     		}else{
     			Debug("Error on caching the sender information. \n");
     		}
     	}else{
     		/* Send ARP reply message */
-    		send_packet(sr, packet, interface, htons(eth_header->ether_type), 0);
+    		send_packet(sr, packet, len, interface, htons(eth_header->ether_type));
     	}
     }else if(htons(arp_orig_header->ar_op) == arp_op_reply){
     	/* If the packet is ARP reply, then the router ....*/
@@ -153,7 +153,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
  * This method is called when the router needs to send a packet.
  *
  *---------------------------------------------------------------------*/
-void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t protocol){
+void send_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface, uint16_t protocol){
 	unsigned int length;
 
 	sr_ethernet_hdr_t* eth_header = (sr_ethernet_hdr_t *)packet;
@@ -384,29 +384,37 @@ void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet,
 	}else{
 		/* If the packet is not in the interfaces of the router, the router
 		 * needs to find the longest prefix match interface to send the packet.*/
-		ip_orig_header->ip_ttl--;
-		struct sr_rt *dest;
-		if((dest = sr_longest_prefix_match(&(sr->routing_table), ip_orig_header)) != 0){
-			struct sr_arpentry *arp_entry;
-			if((arp_entry = sr_arpcache_lookup(&(sr->cache), ip_orig_header->ip_dst)) != NULL){
-				fprintf(stderr, "Found IP->MAC mapping in ARP cache forwarding packet \n");
-				/***************/
-				forward_packet(sr, dest->interface, arp_entry->mac, len, packet);
-				free(arp_entry);
+		if(ip_orig_header->ip_ttl > 0){
+			/* Since the packet is going through the router, TTL should be deducted. */
+			ip_orig_header->ip_ttl--;
+
+			/* Find the longest prefix match from the routing table. */
+			struct sr_rt *dest;
+			if((dest = sr_longest_prefix_match(&(sr->routing_table), ip_orig_header)) != 0){
+				struct sr_arpentry *arp_entry;
+				if((arp_entry = sr_arpcache_lookup(&(sr->cache), ip_orig_header->ip_dst)) != NULL){
+					Debug("Transmitting the packet to the destination : %s. \n", arp_entry->mac);
+					/***************/
+					forward_packet(sr, dest->interface, arp_entry->mac, len, packet);
+					free(arp_entry);
+				}else{
+					/*send_packet(); arp request send*/
+					fprintf(stderr, "IP->MAC mapping not in ARP cache %u \n", ip_orig_header->ip_dst);
+					/*Case where ip->mapping is not in cache*/
+					/***************/
+					sr_arpcache_queuereq(&(sr->cache), ip_orig_header->ip_dst, packet, len, dest->interface);
+					fprintf(stderr, "Added Arp Req to queu \n");
+				}
 			}else{
-				/*send_packet(); arp request send*/
-				fprintf(stderr, "IP->MAC mapping not in ARP cache %u \n", ip_orig_header->ip_dst);
-				/*Case where ip->mapping is not in cache*/
-				/***************/
-				sr_arpcache_queuereq(&(sr->cache), ip_orig_header->ip_dst, packet, len, dest->interface);
-				fprintf(stderr, "Added Arp Req to queu \n");
+				/* no match found error */
+				/* ICMP net unreachable */
+				/* important*/
+				/*send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), 3);*/
+				send_icmp_error(icmp_type3, icmp_code, sr, interface, len, packet);
 			}
 		}else{
-			/* no match found error */
-			/* ICMP net unreachable */
-			/* important*/
-			/*send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), 3);*/
-			send_icmp_error(icmp_type3, icmp_code, sr, interface, len, packet);
+			fprintf(stderr, "Received Packet TTL(%u) Expired in Transit \n", ip_orig_header->ip_ttl);
+			send_icmp_error(icmp_type11, 0, sr, interface, len, packet);
 		}
 	}
 }/* end sr_handlepacket_ip */
