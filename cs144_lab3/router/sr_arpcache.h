@@ -111,7 +111,6 @@ struct sr_if *next_hop(struct sr_instance *, char *, uint32_t );
 
 
 
-
 /* Checks if an IP->MAC mapping is in the cache. IP is in network byte order. 
    You must free the returned structure if it is not NULL. */
 struct sr_arpentry *sr_arpcache_lookup(struct sr_arpcache *cache, uint32_t ip);
