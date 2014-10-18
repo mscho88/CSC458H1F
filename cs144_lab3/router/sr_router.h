@@ -67,6 +67,9 @@ int sr_read_from_server(struct sr_instance* );
 /* -- sr_router.c -- */
 void sr_init(struct sr_instance* );
 void sr_handlepacket(struct sr_instance* , uint8_t * , unsigned int , char* );
+void sr_handlepacket_arp(struct sr_instance* sr, uint8_t*  packet, unsigned int len, char* interface);
+void sr_handlepacket_ip(struct sr_instance* sr, uint8_t * packet, unsigned int len, char* interface);
+void forward_packet(struct sr_instance *sr, char *interface, unsigned char *dest_mac, unsigned int len, uint8_t *packet);
 
 /* -- sr_if.c -- */
 void sr_add_interface(struct sr_instance* , const char* );

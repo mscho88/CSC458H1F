@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "sr_if.h"
 #include "sr_rt.h"
@@ -45,7 +47,7 @@ void send_ip_error_packet(struct sr_instance* sr, uint8_t* packet, char* interfa
 
 	build_ether_header(_packet, eth_header->ether_shost, interfaces, ethertype_ip);
 	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
-	build_icmp_t3_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), packet, ip_header, icmp_header, interfaces, type, code);
+	build_icmp_t3_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), packet, ip_header, (sr_icmp_hdr_t*) icmp_header, interfaces, type, code);
 
 	sr_send_packet(sr, (uint8_t *)_packet, length, interfaces->name);
 	free(_packet);
