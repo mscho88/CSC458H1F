@@ -112,6 +112,8 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	assert(packet);
 	assert(interface);
 
+	Debug("ARP\n");
+
 	/* Set the packet to the ethernet header and ARP header */
 	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *) packet;
     sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
@@ -119,8 +121,12 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     if(htons(arp_header->ar_op) == arp_op_request){
     	/* If the packet is ARP request, then the router tries to caches
     	 * the information of the sender. */
+    	Debug("ARP request\n");
+
     	send_arp_packet(sr, packet, len, interface);
     }else if(htons(arp_header->ar_op) == arp_op_reply){
+    	Debug("ARP reply\n");
+
     	/* If the packet is ARP reply, then the router ....*/
     	/* Send ARP reply message */
 		fprintf(stderr, "We got an ARP Reply, need to check for intfc tho \n");
@@ -176,7 +182,7 @@ void forward_packet(struct sr_instance *sr, char *interface,
 	ip_hdr->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
 	/* Forward to next hop. */
-	print_hdrs(packet, len);
+	/*print_hdrs(packet, len);*/
 	sr_send_packet(sr, packet, len, interface);
 	free(packet);
 }
@@ -199,6 +205,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	assert(sr);
 	assert(packet);
 	assert(interface);
+	Debug("IP\n");
 
 	sr_ip_hdr_t* ip_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 	sr_icmp_hdr_t* icmp_header =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
@@ -214,6 +221,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	struct sr_if *dest;
 	if(is_for_me(&(sr->if_list), ip_header->ip_dst)){
+
+		Debug("IP packet is for me\n");
 		/* Check whether the packet is in the interfaces of the router. */
 
 		if(ip_header->ip_p == ip_protocol_tcp || ip_header->ip_p == ip_protocol_udp){
@@ -231,12 +240,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			}
 		}
 	}else{
+		Debug("IP is not for me\n");
 		/* If the packet is not in the interfaces of the router, the router
 		 * needs to find the longest prefix match interface to send the packet.*/
 		if(ip_header->ip_ttl > 0){
 			/* Since the packet is going through the router, TTL should be deducted. */
 			ip_header->ip_ttl--;
 
+			Debug("IP packet ttl failure \n");
 			/* Find the longest prefix match from the routing table. */
 			struct sr_rt *dest;
 			if((dest = sr_longest_prefix_match(sr->routing_table, ip_header)) != 0){
@@ -256,14 +267,15 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					fprintf(stderr, "Added Arp Req to queu \n");
 				}
 			}else{
+				Debug("CAnnot transmit the packet\n");
 				/* no match found error */
 				/* ICMP net unreachable */
 				/* important*/
 				/*send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), 3);*/
-				fprintf(stderr, "Can Not Transmit The Packet To ");
+				/*fprintf(stderr, "Can Not Transmit The Packet To ");
 				print_addr_ip_int(ip_header->ip_dst);
 				fprintf(stderr, "Sending The Packet Back To ");
-				print_addr_ip_int(ip_header->ip_src);
+				print_addr_ip_int(ip_header->ip_src);*/
 				send_ip_packet(sr, interface, packet, icmp_type3, icmp_code);
 				/* send_icmp_error(icmp_type3, icmp_code, sr, interface, packet);*/
 			}
