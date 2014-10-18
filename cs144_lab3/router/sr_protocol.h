@@ -153,6 +153,7 @@ typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
 enum sr_icmp_code {
 	icmp_code = 0x0000,
+	icmp_code1 = 0x0001,
 	icmp_code3 = 0x0003,
 };
 
