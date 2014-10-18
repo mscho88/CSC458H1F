@@ -186,6 +186,7 @@ void send_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint1
 		build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
 		build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), icmp_header, interfaces);
 
+		print_hdr_eth(_packet);
 		print_hdr_ip(_packet + sizeof(sr_ethernet_hdr_t));
 		print_hdr_icmp(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 		sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
@@ -248,7 +249,7 @@ void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_i
 
 	icmp_tmp_header->icmp_code = icmp_header->icmp_code;
 	if(icmp_header->icmp_type == icmp_protocol_type8){
-		icmp_tmp_header->icmp_type = icmp_protocol_type8;
+		icmp_tmp_header->icmp_type = icmp_protocol_type0;
 	}
 	icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, (IPv4_MIN_LEN + 8 > temporary_len - ETHER_HEADER_LEN ? IPv4_MIN_LEN + 8 : temporary_len - ETHER_HEADER_LEN));
 	printf("icmp %u\n", icmp_tmp_header->icmp_sum);
