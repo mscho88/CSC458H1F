@@ -163,13 +163,12 @@ void forward_packet(struct sr_instance *sr, char *interface,
 
 	uint8_t *packet = (uint8_t *) malloc(len);
 	memcpy(packet, pkt, len);
-	struct sr_if *rt_if = (struct sr_if *)malloc(sizeof(struct sr_if));
-	rt_if = (struct sr_if *)sr_get_interface(sr, interface);
+	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
 
 	/* Prepare ethernet header. */
 	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *) packet;
 	ether_hdr->ether_type = htons(ethertype_ip);
-	memcpy(ether_hdr->ether_shost, rt_if->addr, ETHER_ADDR_LEN);
+	memcpy(ether_hdr->ether_shost, interfaces->addr, ETHER_ADDR_LEN);
 	memcpy(ether_hdr->ether_dhost, &(dest_mac), ETHER_ADDR_LEN);
 
 	/* Recompute checksum. */
@@ -180,7 +179,7 @@ void forward_packet(struct sr_instance *sr, char *interface,
 	/* Forward to next hop. */
 	/*print_hdrs(packet, len);*/
 	sr_send_packet(sr, packet, len, interface);
-
+	free(packet);
 }
 
 /*---------------------------------------------------------------------
@@ -319,8 +318,7 @@ void send_icmp_echo(struct sr_instance *sr, char *interface, unsigned int len, u
 
 	uint8_t *packet = (uint8_t *) malloc(len);
 	memcpy(packet, pkt, len);
-	struct sr_if *rt_if = (struct sr_if *)malloc(sizeof(struct sr_if));
-	rt_if = (struct sr_if *)sr_get_interface(sr, interface);
+	struct sr_if *rt_if = (struct sr_if *)sr_get_interface(sr, interface);
 
 	/* Prepare ethernet header. */
 	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *) packet;
@@ -353,7 +351,7 @@ void send_icmp_echo(struct sr_instance *sr, char *interface, unsigned int len, u
 
 	/* Now send the packet. */
 	sr_send_packet(sr, packet, len, interface);
-
+	free(packet);
 }
 
 
