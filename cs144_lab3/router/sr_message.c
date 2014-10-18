@@ -25,7 +25,7 @@ void send_arp_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, 
 	sr_arp_hdr_t* arp_header = (sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t));
 
 	/* Build ARP Packet */
-	build_ether_header(_packet, eth_header->ether_shost, interfaces);
+	build_ether_header(_packet, eth_header->ether_shost, interfaces, ethertype_arp);
 	build_arp_header(_packet + sizeof(sr_ethernet_hdr_t), arp_header, interfaces);
 
 	sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
@@ -33,7 +33,7 @@ void send_arp_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, 
 }/* end send_arp_packet */
 
 void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t type, uint16_t code){
-	int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
+	unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
 
 	uint8_t *_packet = (uint8_t *)malloc(length);
@@ -46,7 +46,7 @@ void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, ui
 	print_hdr_ip(ip_header);
 	print_hdr_icmp(icmp_header);
 	printf("**********\n");
-	build_ether_header(_packet, eth_header->ether_shost, interfaces);
+	build_ether_header(_packet, eth_header->ether_shost, interfaces, ethertype_ip);
 	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
 	build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_icmp_t3_hdr_t), packet, ip_header, icmp_header, interfaces, type, code);
 
@@ -67,11 +67,15 @@ void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, ui
  * Build the ethernet header
  *
  *---------------------------------------------------------------------*/
-void build_ether_header(uint8_t *_packet, uint8_t *addr, struct sr_if* interfaces){
+void build_ether_header(uint8_t *_packet, uint8_t *addr, struct sr_if* interfaces, uint16_t protocol){
 	sr_ethernet_hdr_t *eth_tmp_header = (sr_ethernet_hdr_t *)_packet;
 	memcpy(eth_tmp_header->ether_dhost, addr, ETHER_ADDR_LEN);
 	memcpy(eth_tmp_header->ether_shost, interfaces->addr, ETHER_ADDR_LEN);
-	eth_tmp_header->ether_type = htons(ethertype_arp);
+	if(protocol == ethertype_arp){
+		eth_tmp_header->ether_type = htons(ethertype_arp);
+	}else if(protocol == ethertype_ip){
+		eth_tmp_header->ether_type = htons(ethertype_ip);
+	}
 }/* end build_ether_header */
 
 /*---------------------------------------------------------------------
