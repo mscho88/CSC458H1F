@@ -1,4 +1,7 @@
 
+#ifndef SR_MESSAGE_H
+#define SR_MESSAGE_H
+
 #include <stdio.h>
 #include <assert.h>
 
@@ -17,4 +20,4 @@ void build_arp_header(uint8_t *, sr_arp_hdr_t* , struct sr_if* );
 void build_ip_header(uint8_t *, sr_ip_hdr_t* , struct sr_if* );
 void build_icmp_header(uint8_t *, uint8_t *, sr_ip_hdr_t *, sr_icmp_hdr_t* , struct sr_if* , uint8_t , uint8_t );
 
-#endif /* sr_message.h */
+#endif /* SR_MESSAGE_H */
