@@ -246,6 +246,7 @@ struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_head
  *
  *---------------------------------------------------------------------*/
 void forward_packet(struct sr_instance *sr, char *interface, unsigned char *dest_mac, unsigned int len, uint8_t *packet) {
+	printf("555\n");
 	uint8_t *_packet = (uint8_t *) malloc(len);
 	memcpy(_packet, packet, len);
 	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
