@@ -122,6 +122,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	send_arp_packet(sr, packet, len, interface);
     }else if(htons(arp_header->ar_op) == arp_op_reply){
 		if (get_interface_for_ip(sr->if_list, arp_header->ar_tip)) {
+			printf("333\n");
 			struct sr_arpreq *request;
 			if((request = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) != NULL) {
 				struct sr_packet *cur_packet = request->packets;
@@ -185,7 +186,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}else{
 		/* If the packet is not in the interfaces of the router, the router
 		 * needs to find the longest prefix match interface to send the packet.*/
-		if(ip_header->ip_ttl > 0){
+		if(ip_header->ip_ttl > 1){
 			/* Since the packet is going through the router, TTL should be deducted. */
 			ip_header->ip_ttl--;
 
