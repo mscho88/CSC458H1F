@@ -48,7 +48,11 @@ void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, ui
 	printf("**********\n");
 	build_ether_header(_packet, eth_header->ether_shost, interfaces, ethertype_ip);
 	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
+	((sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)))->ip_sum = 0;
+	((sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)))->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 	build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), packet, ip_header, icmp_header, interfaces, type, code);
+	((sr_icmp_t3_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)))->icmp_sum = 0;
+	((sr_icmp_t3_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)))->icmp_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), sizeof(sr_icmp_t3_hdr_t));
 
 	printf("***new***\n");
 	print_hdr_ip(_packet + sizeof(sr_ethernet_hdr_t));
@@ -127,8 +131,7 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* int
 	ip_tmp_header->ip_off = 0;/*htons(ip_header->ip_off);*/
 	ip_tmp_header->ip_ttl = 64;/*ip_header->ip_ttl;*/
 	ip_tmp_header->ip_p = htons(ip_protocol_icmp);
-	ip_tmp_header->ip_sum = 0;
-	ip_tmp_header->ip_sum = cksum(ip_tmp_header, sizeof(sr_ip_hdr_t));
+
 }
 
 void build_icmp_header(uint8_t *_packet, uint8_t *packet, sr_ip_hdr_t *ip_header, sr_icmp_hdr_t* icmp_orig_header, struct sr_if* interfaces, uint8_t type, uint8_t code){
