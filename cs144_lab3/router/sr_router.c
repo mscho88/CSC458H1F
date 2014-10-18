@@ -271,6 +271,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				print_addr_ip_int(ip_header->ip_dst);
 				fprintf(stderr, "Sending The Packet Back To ");
 				print_addr_ip_int(ip_header->ip_src);*/
+				print_hdr_ip(ip_header);
 				send_ip_packet(sr, packet, interface, icmp_type3, icmp_code);
 				/* send_icmp_error(icmp_type3, icmp_code, sr, interface, packet);*/
 			}
