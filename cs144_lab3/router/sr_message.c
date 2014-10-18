@@ -31,7 +31,7 @@ void send_arp_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, 
 	sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
 	free(_packet);
 }/* end send_arp_packet */
-void send_ip_error_packet(struct sr_instance *sr, uint8_t *packet, char *interface, uint8_t type, uint8_t code) {
+void send_ip_error_packet33(struct sr_instance *sr, uint8_t *packet, char *interface, uint8_t type, uint8_t code) {
 
 	int new_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	uint8_t *_packet = (uint8_t *) malloc(new_len);
@@ -105,7 +105,7 @@ void send_ip_error_packet2(struct sr_instance* sr, uint8_t* packet, char* interf
 
 	sr_send_packet(sr, _packet, length, interface);
 }
-void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t type, uint16_t code){
+void send_ip_error_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t type, uint16_t code){
 	unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
 
@@ -202,7 +202,7 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* int
 	ip_tmp_header->ip_id = 0;
 	ip_tmp_header->ip_off = 0;/*htons(ip_header->ip_off);*/
 	ip_tmp_header->ip_ttl = 64;/*ip_header->ip_ttl;*/
-	ip_tmp_header->ip_p = htons(ip_protocol_icmp);
+	ip_tmp_header->ip_p = ip_protocol_icmp;
 	ip_tmp_header->ip_sum = 0;
 	ip_tmp_header->ip_sum = cksum(ip_tmp_header, sizeof(sr_ip_hdr_t));
 }
