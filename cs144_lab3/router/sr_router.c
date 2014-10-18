@@ -289,7 +289,7 @@ void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_i
 
 
 void send_icmp_error(uint8_t type, uint8_t code, struct sr_instance *sr,
-					char *interface, unsigned int len, uint8_t *pkt) {
+		char *interface, unsigned int len, uint8_t *pkt) {
 
 	int new_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	uint8_t *packet = (uint8_t *) malloc(new_len);
@@ -410,7 +410,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			/* no match found error */
 			/* ICMP net unreachable */
 			/*send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), 3);*/
-			send_icmp_error(3, 0, sr, interface, len, packet) {
+			send_icmp_error(3, 0, sr, interface, len, packet);
 		}
 	}
 }/* end sr_handlepacket_ip */
