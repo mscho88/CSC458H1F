@@ -282,8 +282,9 @@ void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_i
 		icmp_tmp_header->icmp_code = icmp_header->icmp_code;
 		icmp_tmp_header->icmp_type = 0;
 		icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, (IPv4_MIN_LEN + 8 > temporary_len - ETHER_HEADER_LEN ? IPv4_MIN_LEN + 8 : temporary_len - ETHER_HEADER_LEN));
+		printf("icmp %u\n", icmp_tmp_header->icmp_sum);
+
 	}
-	printf("icmp %u\n", icmp_tmp_header->icmp_sum);
 }
 
 void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_if* if_walker){
