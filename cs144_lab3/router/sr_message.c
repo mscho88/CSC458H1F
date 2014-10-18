@@ -78,7 +78,8 @@ void send_ip_error_packet(struct sr_instance *sr, uint8_t *pkt, char *interface,
 void send_ip_error_packet1(struct sr_instance* sr, uint8_t* packet, char* interface, uint16_t type, uint16_t code){
 	int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	uint8_t *_packet = (uint8_t *) malloc(length);
-	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
+	struct sr_if *interfaces = (struct sr_if *)malloc(sizeof(struct sr_if));
+	interfaces = (struct sr_if *)sr_get_interface(sr, interface);
 
 	sr_ethernet_hdr_t *eth_new_header = (sr_ethernet_hdr_t *)_packet;
 	sr_ip_hdr_t *ip_new_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
