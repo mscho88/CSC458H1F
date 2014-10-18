@@ -118,7 +118,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     if(htons(arp_header->ar_op) == arp_op_request){
     	/* If the packet is ARP request, then the router tries to caches
     	 * the information of the sender. */
-    	send_packet(sr, packet, len, interface, htons(eth_header->ether_type));
+    	send_arp_packet(sr, packet, len, interface);
     }else if(htons(arp_header->ar_op) == arp_op_reply){
     	/* If the packet is ARP reply, then the router ....*/
     	/* Send ARP reply message */
@@ -156,67 +156,74 @@ void sr_handlepacket_arp(struct sr_instance* sr,
  * When the ethernet type is Address Resolution Protocol
  *
  *---------------------------------------------------------------------*/
-void send_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface, uint16_t protocol){
-	unsigned int length;
-	uint8_t* _packet;
-	sr_ethernet_hdr_t* eth_header = (sr_ethernet_hdr_t *)packet;
+void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* interfaces){
+	sr_ip_hdr_t* ip_tmp_header = (sr_ip_hdr_t *)_packet;
+	ip_tmp_header->ip_src = interfaces->ip;
+	ip_tmp_header->ip_dst = ip_header->ip_src;
+	ip_tmp_header->ip_len = htons(56);
+	ip_tmp_header->ip_id = 0;
+	ip_tmp_header->ip_hl = 5;
+	ip_tmp_header->ip_off = 0;
+	ip_tmp_header->ip_ttl = 64;
+	ip_tmp_header->ip_p = ip_protocol_icmp;
+	ip_tmp_header->ip_sum = 0;
+	ip_tmp_header->ip_sum = cksum(ip_header, sizeof(sr_ip_hdr_t));
+}
+/*
+void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_if* if_walker){
+	sr_icmp_hdr_t *icmp_tmp_header = (sr_icmp_hdr_t *)_packet;
+	icmp_tmp_header->icmp_code = icmp_header->icmp_code;
+	icmp_tmp_header->icmp_type = 0;
+	icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, (IPv4_MIN_LEN + 8 > temporary_len - ETHER_HEADER_LEN ? IPv4_MIN_LEN + 8 : temporary_len - ETHER_HEADER_LEN));
+}*/
+
+
+/*---------------------------------------------------------------------
+ * Method: send_arp_packet(struct sr_instance* sr, uint8_t* packet,
+ * 							unsigned int len, char* interface)
+ * Scope:  Local
+ *
+ * Send an ARP reply packet to the sender
+ *
+ *---------------------------------------------------------------------*/
+void send_arp_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface){
+	unsigned int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 	struct sr_if *interfaces = sr_get_interface(sr, interface);
+	uint8_t* _packet = (uint8_t*)malloc(length);
+	sr_ethernet_hdr_t* eth_header = (sr_ethernet_hdr_t *)packet;
+	sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
 
-	if(protocol == ethertype_arp){
-		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
-		_packet = (uint8_t*)malloc(length);
-
-		sr_arp_hdr_t* arp_header = ((sr_arp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-
-		/* Build ARP Packet */
-		build_ether_header(_packet, eth_header, interfaces, protocol);
-		build_arp_header(_packet + sizeof(sr_ethernet_hdr_t), arp_header, interfaces);
-	}else if(protocol == ethertype_ip){
-		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t);
-		_packet = (uint8_t*)malloc(length);
-
-		sr_ip_hdr_t* ip_header = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-		sr_icmp_hdr_t* icmp_header = ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
-
-		/* Build IP Packet */
-		build_ether_header(_packet, eth_header, interfaces, protocol);
-		build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
-		/*build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), icmp_header, interfaces);*/
-	}
+	/* Build ARP Packet */
+	build_ether_header(_packet, eth_header->ether_shost, interfaces);
+	build_arp_header(_packet + sizeof(sr_ethernet_hdr_t), arp_header, interfaces);
 
 	sr_send_packet(sr, (uint8_t*)_packet, length, interfaces->name);
 	free(_packet);
-}
+}/* end send_arp_packet */
 
 /*---------------------------------------------------------------------
- * Method: sr_handlepacket_arp(struct sr_instance* sr,
- *      						uint8_t*  packet,
- *      						unsigned int len,
- *								char* interface)
+ * Method: build_ether_header(uint8_t *_packet,
+ *							sr_ethernet_hdr_t* eth_orig_header,
+ *							struct sr_if* interfaces)
  * Scope:  Local
  *
- * When the ethernet type is Address Resolution Protocol
+ * Build the ethernet header
  *
  *---------------------------------------------------------------------*/
-void build_ether_header(uint8_t *_packet, sr_ethernet_hdr_t* eth_orig_header, struct sr_if* if_walker, uint16_t protocol){
+void build_ether_header(uint8_t *_packet, uint8_t *destination, struct sr_if* interfaces){
 	sr_ethernet_hdr_t *eth_tmp_header = (sr_ethernet_hdr_t *)_packet;
-	memcpy(eth_tmp_header->ether_dhost, eth_orig_header->ether_shost, ETHER_ADDR_LEN);
-	memcpy(eth_tmp_header->ether_shost, if_walker->addr, ETHER_ADDR_LEN);
-	if(protocol == ethertype_arp){
-		eth_tmp_header->ether_type = htons(ethertype_arp);
-	}else if(protocol == ethertype_ip){
-		eth_tmp_header->ether_type = htons(ethertype_ip);
-	}
-}
+	memcpy(eth_tmp_header->ether_dhost, destination, ETHER_ADDR_LEN);
+	memcpy(eth_tmp_header->ether_shost, interfaces->addr, ETHER_ADDR_LEN);
+	eth_tmp_header->ether_type = htons(ethertype_arp);
+}/* end build_ether_header */
 
 /*---------------------------------------------------------------------
- * Method: sr_handlepacket_arp(struct sr_instance* sr,
- *      						uint8_t*  packet,
- *      						unsigned int len,
- *								char* interface)
+ * Method: build_arp_header(uint8_t *_packet,
+ * 							sr_arp_hdr_t* arp_orig_header,
+ * 							struct sr_if* if_walker)
  * Scope:  Local
  *
- * When the ethernet type is Address Resolution Protocol
+ * Build the ARP header
  *
  *---------------------------------------------------------------------*/
 void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr_if* if_walker){
@@ -230,96 +237,37 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig_header, struct sr
 	arp_tmp_header->ar_sip = if_walker->ip;
 	memcpy(arp_tmp_header->ar_tha, arp_orig_header->ar_sha, ETHER_ADDR_LEN);
 	arp_tmp_header->ar_tip = arp_orig_header->ar_sip;
+}/* end build_arp_header */
+
+
+void send_ip_packet(struct sr_instance* sr, uint8_t* packet, char* interface, uint8_t type, uint8_t code){
+	int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
+	struct sr_if *interfaces = sr_get_interface(sr, interface);
+
+	uint8_t *_packet = (uint8_t *) malloc(length);
+
+	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *)packet;
+	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)packet + sizeof(sr_ethernet_hdr_t);
+	sr_icmp_hdr_t *icmp_header = (sr_icmp_hdr_t *)packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t);
+
+	build_ether_header(_packet, interfaces->addr, interfaces);
+	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
+	build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), packet, ip_header, icmp_header, interfaces, type, code);
+
+	sr_send_packet(sr, _packet, length, interface);
 }
 
-/*---------------------------------------------------------------------
- * Method: sr_handlepacket_arp(struct sr_instance* sr,
- *      						uint8_t*  packet,
- *      						unsigned int len,
- *								char* interface)
- * Scope:  Local
- *
- * When the ethernet type is Address Resolution Protocol
- *
- *---------------------------------------------------------------------*/
-void build_ip_header(uint8_t *_packet, sr_ip_hdr_t* ip_header, struct sr_if* if_walker){
-	sr_ip_hdr_t *ip_tmp_header = (sr_ip_hdr_t *)_packet;
-	ip_tmp_header->ip_hl = ip_header->ip_hl;
-	ip_tmp_header->ip_v = ip_header->ip_v;
-	ip_tmp_header->ip_tos = ip_header->ip_tos;
-	ip_tmp_header->ip_len = ip_header->ip_len;
-	ip_tmp_header->ip_id = ip_header->ip_id;
-	ip_tmp_header->ip_off = ip_header->ip_off;
-	ip_tmp_header->ip_ttl = ip_header->ip_ttl;
-	ip_tmp_header->ip_p = ip_header->ip_p;
-	ip_tmp_header->ip_src = if_walker->ip;
-	ip_tmp_header->ip_dst = ip_header->ip_src;
-	ip_tmp_header->ip_sum = 0;
-	ip_tmp_header->ip_sum = cksum((uint8_t*)ip_header, IPv4_MIN_LEN);
-}
-/*
-void build_icmp_header(uint8_t *_packet, sr_icmp_hdr_t* icmp_header, struct sr_if* if_walker){
-	sr_icmp_hdr_t *icmp_tmp_header = (sr_icmp_hdr_t *)_packet;
-	icmp_tmp_header->icmp_code = icmp_header->icmp_code;
-	icmp_tmp_header->icmp_type = 0;
-	icmp_tmp_header->icmp_sum = cksum((uint8_t*)icmp_header, (IPv4_MIN_LEN + 8 > temporary_len - ETHER_HEADER_LEN ? IPv4_MIN_LEN + 8 : temporary_len - ETHER_HEADER_LEN));
-}*/
-
-/*---------------------------------------------------------------------
- * Method: sr_handlepacket_arp(struct sr_instance* sr,
- *      						uint8_t*  packet,
- *      						unsigned int len,
- *								char* interface)
- * Scope:  Local
- *
- * When the ethernet type is Address Resolution Protocol
- *
- *---------------------------------------------------------------------*/
-void send_icmp_error(uint8_t type, uint8_t code, struct sr_instance *sr,
-		char *interface, uint8_t *pkt) {
-
-	int new_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
-	uint8_t *packet = (uint8_t *) malloc(new_len);
-	struct sr_if *rt_if = (struct sr_if *)malloc(sizeof(struct sr_if));
-	rt_if = (struct sr_if *)sr_get_interface(sr, interface);
-
-	/* Prepare ethernet header. */
-	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *) pkt;
-	sr_ethernet_hdr_t *ether_newhdr = (sr_ethernet_hdr_t *) packet;
-	ether_newhdr->ether_type = htons(ethertype_ip);
-	memcpy(ether_newhdr->ether_shost, rt_if->addr, ETHER_ADDR_LEN);
-	memcpy(ether_newhdr->ether_dhost, ether_hdr->ether_shost, ETHER_ADDR_LEN);
-
-	/* Prepare IP header. */
-	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(pkt + sizeof(sr_ethernet_hdr_t));
-	sr_ip_hdr_t *ip_newhdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
-	memcpy(ip_newhdr, ip_hdr, sizeof(sr_ip_hdr_t));
-	ip_newhdr->ip_src = rt_if->ip;
-	ip_newhdr->ip_dst = ip_hdr->ip_src;
-	ip_newhdr->ip_len = htons(56);
-	ip_newhdr->ip_id = 0;
-	ip_newhdr->ip_hl = 5;
-	ip_newhdr->ip_off = 0;
-	ip_newhdr->ip_ttl = 64;
-	ip_newhdr->ip_p = ip_protocol_icmp;
-	ip_newhdr->ip_sum = 0;
-	ip_newhdr->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
-
-	/* Prepare the ICMP t3 header. */
-	sr_icmp_t3_hdr_t *icmp_t3_hdr = (sr_icmp_t3_hdr_t *)(packet +
-									sizeof(sr_ethernet_hdr_t) +
-									sizeof(sr_ip_hdr_t));
-	icmp_t3_hdr->icmp_type = type;
-	icmp_t3_hdr->icmp_code = code;
-	icmp_t3_hdr->icmp_sum = 0;
-	memcpy(icmp_t3_hdr->data,  ip_hdr, 20);
-	memcpy(icmp_t3_hdr->data + 20, pkt + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), 8);
-	icmp_t3_hdr->icmp_sum = cksum(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
+void build_icmp_header(uint8_t *_packet, uint8_t *packet, sr_ip_hdr_t *ip_header, sr_icmp_hdr_t* icmp_orig_header, struct sr_if* interfaces, uint8_t type, uint8_t code){
+	sr_icmp_t3_hdr_t *icmp_tmp_hdr = (sr_icmp_t3_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+	icmp_tmp_hdr->icmp_type = type;
+	icmp_tmp_hdr->icmp_code = code;
+	icmp_tmp_hdr->icmp_sum = 0;
+	memcpy(icmp_tmp_hdr->data, ip_header, 20);
+	memcpy(icmp_tmp_hdr->data + 20, packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), 8);
+	icmp_tmp_hdr->icmp_sum = cksum(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
 							sizeof(sr_icmp_t3_hdr_t));
-
-	/* Send the ICMP error packet. */
-	sr_send_packet(sr, packet, new_len, interface);
 }
+
 
 /*---------------------------------------------------------------------
  * Method: sr_handlepacket_arp(struct sr_instance* sr,
@@ -393,7 +341,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	/* Check Sum */
 	uint16_t given_len = ip_header->ip_sum;
 	ip_header->ip_sum = 0;
-	if(given_len != cksum((uint8_t*)ip_header, IPv4_MIN_LEN)) {
+	if(given_len != cksum((uint8_t*)ip_header, sizeof(sr_ip_hdr_t))) {
 		printf(" The Received Packet is corrupted. Checksum Failed. \n");
 		return;
 	}
@@ -408,7 +356,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			 * ICMP error packet to the sender. */
 			fprintf(stderr, " Received Unsupported %s Packet \n", ip_header->ip_p == ip_protocol_tcp ? "TCP" : "UDP");
 			/***************/
-			send_icmp_error(icmp_type3, icmp_code3, sr, interface, packet);
+			send_ip_packet(sr, packet, interface, icmp_type3, icmp_code3);
+			/*send_icmp_error(icmp_type3, icmp_code3, sr, interface, packet);*/
 		}else{
 			/* If the router receives the packet, consider the packet with the Type 0(Echo). */
 			if(icmp_header->icmp_type == icmp_type0){
@@ -452,11 +401,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				print_addr_ip_int(ip_header->ip_dst);
 				fprintf(stderr, "Sending The Packet Back To ");
 				print_addr_ip_int(ip_header->ip_src);
-				send_icmp_error(icmp_type3, icmp_code, sr, interface, packet);
+				send_ip_packet(sr, interface, packet, icmp_type3, icmp_code);
+				/* send_icmp_error(icmp_type3, icmp_code, sr, interface, packet);*/
 			}
 		}else{
 			fprintf(stderr, "Received Packet TTL(%u) Expired in Transit \n", ip_header->ip_ttl);
-			send_icmp_error(icmp_type11, 0, sr, interface, packet);
+			send_ip_packet(sr, interface, packet, icmp_type11, icmp_code);
+
+/*			send_icmp_error(icmp_type11, 0, sr, interface, packet);*/
 		}
 	}
 }/* end sr_handlepacket_ip */

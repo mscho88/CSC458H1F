@@ -101,7 +101,6 @@ struct sr_icmp_t3_hdr {
 } __attribute__ ((packed)) ;
 typedef struct sr_icmp_t3_hdr sr_icmp_t3_hdr_t;
 
-#define IPv4_MIN_LEN 20
 #define ICMP_MIN_LEN 8
 #define ETHER_HEADER_LEN 14
 
@@ -152,9 +151,12 @@ struct sr_ethernet_hdr
 } __attribute__ ((packed)) ;
 typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
-enum sr_icmp_protocol {
+enum sr_icmp_code {
 	icmp_code = 0x0000,
 	icmp_code3 = 0x0003,
+};
+
+enum sr_icmp_type {
 	icmp_type0 = 0x0000,
 	icmp_type3 = 0x0003,
 	icmp_type8 = 0x0008,
