@@ -179,7 +179,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			 * ICMP error packet to the sender. */
 			fprintf(stderr, " Received Unsupported %s Packet \n", ip_header->ip_p == ip_protocol_tcp ? "TCP" : "UDP");
 			send_ip_error_packet(sr, packet, interface, icmp_type3, icmp_code3);
-			/*send_icmp_error(sr, interface, len, packet, icmp_type3, icmp_code3);*/
 		}else{
 			/* If the router receives the packet, consider the packet with the Type 0(Echo). */
 			if(icmp_header->icmp_type == icmp_type0){
@@ -205,22 +204,17 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					forward_packet(sr, dest->interface, arp_entry->mac, len, packet);
 					free(arp_entry);
 				}else{
-					/*send_packet(); arp request send*/
 					fprintf(stderr, "IP->MAC mapping not in ARP cache %u \n", ip_header->ip_dst);
-					/*Case where ip->mapping is not in cache*/
-					/***************/
-					/*sr_arpcache_queuereq(&(sr->cache), ip_header->ip_dst, packet, len, dest->interface);*/
+					sr_arpcache_queuereq(&(sr->cache), ip_header->ip_dst, packet, len, dest->interface);
 					fprintf(stderr, "Added Arp Req to queu \n");
 				}
 			}else{
 				Debug("Cannot transmit the packet\n");
 				send_ip_error_packet(sr, packet, interface, icmp_type3, icmp_code);
-				/*send_icmp_error(sr, interface, len, packet, icmp_type3, icmp_code);*/
 			}
 		}else{
 			fprintf(stderr, "Received Packet TTL(%u) Expired in Transit \n", ip_header->ip_ttl);
 			send_ip_error_packet(sr, packet, interface, icmp_type11, icmp_code);
-			/*send_icmp_error(sr, interface, len, packet, icmp_type11, icmp_code);*/
 		}
 	}
 }/* end sr_handlepacket_ip */
@@ -283,37 +277,24 @@ void send_icmp_echo(struct sr_instance* sr, uint8_t* packet, unsigned int len, c
 
 	uint8_t *_packet = (uint8_t *) malloc(len);
 	memcpy(_packet, packet, len);
-	struct sr_if *rt_if = (struct sr_if *)sr_get_interface(sr, interface);
+	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
 
-	/* Prepare ethernet header. */
 	sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *)_packet;
 	sr_ip_hdr_t *ip_header = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
 	sr_icmp_hdr_t *icmp_header = (sr_icmp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
 	eth_header->ether_type = htons(ethertype_ip);
 	uint8_t shost[ETHER_ADDR_LEN];
+	memcpy(shost, interfaces->addr, ETHER_ADDR_LEN);
 	uint8_t dhost[ETHER_ADDR_LEN];
-	memcpy(shost, rt_if->addr, ETHER_ADDR_LEN);
 	memcpy(dhost, eth_header->ether_shost, ETHER_ADDR_LEN);
+
 	memcpy(eth_header->ether_shost, shost, ETHER_ADDR_LEN);
 	memcpy(eth_header->ether_dhost, dhost, ETHER_ADDR_LEN);
 
-	/* Prepare IP header. */
-	uint32_t dest = ip_header->ip_src;
-	uint32_t src = rt_if->ip;
-	ip_header->ip_src = src;
-	ip_header->ip_dst = dest;
-	ip_header->ip_sum = 0;
-	ip_header->ip_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
+	build_ip_header(_packet + sizeof(sr_ethernet_hdr_t), ip_header, interfaces);
+	build_icmp_header(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), packet, icmp_type0, icmp_code);
 
-	/* Prepare the ICMP reply header. */
-	icmp_header->icmp_type = 0;
-	icmp_header->icmp_code = 0;
-	icmp_header->icmp_sum = 0;
-	icmp_header->icmp_sum = cksum(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
-									sizeof(sr_icmp_hdr_t));
-
-	/* Now send the packet. */
 	sr_send_packet(sr, _packet, len, interface);
 	free(_packet);
 }
