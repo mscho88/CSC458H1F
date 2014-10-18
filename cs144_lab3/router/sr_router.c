@@ -278,6 +278,7 @@ void send_icmp_error(struct sr_instance *sr,
 							sizeof(sr_icmp_t3_hdr_t));
 
 	/* Send the ICMP error packet. */
+	print_hdr_ip(ip_newhdr);
 	sr_send_packet(sr, packet, new_len, interface);
 }
 /*---------------------------------------------------------------------
