@@ -9,8 +9,8 @@
 #include "sr_arpcache.h"
 #include "sr_router.h"
 #include "sr_if.h"
+#include "sr_packet.h"
 #include "sr_protocol.h"
-#include "sr_message.h"
 
 #define ETHER_HEADER_LEN 14
 #define IPV4_HEADER_LEN 20
@@ -69,25 +69,24 @@ struct sr_if *next_hop(struct sr_instance *sr, char *intfc, uint32_t dest) {
 	}
 	return nxt_hop_ip;
 }
+
 void send_arp_request(struct sr_instance *sr, uint32_t dst_ip, char *interface) {
 
 	uint8_t *packet = (uint8_t *)malloc(sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t));
 	unsigned int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 	struct sr_if *rt_if = (struct sr_if *)sr_get_interface(sr, interface);
-	uint8_t brdcst_addr[ETHER_ADDR_LEN];
+	uint8_t brdcst_addr[ETHER_ADDR_LEN] = {255, 255, 255, 255, 255, 255};
 
-	int i = 0;
-	for(i; i < ETHER_ADDR_LEN; i++){
+/*	int i;
+	for(i = 0; i < ETHER_ADDR_LEN; i++){
 		brdcst_addr[i] = 255;
-	}
+	}*/
 
-	/* Prepare ethernet header. */
 	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *)(packet);
 	ether_hdr->ether_type = htons(ethertype_arp);
 	memcpy(ether_hdr->ether_shost, rt_if->addr, ETHER_ADDR_LEN);
 	memcpy(ether_hdr->ether_dhost, brdcst_addr, ETHER_ADDR_LEN);
 
-	/* Prepare ARP header. */
 	sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 	arp_hdr->ar_hrd = htons(arp_hrd_ethernet);
 	arp_hdr->ar_pro = htons(ethertype_ip);

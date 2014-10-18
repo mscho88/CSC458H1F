@@ -20,8 +20,8 @@
 #include "sr_router.h"
 #include "sr_protocol.h"
 #include "sr_arpcache.h"
+#include "sr_packet.c"
 #include "sr_utils.h"
-#include "sr_message.c"
 
 
 /*---------------------------------------------------------------------
@@ -121,7 +121,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
     	 * the information of the sender. */
     	send_arp_packet(sr, packet, len, interface);
     }else if(htons(arp_header->ar_op) == arp_op_reply){
-    	Debug("ARP reply\n");
 		if (get_interface_for_ip(sr->if_list, arp_header->ar_tip)) {
 			struct sr_arpreq *request;
 			if((request = sr_arpcache_insert(&(sr->cache), arp_header->ar_sha, arp_header->ar_sip)) != NULL) {
@@ -198,8 +197,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					forward_packet(sr, dest->interface, arp_entry->mac, len, packet);
 					free(arp_entry);
 				}else{
-					Debug("IP is not for me\n");
-
 					sr_arpcache_queuereq(&(sr->cache), ip_header->ip_dst, packet, len, dest->interface);
 				}
 			}else{

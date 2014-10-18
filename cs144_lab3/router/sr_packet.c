@@ -1,3 +1,5 @@
+#include "sr_packet.h"
+
 #include <stdio.h>
 #include <assert.h>
 
@@ -7,7 +9,6 @@
 #include "sr_protocol.h"
 #include "sr_arpcache.h"
 #include "sr_utils.h"
-#include "sr_message.h"
 
 /*---------------------------------------------------------------------
  * Method: send_arp_packet(struct sr_instance* sr, uint8_t* packet,
@@ -138,7 +139,6 @@ void build_icmp_t3_header(uint8_t *_packet, uint8_t *packet, sr_ip_hdr_t *ip_hea
 }
 
 void send_icmp_echo_packet(struct sr_instance* sr, uint8_t* packet, unsigned int len, char* interface) {
-
 	uint8_t *_packet = (uint8_t *) malloc(len);
 	memcpy(_packet, packet, len);
 	struct sr_if *interfaces = (struct sr_if *)sr_get_interface(sr, interface);
