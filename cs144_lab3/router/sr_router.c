@@ -215,72 +215,20 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					fprintf(stderr, "Added Arp Req to queu \n");
 				}
 			}else{
-				Debug("CAnnot transmit the packet\n");
-				/* no match found error */
-				/* ICMP net unreachable */
-				/* important*/
-				/*send_packet(sr, packet, interface, htons(eth_orig_header->ether_type), 3);*/
-				/*fprintf(stderr, "Can Not Transmit The Packet To ");
-				print_addr_ip_int(ip_header->ip_dst);
-				fprintf(stderr, "Sending The Packet Back To ");
-				print_addr_ip_int(ip_header->ip_src);*/
+				Debug("Cannot transmit the packet\n");
+				print_addr_ip_int(ip_header->ip_src);
 				send_ip_packet(sr, packet, interface, icmp_type3, icmp_code);
 				/*send_icmp_error(sr, interface, len, packet, icmp_type3, icmp_code);*/
 			}
 		}else{
 			fprintf(stderr, "Received Packet TTL(%u) Expired in Transit \n", ip_header->ip_ttl);
-			send_ip_packet(sr, interface, packet, icmp_type11, icmp_code);
+			send_ip_packet(sr, packet, interface, icmp_type11, icmp_code);
 			/*send_icmp_error(sr, interface, len, packet, icmp_type11, icmp_code);*/
 /*			send_icmp_error(icmp_type11, 0, sr, interface, packet);*/
 		}
 	}
 }/* end sr_handlepacket_ip */
-void send_icmp_error(struct sr_instance *sr,
-					char *interface, unsigned int len, uint8_t *pkt,uint8_t type, uint8_t code) {
 
-	int new_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
-	uint8_t *packet = (uint8_t *) malloc(new_len);
-	struct sr_if *rt_if = (struct sr_if *)malloc(sizeof(struct sr_if));
-	rt_if = (struct sr_if *)sr_get_interface(sr, interface);
-
-	/* Prepare ethernet header. */
-	sr_ethernet_hdr_t *ether_hdr = (sr_ethernet_hdr_t *) pkt;
-	sr_ethernet_hdr_t *ether_newhdr = (sr_ethernet_hdr_t *) packet;
-	ether_newhdr->ether_type = htons(ethertype_ip);
-	memcpy(ether_newhdr->ether_shost, rt_if->addr, ETHER_ADDR_LEN);
-	memcpy(ether_newhdr->ether_dhost, ether_hdr->ether_shost, ETHER_ADDR_LEN);
-
-	/* Prepare IP header. */
-	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(pkt + sizeof(sr_ethernet_hdr_t));
-	sr_ip_hdr_t *ip_newhdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
-	memcpy(ip_newhdr, ip_hdr, sizeof(sr_ip_hdr_t));
-	ip_newhdr->ip_src = rt_if->ip;
-	ip_newhdr->ip_dst = ip_hdr->ip_src;
-	ip_newhdr->ip_len = htons(56);
-	ip_newhdr->ip_id = 0;
-	ip_newhdr->ip_hl = 5;
-	ip_newhdr->ip_off = 0;
-	ip_newhdr->ip_ttl = 64;
-	ip_newhdr->ip_p = ip_protocol_icmp;
-	ip_newhdr->ip_sum = 0;
-	ip_newhdr->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
-
-	/* Prepare the ICMP t3 header. */
-	sr_icmp_t3_hdr_t *icmp_t3_hdr = (sr_icmp_t3_hdr_t *)(packet +
-									sizeof(sr_ethernet_hdr_t) +
-									sizeof(sr_ip_hdr_t));
-	icmp_t3_hdr->icmp_type = type;
-	icmp_t3_hdr->icmp_code = code;
-	icmp_t3_hdr->icmp_sum = 0;
-	memcpy(icmp_t3_hdr->data,  ip_hdr, 20);
-	memcpy(icmp_t3_hdr->data + 20, pkt + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t), 8);
-	icmp_t3_hdr->icmp_sum = cksum(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t),
-							sizeof(sr_icmp_t3_hdr_t));
-
-	/* Send the ICMP error packet. */
-	print_hdr_ip(ip_newhdr);
-	sr_send_packet(sr, packet, new_len, interface);
-}
 /*---------------------------------------------------------------------
  * Method: sr_longest_prefix_match(struct sr_rt*, sr_ip_hdr_t*)
  * Scope:  Global
