@@ -170,7 +170,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		}
 	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
 		/* In case, the packet is the arp reply packet .. */
-		struct sr_arpreq *arp_packet;
+		struct sr_arpreq *arp_packet = NULL;
 		/****??? what the fuck is this warning ****/
 		if(arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip) != NULL){
 			struct sr_packet *packets = arp_packet->packets;
