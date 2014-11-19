@@ -116,7 +116,7 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig, struct sr_if* in
 	sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)_packet;
 
 	arp_hdr->ar_hrd = arp_orig->ar_hrd;
-	arp_hdr->ar_pro = arp_orig->ar_pro;//htons(ethertype_ip);
+	arp_hdr->ar_pro = arp_orig->ar_pro;/*htons(ethertype_ip);*/
 	arp_hdr->ar_hln = arp_orig->ar_hln;
 	arp_hdr->ar_pln = arp_orig->ar_pln;
 	arp_hdr->ar_op = htons(arp_op_reply);
@@ -145,7 +145,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
 			/* Transform the packet to the ethernet header and arp header to fill the informations. */
 			/*sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)arp_packet;*/
-			sr_arp_hdr_t *arp_hdr_2send = (sr_arp_hdr_t *)(arp_packet + sizeof(sr_ethernet_hdr_t));
+			/*sr_arp_hdr_t *arp_hdr_2send = (sr_arp_hdr_t *)(arp_packet + sizeof(sr_ethernet_hdr_t));*/
 
 			/* build the Ethernet header */
 /*			memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
@@ -171,7 +171,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
 		/* In case, the packet is the arp reply packet .. */
 		struct sr_arpreq *arp_packet;
-		if(arp_packet = (struct sr_arpreq *)sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip) != NULL){
+		if(*arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip) != NULL){
 			struct sr_packet *packets = arp_packet->packets;
 			while (packets != NULL) {
 				sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)(packets->buf);
