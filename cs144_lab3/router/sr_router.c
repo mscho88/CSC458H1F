@@ -129,32 +129,32 @@ void sr_handlepacket_arp(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
         char* interface/* lent */){
-	// Transform the packet to the arp header by adding the size of sr_ethernet_hdr_t.
+	/* Transform the packet to the arp header by adding the size of sr_ethernet_hdr_t. */
 	sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
 	sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 
-	// In case, the packet is the arp request packet ..
+	/* In case, the packet is the arp request packet .. */
 	if (ntohs(arp_hdr->ar_op) == ARP_REQUEST){
-		// If the router has the interface of the arp_request, the send the arp reply.
-		// Otherwise, the router drops the packet.
+		/* If the router has the interface of the arp_request, the send the arp reply.
+		 * Otherwise, the router drops the packet. */
 		if(interface_exist(sr->if_list, arp_hdr)){
-			// Build an arp reply packet
+			/* Build an arp reply packet */
 			int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 			uint8_t *arp_packet = (uint8_t *)malloc(length);
 
-			// Transform the packet to the ethernet header and arp header to fill the informations.
+			/* Transform the packet to the ethernet header and arp header to fill the informations. */
 			sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)arp_packet;
 			sr_arp_hdr_t *arp_hdr_2send = (sr_arp_hdr_t *)(arp_packet + sizeof(sr_ethernet_hdr_t));
 
-			// build the Ethernet header
-//			memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
+			/* build the Ethernet header */
+/*			memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
 //			memcpy(eth_hdr_2send->ether_shot, sr->if_list->addr, ETHER_ADDR_LEN);
-//			ethernet_header->ether_type = htons(ETHERTYPE_ARP);
+//			ethernet_header->ether_type = htons(ETHERTYPE_ARP);*/
 			build_ethernet_header(arp_packet, eth_hdr->ether_shost, sr->if_list, ethertype_arp);
 			build_arp_header(arp_packet, arp_hdr, sr->if_list, ethertype_arp);
 
-			// build the ARP header
-//			arp_hdr_2send->ar_hrd = htons(ARP_HRD_ETHER);      // Hardware length
+			/* build the ARP header */
+/*			arp_hdr_2send->ar_hrd = htons(ARP_HRD_ETHER);      // Hardware length
 //			arp_hdr_2send->ar_pro = arp_hdr->ar_pro;           // Protocol length
 //			arp_hdr_2send->ar_hln = arp_hdr->ar_hln;           // # bytes in MAC address
 //			arp_hdr_2send->ar_pln = arp_hdr->ar_pln;           // # bytes in IP address
@@ -162,13 +162,13 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 //			memcpy(arp_hdr_2send->ar_sha, interface_list->addr, ETHER_ADDR_LEN);
 //			arp_hdr_2send->ar_sip = arp_hdr->ar_tip;
 //			memcpy(arp_hdr_2send->ar_tha, arp_hdr->ar_sha, ETHER_ADDR_LEN);
-//			arp_hdr_2send->ar_tip = arp_hdr->ar_sip;
+//			arp_hdr_2send->ar_tip = arp_hdr->ar_sip;*/
 
 			sr_send_packet(sr, arp_packet, length, interface);
 			free(arp_packet);
 		}
 	}else if (ntohs(arp_hdr->ar_op) == ARP_REPLY){
-		// In case, the packet is the arp reply packet ..
+		/* In case, the packet is the arp reply packet .. */
 		struct sr_arpreq *arp_packet;
 		if(arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip) != NULL){
 			struct sr_packet *packets = arp_packet->packets;
