@@ -13,7 +13,7 @@
 
 #include <stdio.h>
 #include <assert.h>
-
+#include <stdlib.h>
 
 #include "sr_if.h"
 #include "sr_rt.h"
@@ -134,7 +134,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 
 	/* In case, the packet is the arp request packet .. */
-	if (ntohs(arp_hdr->ar_op) == ARP_REQUEST){
+	if (ntohs(arp_hdr->ar_op) == arp_op_request){
 		/* If the router has the interface of the arp_request, the send the arp reply.
 		 * Otherwise, the router drops the packet. */
 		if(interface_exist(sr->if_list, arp_hdr)){
@@ -143,7 +143,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			uint8_t *arp_packet = (uint8_t *)malloc(length);
 
 			/* Transform the packet to the ethernet header and arp header to fill the informations. */
-			sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)arp_packet;
+			/*sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)arp_packet;*/
 			sr_arp_hdr_t *arp_hdr_2send = (sr_arp_hdr_t *)(arp_packet + sizeof(sr_ethernet_hdr_t));
 
 			/* build the Ethernet header */
@@ -167,10 +167,10 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			sr_send_packet(sr, arp_packet, length, interface);
 			free(arp_packet);
 		}
-	}else if (ntohs(arp_hdr->ar_op) == ARP_REPLY){
+	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
 		/* In case, the packet is the arp reply packet .. */
 		struct sr_arpreq *arp_packet;
-		if(arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip) != NULL){
+		if(arp_packet = (struct sr_arpreq *)sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip) != NULL){
 			struct sr_packet *packets = arp_packet->packets;
 			while (packets != NULL) {
 				sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)(packets->buf);
