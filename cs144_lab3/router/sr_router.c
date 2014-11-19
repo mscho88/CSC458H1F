@@ -171,17 +171,17 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
 		/* In case, the packet is the arp reply packet .. */
 		struct sr_arpreq *arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
-		/****??? what the fuck is this warning ****/
-		if(arp_packet){
-			struct sr_packet *packets = arp_packet->packets;
-			while (packets != NULL) {
-				sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)(packets->buf);
-				memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
-				sr_send_packet(sr, packets->buf, packets->len, packets->iface);
-				packets = packets->next;
-			}
-			sr_arpreq_destroy(&sr->cache, arp_packet);
+		if(arp_packet == NULL){ return; }
+
+		struct sr_packet *packets = arp_packet->packets;
+		sr_ethernet_hdr_t *eth_hdr_2send;
+		while (packets != NULL) {
+			eth_hdr_2send = (sr_ethernet_hdr_t *)(packets->buf);
+			memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
+			sr_send_packet(sr, packets->buf, packets->len, packets->iface);
+			packets = packets->next;
 		}
+		sr_arpreq_destroy(&sr->cache, arp_packet);
 	}
 }
 
