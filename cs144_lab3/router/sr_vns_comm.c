@@ -112,8 +112,6 @@ int sr_connect_to_server(struct sr_instance* sr,unsigned short port,
         return -1;
     }
 
-
-
     /* attempt to connect to the server */
     if (connect(sr->sockfd, (struct sockaddr *)&(sr->sr_addr),
                 sizeof(sr->sr_addr)) < 0)
@@ -566,7 +564,6 @@ int sr_send_packet(struct sr_instance* sr /* borrowed */,
                          unsigned int len,
                          const char* iface /* borrowed */)
 {
-	sr_print_if(sr_get_interface(sr, iface));
     c_packet_header *sr_pkt;
     unsigned int total_len =  len + (sizeof(c_packet_header));
 

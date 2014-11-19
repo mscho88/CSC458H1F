@@ -101,8 +101,8 @@ struct sr_icmp_t3_hdr {
 } __attribute__ ((packed)) ;
 typedef struct sr_icmp_t3_hdr sr_icmp_t3_hdr_t;
 
-#define ICMP_MIN_LEN 8
-#define ETHER_HEADER_LEN 14
+
+
 
 /*
  * Structure of an internet header, naked of options.
@@ -116,10 +116,7 @@ struct sr_ip_hdr
     unsigned int ip_v:4;		/* version */
     unsigned int ip_hl:4;		/* header length */
 #else
-/*#error "Byte ordering ot specified "*/
-    /* Mac OS X Hack Fix*/
-    unsigned int ip_v:4;		/* version */
-    unsigned int ip_hl:4;		/* header length */
+#error "Byte ordering ot specified " 
 #endif 
     uint8_t ip_tos;			/* type of service */
     uint16_t ip_len;			/* total length */
@@ -153,24 +150,8 @@ typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
 
 
-enum sr_icmp_code {
-	icmp_code = 0x0000,
-	icmp_code1 = 0x0001,
-	icmp_code3 = 0x0003,
-};
-
-enum sr_icmp_type {
-	icmp_type0 = 0x0000,
-	icmp_type3 = 0x0003,
-	icmp_type8 = 0x0008,
-	icmp_type11 = 0x000B,
-	icmp_type30 = 0x001E,
-};
-
 enum sr_ip_protocol {
   ip_protocol_icmp = 0x0001,
-  ip_protocol_tcp = 0x0006,
-  ip_protocol_udp = 0x0011,
 };
 
 enum sr_ethertype {

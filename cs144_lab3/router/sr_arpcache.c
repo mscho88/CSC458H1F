@@ -9,7 +9,6 @@
 #include "sr_arpcache.h"
 #include "sr_router.h"
 #include "sr_if.h"
-#include "sr_packet.h"
 #include "sr_protocol.h"
 
 /* 
@@ -17,51 +16,8 @@
   checking whether we should resend an request or destroy the arp request.
   See the comments in the header file for an idea of what it should look like.
 */
-void sr_arpcache_sweepreqs(struct sr_instance *sr) {
-	struct sr_arpcache *cache = &(sr->cache);
-	struct sr_arpreq *req = cache->requests;
-	struct sr_arpreq *prevreq = cache->requests;
-	time_t cur_time;
-	while(req) {
-		prevreq = req;
-		cur_time = time(NULL);
-		if (difftime(cur_time, req->sent) > 1.0) {
-			struct sr_packet *cur_packet = (struct sr_packet *)(req->packets);
-			if (req->times_sent >= 5) {
-				while (cur_packet) {
-					struct sr_if *src_if = (struct sr_if *)malloc(sizeof(struct sr_if));
-					sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(cur_packet->buf + sizeof(sr_ethernet_hdr_t));
-					src_if = next_hop(sr, cur_packet->iface, ip_hdr->ip_src);
-					send_ip_error_packet(sr, src_if->name, cur_packet->buf, icmp_type3, icmp_code1);
-					free(src_if);
-					cur_packet = cur_packet->next;
-				}
-				sr_arpreq_destroy(cache, req);
-			}else{
-				if(cur_packet) {
-					send_arp_request(sr, req->ip, cur_packet->iface);
-					req->sent = cur_time;
-					req->times_sent++;
-				}
-			}
-		}
-		req = prevreq->next;
-	}
-}
-
-struct sr_if *next_hop(struct sr_instance *sr, char *intfc, uint32_t dest) {
-	int m = 0, cur = 0;
-	struct sr_if* interface = sr->if_list;
-
-	struct sr_if *nxt_hop_ip = (struct sr_if *) malloc(sizeof(interface));
-	while (interface) {
-		if (strncmp(interface->name, intfc, sr_IFACE_NAMELEN) != 0) {
-			for(cur = 0; memcmp(&(interface->ip), &(dest), cur) != 0; cur++);
-			if (m < cur) { m = cur; nxt_hop_ip = interface; }
-		}
-		interface = interface->next;
-	}
-	return nxt_hop_ip;
+void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
+    /* Fill this in */
 }
 
 /* You should not need to touch the rest of this code. */
