@@ -101,7 +101,7 @@ int interface_exist(struct sr_if *interface_list, sr_arp_hdr_t *arp_hdr){
 	return 0;
 }
 
-void build_ether_header(uint8_t *_packet, uint8_t *addr, struct sr_if* interface, uint16_t ethertype){
+void build_ethernet_header(uint8_t *_packet, uint8_t *addr, struct sr_if* interface, uint16_t ethertype){
 	sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)_packet;
 	memcpy(eth_hdr->ether_dhost, addr, ETHER_ADDR_LEN);
 	memcpy(eth_hdr->ether_shost, interface->addr, ETHER_ADDR_LEN);
