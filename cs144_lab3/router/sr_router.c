@@ -172,7 +172,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		/* In case, the packet is the arp reply packet .. */
 		struct sr_arpreq *arp_packet;
 		/****??? what the fuck is this warning ****/
-		if(&arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip) != NULL){
+		if(arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip) != NULL){
 			struct sr_packet *packets = arp_packet->packets;
 			while (packets != NULL) {
 				sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)(packets->buf);
