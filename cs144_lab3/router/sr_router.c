@@ -300,5 +300,5 @@ struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_head
 	return best;
 }/* end sr_longest_prefix_match */
 
-void IcmpMessage(struct sr_instance *sr, uint8_t *packet, uint8_t icmp_type, uint8_t icmp_code) {
+void IcmpMessage(struct sr_instance *sr, uint8_t *packet, uint16_t icmp_type, uint16_t icmp_code) {
 }
