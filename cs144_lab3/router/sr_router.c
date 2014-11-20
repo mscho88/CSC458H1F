@@ -363,7 +363,7 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 	build_ethernet_header(_packet, arp_entry->mac, interface, ethertype_ip);
 
 	/* build the IP header */
-	build_ip_header(_packet, ip_hdr, length, newDest, interface, icmp_type, icmp_code);
+	build_ip_header(_packet, ip_hdr, length, ip_hdr->ip_src, interface, icmp_type, icmp_code);
 
 	/* build ICMP header regarding to the type of ICMP */
 	if(icmp_type == icmp_type0){
