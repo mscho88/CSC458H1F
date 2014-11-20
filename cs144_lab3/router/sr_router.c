@@ -105,7 +105,12 @@ int interface_exist(struct sr_if *interface_list, uint32_t addr){
 
 void build_ethernet_header(uint8_t *_packet, uint8_t *addr, struct sr_if* interface, uint16_t ethertype){
 	sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)_packet;
-	memcpy(eth_hdr->ether_dhost, addr, ETHER_ADDR_LEN);
+	if(addr != NULL){
+		memcpy(eth_hdr->ether_dhost, addr, ETHER_ADDR_LEN);
+	}else{
+	    memset(eth_hdr->ether_dhost, 255, ETHER_ADDR_LEN);
+
+	}
 	memcpy(eth_hdr->ether_shost, interface->addr, ETHER_ADDR_LEN);
 	if(ethertype == ethertype_arp){
 		eth_hdr->ether_type = htons(ethertype_arp);
@@ -403,8 +408,7 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
 
 			/* Build the Ethernet and ARP header
 			 * Note : This case ARP header is constructed as ARP request. */
-			build_ethernet_header(_packet, '\0', interface, ethertype_arp);
-		    memset(((sr_ethernet_hdr_t *)(_packet))->ether_dhost, 255, ETHER_ADDR_LEN);
+			build_ethernet_header(_packet, NULL, interface, ethertype_arp);
 			build_arp_header(_packet, (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), interface, arp_op_request);
 			sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
 			arp_hdr->ar_tip = req->ip;
