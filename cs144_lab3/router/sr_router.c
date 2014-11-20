@@ -343,8 +343,9 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 	if (matching_ip == NULL){
 		/* If the router cannot find the longest prefix matching ip, then
 		 * re-send a packet of ICMP destination unreachable.*/
-		uint8_t *eth_data = (uint8_t *) (packet + sizeof(sr_ethernet_hdr_t));
-		sr_send_icmp_message(sr, eth_data, icmp_type3, icmp_code3);
+		/*uint8_t *eth_data = (uint8_t *) (packet + sizeof(sr_ethernet_hdr_t));
+		sr_send_icmp_message(sr, eth_data, icmp_type3, icmp_code3);*/
+		fprintf(stderr, "wtf\n");
 		return;
 	}
 	/* end of Longest Prefix Matching*/
