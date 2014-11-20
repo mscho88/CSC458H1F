@@ -246,7 +246,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}
 	}else{
 		/* Longest Prefix Matching */
-		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, (in_addr_t *)ip_hdr->ip_dst);
+		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr);
 		if (matching_ip == NULL){
 			/* If the router cannot find the longest prefix matching ip, then
 			 * re-send a packet of ICMP destination unreachable.*/
@@ -286,11 +286,11 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}
 }
 
-struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, in_addr_t *dst_ip){
+struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_hdr){
 	struct sr_rt *best = 0;
 	struct sr_rt *cur = rtable;
 	while(cur){
-		if((dst_ip & cur->mask.s_addr) == (cur->dest.s_addr & cur->mask.s_addr)){
+		if((ip_hdr->ip_dst & cur->mask.s_addr) == (cur->dest.s_addr & cur->mask.s_addr)){
 			if(best == 0 || cur->mask.s_addr > best->mask.s_addr){
 				best = cur;
 			}
