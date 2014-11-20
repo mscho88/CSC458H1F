@@ -91,7 +91,7 @@ void sr_handlepacket(struct sr_instance* sr,
 	}
 }/* end sr_ForwardPacket */
 
-int interface_exist(struct sr_if *interface_list, uint32_t *addr){
+int interface_exist(struct sr_if *interface_list, uint32_t addr){
 	while (interface_list != NULL){
 		if (interface_list->ip == addr){
 			return 1;
@@ -229,7 +229,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			sr_icmp_hdr_t * icmp_hdr = (sr_icmp_hdr_t *)((uint8_t *)ip_hdr + sizeof(sr_ip_hdr_t));
 
 			/* Check Sum */
-			uint16_t icmp_checksum = icmp_hdr->icmp_sum;
+			uint16_t given_len = icmp_hdr->icmp_sum;
 			icmp_hdr->icmp_sum = 0;
 			if (given_len != cksum(icmp_hdr, len - sizeof(sr_ip_hdr_t))){
 				fprintf(stderr, " The Received Packet is corrupted. Checksum Failed. \n");
@@ -271,7 +271,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 		if (arp_entry == NULL){
 			struct sr_arpreq  *new_arp_request = sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface);
-			handle_arpreq(sr, new_arp_request);
+			/*handle_arpreq(sr, new_arp_request);*/
 		}else{
 			memcpy(eth_header->ether_dhost,arp_entry->mac,ETHER_ADDR_LEN);
 
