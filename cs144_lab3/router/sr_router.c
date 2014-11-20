@@ -114,16 +114,26 @@ void build_ethernet_header(uint8_t *_packet, uint8_t *addr, struct sr_if* interf
 
 void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig, struct sr_if* interface, uint16_t ethertype){
 	sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
-
-	arp_hdr->ar_hrd = arp_orig->ar_hrd;
-	arp_hdr->ar_pro = arp_orig->ar_pro;/*htons(ethertype_ip);*/
-	arp_hdr->ar_hln = arp_orig->ar_hln;
-	arp_hdr->ar_pln = arp_orig->ar_pln;
-	arp_hdr->ar_op = htons(arp_op_reply);
-	memcpy(arp_hdr->ar_sha, interface->addr, ETHER_ADDR_LEN);
-	arp_hdr->ar_sip = arp_orig->ar_tip;
-	memcpy(arp_hdr->ar_tha, arp_orig->ar_sha, ETHER_ADDR_LEN);
-	arp_hdr->ar_tip = arp_orig->ar_sip;
+	if(ethertype == arp_op_reply){
+		arp_hdr->ar_hrd = arp_orig->ar_hrd;
+		arp_hdr->ar_pro = arp_orig->ar_pro;/*htons(ethertype_ip);*/
+		arp_hdr->ar_hln = arp_orig->ar_hln;
+		arp_hdr->ar_pln = arp_orig->ar_pln;
+		arp_hdr->ar_op = htons(ethertype);
+		memcpy(arp_hdr->ar_sha, interface->addr, ETHER_ADDR_LEN);
+		arp_hdr->ar_sip = arp_orig->ar_tip;
+		memcpy(arp_hdr->ar_tha, arp_orig->ar_sha, ETHER_ADDR_LEN);
+		arp_hdr->ar_tip = arp_orig->ar_sip;
+	}else if(ethertype == arp_op_request){
+		arp_hdr->ar_hrd = htons(0x0001);
+		arp_hdr->ar_pro = htons(0x0800);
+		arp_hdr->ar_hln = ETHER_ADDR_LEN;
+		arp_hdr->ar_pln = sizeof(uint32_t);
+		arp_hdr->ar_op = htons(ethertype);
+		memcpy(arp_hdr->ar_sha, interface->addr, ETHER_ADDR_LEN);
+		arp_hdr->ar_sip = interface->ip;
+		memset(arp_hdr->ar_tha, 255, ETHER_ADDR_LEN);
+	}
 }/* end build_arp_header */
 
 void sr_handlepacket_arp(struct sr_instance* sr,
@@ -148,22 +158,8 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			/*sr_arp_hdr_t *arp_hdr_2send = (sr_arp_hdr_t *)(arp_packet + sizeof(sr_ethernet_hdr_t));*/
 
 			/* build the Ethernet and ARP header */
-/*			memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
-//			memcpy(eth_hdr_2send->ether_shot, sr->if_list->addr, ETHER_ADDR_LEN);
-//			ethernet_header->ether_type = htons(ETHERTYPE_ARP);*/
 			build_ethernet_header(_packet, eth_hdr->ether_shost, sr->if_list, ethertype_arp);
-			build_arp_header(_packet, arp_hdr, sr->if_list, ethertype_arp);
-
-			/* build the ARP header */
-/*			arp_hdr_2send->ar_hrd = htons(ARP_HRD_ETHER);      // Hardware length
-//			arp_hdr_2send->ar_pro = arp_hdr->ar_pro;           // Protocol length
-//			arp_hdr_2send->ar_hln = arp_hdr->ar_hln;           // # bytes in MAC address
-//			arp_hdr_2send->ar_pln = arp_hdr->ar_pln;           // # bytes in IP address
-//			arp_hdr_2send->ar_op = htons(ARP_REPLY);
-//			memcpy(arp_hdr_2send->ar_sha, interface_list->addr, ETHER_ADDR_LEN);
-//			arp_hdr_2send->ar_sip = arp_hdr->ar_tip;
-//			memcpy(arp_hdr_2send->ar_tha, arp_hdr->ar_sha, ETHER_ADDR_LEN);
-//			arp_hdr_2send->ar_tip = arp_hdr->ar_sip;*/
+			build_arp_header(_packet, arp_hdr, sr->if_list, arp_op_reply);
 
 			sr_send_packet(sr, _packet, length, interface);
 			free(_packet);
@@ -270,8 +266,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		struct sr_arpentry * arp_entry = sr_arpcache_lookup(&sr->cache, matching_ip->gw.s_addr);
 
 		if (arp_entry == NULL){
-			/*struct sr_arpreq  *new_arp_request = sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface);*/
-			/*handle_arpreq(sr, new_arp_request);*/
+			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
 		}else{
 			memcpy(eth_header->ether_dhost,arp_entry->mac,ETHER_ADDR_LEN);
 
@@ -334,8 +329,6 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	}
 
-	/*//Obtain information from the next hop*/
-	/*uint32_t *newDest = ip_hdr->ip_src;*/
 	/* Longest Prefix Match */
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr);
 	if (matching_ip == NULL){
@@ -353,9 +346,6 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 	uint8_t *_packet = (uint8_t *)malloc(length);
 
 	/* build the Ethernet header */
-	/*sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)_packet;*/
-	/*sr_ip_hdr_t *ip_hdr_2send = (sr_ip_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));*/
-
 	struct sr_arpentry *arp_entry = sr_arpcache_lookup(&sr->cache, matching_ip->gw.s_addr);
 	if(arp_entry == NULL){
 		build_ethernet_header(_packet, '\0', interface, ethertype_ip);
@@ -387,8 +377,42 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 	if (arp_entry){
 		sr_send_packet (sr, _packet, length, matching_ip->interface);
 	}else{
-		/*struct sr_arpreq *arpRequest = sr_arpcache_queuereq (&sr->cache, matching_ip->gw.s_addr, _packet, length, matching_ip->interface);
-		handle_arpreq(sr, arpRequest);*/
+		sr_arpcache_handle(sr, sr_arpcache_queuereq (&sr->cache, matching_ip->gw.s_addr, _packet, length, matching_ip->interface));
 	}
 	free(_packet);
 }
+
+
+void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
+    time_t cur_time = time(NULL);
+    struct sr_packet *packets;
+    if (difftime(cur_time, req->sent) > 1.0) {
+        if (req->times_sent >= 5) {
+            packets = req->packets;
+            while (packets != NULL) {
+                sr_send_icmp_message(sr, packets->buf + sizeof(sr_ethernet_hdr_t), icmp_type3, icmp_code1);
+                packets = packets->next;
+            }
+            sr_arpreq_destroy(&sr->cache, req);
+        }else{
+            int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t)
+			uint8_t *_packet = (uint8_t *)malloc(len);
+			struct sr_if *interface = sr_get_interface(sr, req->packets->iface);
+
+			/* Build the Ethernet and ARP header
+			 * Note : This case ARP header is constructed as ARP request. */
+			build_ethernet_header(_packet, 255, interface, ethertype_arp);
+			build_arp_header(_packet, (sr_ethernet_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), interface, arp_op_request);
+			sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
+			arp_hdr->ar_tip = req->ip;
+
+			sr_send_packet(sr, _packet, len, req->packets->iface);
+			free(_packet);
+
+			/* Renew the cached ARP packets */
+			req->sent = cur_time;
+            req->times_sent++;
+        }
+    }
+}
+
