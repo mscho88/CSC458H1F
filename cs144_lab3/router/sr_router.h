@@ -67,7 +67,7 @@ int sr_read_from_server(struct sr_instance* );
 /* -- sr_router.c -- */
 void sr_init(struct sr_instance* );
 void sr_handlepacket(struct sr_instance* , uint8_t * , unsigned int , char* );
-int interface_exist(struct sr_if *, sr_arp_hdr_t *);
+int interface_exist(struct sr_if *, uint32_t ){
 void build_ethernet_header(uint8_t *, uint8_t *, struct sr_if* , uint16_t );
 void build_arp_header(uint8_t *, sr_arp_hdr_t* , struct sr_if* , uint16_t );
 void sr_handlepacket_arp(struct sr_instance* , uint8_t * , unsigned int , char* );
