@@ -72,7 +72,7 @@ void build_ethernet_header(uint8_t *, uint8_t *, struct sr_if* , uint16_t );
 void build_arp_header(uint8_t *, sr_arp_hdr_t* , struct sr_if* , uint16_t );
 void sr_handlepacket_arp(struct sr_instance* , uint8_t * , unsigned int , char* );
 void sr_handlepacket_ip(struct sr_instance* , uint8_t * , unsigned int , char* );
-struct sr_rt *sr_longest_prefix_match(struct sr_rt *, sr_ip_hdr_t *);
+struct sr_rt *sr_longest_prefix_match(struct sr_rt *, struct sr_ip_hdr_t *);
 void IcmpMessage(struct sr_instance *, uint8_t *, uint16_t, uint16_t);
 
 /* -- sr_if.c -- */

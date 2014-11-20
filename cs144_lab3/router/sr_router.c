@@ -270,7 +270,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		struct sr_arpentry * arp_entry = sr_arpcache_lookup(&sr->cache, matching_ip->gw.s_addr);
 
 		if (arp_entry == NULL){
-			struct sr_arpreq  *new_arp_request = sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface);
+			/*struct sr_arpreq  *new_arp_request = sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface);*/
 			/*handle_arpreq(sr, new_arp_request);*/
 		}else{
 			memcpy(eth_header->ether_dhost,arp_entry->mac,ETHER_ADDR_LEN);
