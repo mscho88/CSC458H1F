@@ -403,7 +403,8 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
 
 			/* Build the Ethernet and ARP header
 			 * Note : This case ARP header is constructed as ARP request. */
-			build_ethernet_header(_packet, NULL, interface, ethertype_arp);
+			build_ethernet_header(_packet, '\0', interface, ethertype_arp);
+		    memset(((sr_ethernet_hdr_t *)(_packet))->ether_dhost, 255, ETHER_ADDR_LEN);
 			build_arp_header(_packet, (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), interface, arp_op_request);
 			sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
 			arp_hdr->ar_tip = req->ip;
