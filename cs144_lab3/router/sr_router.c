@@ -395,7 +395,7 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
             }
             sr_arpreq_destroy(&sr->cache, req);
         }else{
-            int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t)
+            int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 			uint8_t *_packet = (uint8_t *)malloc(len);
 			struct sr_if *interface = sr_get_interface(sr, req->packets->iface);
 
