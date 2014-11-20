@@ -192,7 +192,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	sr_ethernet_hdr_t* eth_hdr = (sr_ethernet_hdr_t *)packet;
 	sr_ip_hdr_t* ip_hdr = ((sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t)));
-	sr_icmp_hdr_t* icmp_hdr =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));
+	/*sr_icmp_hdr_t* icmp_hdr =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));*/
 
 	/* Check Sum */
 	uint16_t given_len = ip_hdr->ip_sum;
@@ -302,4 +302,5 @@ struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_head
 
 void IcmpMessage(struct sr_instance *sr, uint8_t *packet, uint16_t icmp_type, uint16_t icmp_code) {
 	int i = 0;
+	i = 1;
 }
