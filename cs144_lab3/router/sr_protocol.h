@@ -45,6 +45,10 @@
 #define IP_MAXPACKET 65535
 #endif
 
+#ifndef IP_PACKET_TTL
+#define IP_PACKET_TTL 64
+#endif
+
 
 
 /* FIXME
@@ -149,9 +153,9 @@ struct sr_ethernet_hdr
 typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
 enum sr_icmp_code {
-	icmp_code0 = 0x0000,	/**/
-	icmp_code1 = 0x0001,	/**/
-	icmp_code3 = 0x0003,	/**/
+	icmp_code0 = 0x0000,	/* ICMP default */
+	icmp_code1 = 0x0001,	/* ICMP host unreachable */
+	icmp_code3 = 0x0003,	/* ICMP port unreachable */
 };
 
 enum sr_icmp_type {
