@@ -221,7 +221,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		if(ip_hdr->ip_p == IPPROTO_TCP || ip_hdr->ip_p == IPPROTO_UDP){
 			/* If the router receives any packet of TCP or UDP, then re-send a
 			 * packet of destination unreachable back. */
-			IcmpMessage(sr, eth_hdr, icmp_type3, icmp_code3);
+			IcmpMessage(sr, eth_hdr, &icmp_type3, &icmp_code3);
 		}else if (ip_hdr->ip_p == IPPROTO_ICMP){
 			/* If the received packet is ICMP type, then firstly do checksum
 			 * for icmp header and send a packet echo reply in case of the
@@ -240,7 +240,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 			if (icmp_hdr->icmp_type == icmp_type8){
 			    uint8_t *eth_data = (uint8_t *) (packet + sizeof(sr_ethernet_hdr_t));
-				IcmpMessage(sr, eth_data, icmp_type0, icmp_code0);
+				IcmpMessage(sr, eth_data, &icmp_type0, &icmp_code0);
 				return;
 			}
 		}
@@ -251,7 +251,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			/* If the router cannot find the longest prefix matching ip, then
 			 * re-send a packet of ICMP destination unreachable.*/
 		    uint8_t *eth_data = (uint8_t *) (packet + sizeof(sr_ethernet_hdr_t));
-			IcmpMessage(sr, eth_data, icmp_type3, icmp_code3);
+			IcmpMessage(sr, eth_data, &icmp_type3, &icmp_code3);
 			return;
 		}
 		/* end of Longest Prefix Matching*/
