@@ -148,7 +148,19 @@ struct sr_ethernet_hdr
 } __attribute__ ((packed)) ;
 typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
+enum sr_icmp_code {
+	icmp_code0 = 0x0000,	/**/
+	icmp_code1 = 0x0001,	/**/
+	icmp_code3 = 0x0003,	/**/
+};
 
+enum sr_icmp_type {
+	icmp_type0 = 0x0000,	/* ICMP echo reply */
+	icmp_type3 = 0x0003,	/* ICMP destination unreachable */
+	icmp_type8 = 0x0008,	/* ICMP echo request */
+	icmp_type11 = 0x000B,	/* ICMP time exceeded */
+	icmp_type30 = 0x001E,	/* ICMP traceroute */
+};
 
 enum sr_ip_protocol {
   ip_protocol_icmp = 0x0001,
