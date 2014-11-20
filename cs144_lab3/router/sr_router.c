@@ -335,7 +335,7 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 	}
 
 	/*//Obtain information from the next hop*/
-	uint32_t *newDest = ip_hdr->ip_src;
+	/*uint32_t *newDest = ip_hdr->ip_src;*/
 	/* Longest Prefix Match */
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr);
 	if (matching_ip == NULL){
