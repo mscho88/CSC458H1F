@@ -45,9 +45,7 @@
 #define IP_MAXPACKET 65535
 #endif
 
-#ifndef IP_PACKET_TTL
-#define IP_PACKET_TTL 64
-#endif
+static uint8_t Broadcast[ETHER_ADDR_LEN] = {255, 255, 255, 255, 255, 255};
 
 
 

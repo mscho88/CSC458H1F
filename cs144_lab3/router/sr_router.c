@@ -23,6 +23,8 @@
 #include "sr_arpcache.h"
 #include "sr_utils.h"
 
+
+
 /*---------------------------------------------------------------------
  * Method: sr_init(void)
  * Scope:  Global
@@ -304,7 +306,7 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t *ip_hdr, uint32_t length, uin
 	ip_hdr_2send->ip_len = htons(length - sizeof(sr_ethernet_hdr_t));
 	ip_hdr_2send->ip_id = 0;
 	ip_hdr_2send->ip_off = htons (IP_DF | 0);
-	ip_hdr_2send->ip_ttl = IP_PACKET_TTL;
+	ip_hdr_2send->ip_ttl = INIT_TTL;
 	ip_hdr_2send->ip_p = ip_protocol_icmp;
 	ip_hdr_2send->ip_dst = dest;
 	if (icmp_type == icmp_type0 || (icmp_code == icmp_code3 && icmp_type == icmp_type3)){
@@ -401,7 +403,7 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
 
 			/* Build the Ethernet and ARP header
 			 * Note : This case ARP header is constructed as ARP request. */
-			build_ethernet_header(_packet, 255, interface, ethertype_arp);
+			build_ethernet_header(_packet, NULL, interface, ethertype_arp);
 			build_arp_header(_packet, (sr_ethernet_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), interface, arp_op_request);
 			sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
 			arp_hdr->ar_tip = req->ip;
