@@ -194,7 +194,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
         char* interface/* lent */){
 
 	/*sr_ethernet_hdr_t* eth_hdr = (sr_ethernet_hdr_t *)packet;*/
-	sr_ip_hdr_t* ip_hdr = (sr_ip_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t));
+	sr_ip_hdr_t* ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 	/*sr_icmp_hdr_t* icmp_hdr =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));*/
 
 	/* Check Sum */
@@ -292,14 +292,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_hdr){
 	struct sr_rt *best = 0;
-	/*struct sr_rt *cur = rtable;*/
-	while(rtable){
-		if((ip_hdr->ip_dst & rtable->mask.s_addr) == (rtable->dest.s_addr & rtable->mask.s_addr)){
-			if(best == 0 || rtable->mask.s_addr > best->mask.s_addr){
-				best = rtable;
+	struct sr_rt *cur = rtable;
+	while(cur != NULL){
+		if((ip_hdr->ip_dst & cur->mask.s_addr) == (cur->dest.s_addr & cur->mask.s_addr)){
+			if(best == 0 || cur->mask.s_addr > best->mask.s_addr){
+				best = cur;
 			}
 		}
-		rtable = rtable->next;
+		cur = cur->next;
 	}
 	return best;
 }/* end sr_longest_prefix_match */
