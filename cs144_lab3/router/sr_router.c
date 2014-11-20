@@ -293,7 +293,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_hdr){
 	struct sr_rt *best = 0;
 	struct sr_rt *cur = rtable;
-	while(cur){
+	while(cur != NULL){
 		if((ip_hdr->ip_dst & cur->mask.s_addr) == (cur->dest.s_addr & cur->mask.s_addr)){
 			if(best == 0 || cur->mask.s_addr > best->mask.s_addr){
 				best = cur;
