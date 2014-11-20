@@ -74,6 +74,7 @@ void sr_handlepacket_arp(struct sr_instance* , uint8_t * , unsigned int , char* 
 void sr_handlepacket_ip(struct sr_instance* , uint8_t * , unsigned int , char* );
 struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_hdr);
 void sr_send_icmp_message(struct sr_instance *, uint8_t *, uint16_t , uint16_t );
+void sr_arpcache_handle(struct sr_instance *, struct sr_arpreq *);
 
 
 /* -- sr_if.c -- */
