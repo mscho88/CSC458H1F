@@ -200,7 +200,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	/* Check Sum */
 	uint16_t given_len = ip_hdr->ip_sum;
 	ip_hdr->ip_sum = 0;
-	if(given_len != cksum((uint8_t*)ip_hdr, len-sizeof(sr_ip_hdr_t)-sizeof(sr_ethernet_hdr_t))) {
+	if(given_len != cksum((uint8_t*)ip_hdr, sizeof(sr_ip_hdr_t))) {
 		fprintf(stderr, " The Received Packet is corrupted. Checksum Failed. \n");
 		return;
 	}
@@ -234,7 +234,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			/* Check Sum */
 			uint16_t given_len = icmp_hdr->icmp_sum;
 			icmp_hdr->icmp_sum = 0;
-			if (given_len != cksum(icmp_hdr, sizeof(sr_icmp_hdr_t))){
+			if (given_len != cksum(icmp_hdr, len - sizeof(sr_ip_hdr_t) - sizeof(sr_ethernet_hdr_t))){
 				fprintf(stderr, " The Received Packet is corrupted. Checksum Failed. \n");
 				fprintf(stderr, "this checksum failed. \n");
 
