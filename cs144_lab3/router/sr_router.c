@@ -281,10 +281,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 		if(arp_entry != NULL){
 			printf("no arp_entry \n");
-			print_hdr_eth(eth_hdr_2send);
-			print_hdr_ip(ip_hdr_2send);
 			memcpy(eth_hdr_2send->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
-			print_hdr_eth(eth_hdr_2send);
+			printf("%d\n", len);
+
 			sr_send_packet(sr, _packet, len, matching_ip->interface);
 		}else{
 			printf("arp_entry exist\n");
