@@ -247,11 +247,18 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			/* If the router cannot find the longest prefix matching ip, then
 			 * re-send a packet of ICMP destination unreachable.*/
 		    uint8_t *eth_data = (uint8_t *)(packet + sizeof(sr_ethernet_hdr_t));
-		    printf("this may happen\n");
 		    sr_send_icmp_message(sr, eth_data, icmp_type3, icmp_code0);
 			return;
 		}
 		/* end of Longest Prefix Matching*/
+
+		printf("destination\n");
+		print_addr_ip(matching_ip->dest);
+		printf("gateway\n");
+		print_addr_ip(matching_ip->gw);
+		printf("subnetmask\n");
+		print_addr_ip(matching_ip->mask);
+		printf("interface %s\n", matching_ip->interface);
 
 		ip_hdr->ip_ttl--;
 		uint8_t * _packet = malloc(len);
@@ -269,7 +276,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		if (arp_entry == NULL){
 			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
 		}else{
-			memcpy(eth_header->ether_dhost,arp_entry->mac,ETHER_ADDR_LEN);
+			memcpy(eth_header->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
 
 			/* Set Check Sum */
 			ip_hdr->ip_sum = 0;
