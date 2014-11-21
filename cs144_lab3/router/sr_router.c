@@ -278,26 +278,12 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 		struct sr_arpentry * arp_entry = sr_arpcache_lookup(&sr->cache, matching_ip->gw.s_addr);
 
-		printf("arp entry\n");
-		if(arp_entry != NULL){
-			print_addr_ip_int(arp_entry->ip);
-		}
-		print_hdr_eth((uint8_t *)eth_hdr_2send);
-		print_hdr_ip((uint8_t *)ip_hdr_2send);
-
 		if(arp_entry != NULL){
 			memcpy(eth_hdr_2send->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
 			sr_send_packet(sr, _packet, len, matching_ip->interface);
 		}else{
 			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
 		}
-		printf("arp entry\n");
-		if(arp_entry != NULL){
-			print_addr_ip_int(arp_entry->ip);
-		}
-		print_hdr_eth((uint8_t *)eth_hdr_2send);
-		print_hdr_ip((uint8_t *)ip_hdr_2send);
-
 
 		free(_packet);
 	}
@@ -407,15 +393,13 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
     if (difftime(cur_time, req->sent) > 1.0) {
         if (req->times_sent >= 5) {
             packets = req->packets;
-            printf("3\n");
             while (packets != NULL) {
-            	printf("1\n");
                 sr_send_icmp_message(sr, packets->buf + sizeof(sr_ethernet_hdr_t), icmp_type3, icmp_code1);
                 packets = packets->next;
             }
             sr_arpreq_destroy(&sr->cache, req);
         }else{
-        	printf("2\n");
+
             int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 			uint8_t *_packet = (uint8_t *)malloc(len);
 			struct sr_if *interface = sr_get_interface(sr, req->packets->iface);
@@ -428,6 +412,10 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
 			arp_hdr->ar_tip = req->ip;
 
 			sr_send_packet(sr, _packet, len, req->packets->iface);
+
+			print_hdr_eth(_packet);
+			print_hdr_arp(_packet+sizeof(sr_ethernet_hdr_t));
+
 			free(_packet);
 
 			/* Renew the cached ARP packets */
