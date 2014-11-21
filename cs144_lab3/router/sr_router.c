@@ -207,16 +207,12 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	ip_hdr->ip_sum = given_len;
 	/* end of Check Sum*/
 
-/*	int sanity_check = sanity_check_ip(ip_packet,len);
-//	uint8_t * ethernet_data = (uint8_t *) (ip_packet + sizeof(sr_ethernet_hdr_t));
-//	sr_ip_hdr_t * ip_header = (sr_ip_hdr_t *)(ip_packet + sizeof(sr_ethernet_hdr_t));
-//	if (sanity_check == -1) return; //makes sure ip format is correct
-//	if (sanity_check == -2) //TTL <=1, we need to send ICMP message
-//	{
-//		ip_header->ip_ttl--;
-//		sr_send_icmp_message(sr, ethernet_data, IPPROTO_ICMP_TIME_EXCEEDED, IPPROTO_ICMP_DEFAULT_CODE);
-//		return;
-//	}*/
+	/* TTL check */
+	if(ip_hdr->ip_ttl < 1){
+		ip_hdr->ip_ttl--;
+		sr_send_icmp_message(sr, ((uint8_t *)(packet + sizeof(sr_ethernet_hdr_t))), icmp_type11, icmp_code0);
+	}
+	/* end of TTL check */
 
 	if(interface_exist(sr->if_list, ip_hdr->ip_dst)){
 		/* If the router finds any matches of the destination to one of our
@@ -326,9 +322,7 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t *ip_hdr, uint32_t length, uin
 void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp_type, uint16_t icmp_code) {
 	int length;
 
-	/*sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;*/
-	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)packet;/*///////(packet + sizeof(sr_ethernet_hdr_t));*/
-	/*sr_icmp_hdr_t *icmp_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));*/
+	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)packet;
 
 	if (icmp_type == icmp_type0){
 		length = sizeof(sr_ethernet_hdr_t) + ntohs(ip_hdr->ip_len);
@@ -341,9 +335,6 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 	if (matching_ip == NULL){
 		/* If the router cannot find the longest prefix matching ip, then
 		 * re-send a packet of ICMP destination unreachable.*/
-		/*uint8_t *eth_data = (uint8_t *) (packet + sizeof(sr_ethernet_hdr_t));
-		sr_send_icmp_message(sr, eth_data, icmp_type3, icmp_code3);*/
-		fprintf(stderr, "wtf\n");
 		return;
 	}
 	/* end of Longest Prefix Matching*/
