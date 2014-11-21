@@ -226,6 +226,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			 * packet of destination unreachable back. */
 			sr_send_icmp_message(sr, packet, icmp_type3, icmp_code3);
 		}else if (ip_hdr->ip_p == IPPROTO_ICMP){
+			printf("nice!!");
 			/* If the received packet is ICMP type, then firstly do checksum
 			 * for icmp header and send a packet echo reply in case of the
 			 * received packet is echo request. */
@@ -243,6 +244,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 			if (icmp_hdr->icmp_type == icmp_type8){
 			    uint8_t *eth_data = (uint8_t *) (packet + sizeof(sr_ethernet_hdr_t));
+			    printf("nice!!!!");
 			    sr_send_icmp_message(sr, eth_data, icmp_type0, icmp_code0);
 				return;
 			}
