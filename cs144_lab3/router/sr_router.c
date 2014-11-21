@@ -288,9 +288,11 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		struct sr_arpentry * arp_entry = sr_arpcache_lookup(&sr->cache, matching_ip->gw.s_addr);
 
 		if(arp_entry != NULL){
+			printf("no arp_entry \n");
 			memcpy(eth_hdr_2send->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
 			sr_send_packet(sr, _packet, len, matching_ip->interface);
 		}else{
+			printf("arp_entry exist\n");
 			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
 		}
 		free(arp_entry);
