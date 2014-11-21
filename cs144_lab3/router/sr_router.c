@@ -280,8 +280,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 		printf("arp entry\n");
 		print_addr_ip_int(arp_entry->ip);
-		print_addr_eth(eth_hdr_2send);
-		print_addr_ip(ip_hdr_2send);
+		print_hdr_eth((uint8_t *)eth_hdr_2send);
+		print_hdr_ip((uint8_t *)ip_hdr_2send);
 
 		if(arp_entry != NULL){
 			memcpy(eth_hdr_2send->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
