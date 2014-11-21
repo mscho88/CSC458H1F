@@ -566,7 +566,7 @@ int sr_send_packet(struct sr_instance* sr /* borrowed */,
 {
     c_packet_header *sr_pkt;
     unsigned int total_len =  len + (sizeof(c_packet_header));
-
+    printf("haha\n");
     /* REQUIRES */
     assert(sr);
     assert(buf);
