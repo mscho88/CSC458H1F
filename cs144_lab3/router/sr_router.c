@@ -258,7 +258,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		print_addr_ip(matching_ip->gw);
 		printf("subnetmask\n");
 		print_addr_ip(matching_ip->mask);
-		printf("interface %s\n", matching_ip->interface);
+		printf("interface \n%s\n", matching_ip->interface);
 
 		/* Reset Check Sum due to the change of TTL */
 		ip_hdr->ip_ttl--;
@@ -279,7 +279,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		struct sr_arpentry * arp_entry = sr_arpcache_lookup(&sr->cache, matching_ip->gw.s_addr);
 
 		printf("arp entry\n");
-		print_addr_ip_int(arp_entry->ip);
+		if(arp_entry != NULL){
+			print_addr_ip_int(arp_entry->ip);
+		}
 		print_hdr_eth((uint8_t *)eth_hdr_2send);
 		print_hdr_ip((uint8_t *)ip_hdr_2send);
 
@@ -290,7 +292,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
 		}
 		printf("arp entry\n");
-		print_addr_ip_int(arp_entry->ip);
+		if(arp_entry != NULL){
+			print_addr_ip_int(arp_entry->ip);
+		}
 		print_hdr_eth((uint8_t *)eth_hdr_2send);
 		print_hdr_ip((uint8_t *)ip_hdr_2send);
 
