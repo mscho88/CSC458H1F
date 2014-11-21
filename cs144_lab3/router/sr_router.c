@@ -220,6 +220,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	if(interface_exist(sr->if_list, ip_hdr->ip_dst)){
 		/* If the router finds any matches of the destination to one of our
 		 * interfaces.. */
+		printf("interface exist\n");
+
 		if(ip_hdr->ip_p == IPPROTO_TCP || ip_hdr->ip_p == IPPROTO_UDP){
 			/* If the router receives any packet of TCP or UDP, then re-send a
 			 * packet of destination unreachable back. */
@@ -247,6 +249,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			}
 		}
 	}else{
+		printf("interface does not exist\n");
 		/* Longest Prefix Matching */
 		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 		if (matching_ip == NULL){
