@@ -192,10 +192,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
         char* interface/* lent */){
-
-	/*sr_ethernet_hdr_t* eth_hdr = (sr_ethernet_hdr_t *)packet;*/
 	sr_ip_hdr_t* ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
-	/*sr_icmp_hdr_t* icmp_hdr =  ((sr_icmp_hdr_t*)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t)));*/
 
 	/* Check Sum */
 	uint16_t given_len = ip_hdr->ip_sum;
@@ -250,7 +247,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			/* If the router cannot find the longest prefix matching ip, then
 			 * re-send a packet of ICMP destination unreachable.*/
 		    uint8_t *eth_data = (uint8_t *)(packet + sizeof(sr_ethernet_hdr_t));
-		    sr_send_icmp_message(sr, eth_data, icmp_type3, icmp_code3);
+		    sr_send_icmp_message(sr, eth_data, icmp_type3, icmp_code0);
 			return;
 		}
 		/* end of Longest Prefix Matching*/
