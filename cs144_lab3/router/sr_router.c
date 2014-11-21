@@ -173,6 +173,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		}
 	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
 		/* In case, the packet is the arp reply packet .. */
+		printf("there you go\n");
 		struct sr_arpreq *arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
 		if(arp_packet == NULL){ return; }
 
@@ -413,8 +414,8 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
 
 			sr_send_packet(sr, _packet, len, req->packets->iface);
 
-			print_hdr_eth(_packet);
-			print_hdr_arp(_packet+sizeof(sr_ethernet_hdr_t));
+/*			print_hdr_eth(_packet);
+			print_hdr_arp(_packet+sizeof(sr_ethernet_hdr_t));*/
 
 			free(_packet);
 
