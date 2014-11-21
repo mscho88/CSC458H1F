@@ -173,10 +173,9 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		}
 	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
 		/* In case, the packet is the arp reply packet .. */
-		printf("there you go\n");
 		struct sr_arpreq *arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
 		if(arp_packet == NULL){ return; }
-
+/***something is wrong here...***/
 		struct sr_packet *packets = arp_packet->packets;
 		sr_ethernet_hdr_t *eth_hdr_2send;
 		while (packets != NULL) {
@@ -285,7 +284,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}else{
 			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
 		}
-
+		free(arp_entry);
 		free(_packet);
 	}
 }
@@ -384,6 +383,7 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 	}else{
 		sr_arpcache_handle(sr, sr_arpcache_queuereq (&sr->cache, matching_ip->gw.s_addr, _packet, length, matching_ip->interface));
 	}
+	free(arp_entry);
 	free(_packet);
 }
 
