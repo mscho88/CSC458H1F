@@ -302,7 +302,7 @@ struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_hdr)
 		cur = cur->next;
 	}
 	return best;
-}/* end sr_longest_prefix_match
+}/* end sr_longest_prefix_match */
 
 void build_ip_header(uint8_t *_packet, sr_ip_hdr_t *ip_hdr, uint32_t length, uint32_t dest,
 		struct sr_if *interface, uint8_t icmp_type, uint8_t icmp_code){
