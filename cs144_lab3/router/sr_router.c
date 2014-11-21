@@ -337,7 +337,7 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 	}else if (icmp_type == icmp_type3 || icmp_type == icmp_type11){
 		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	}
-	print_hdr_ip(packet);
+
 	/* Longest Prefix Match */
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr);
 	if (matching_ip == NULL){
