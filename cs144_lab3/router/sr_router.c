@@ -290,7 +290,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}
 }
 
-/*struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_hdr){
+struct sr_rt *sr_longest_prefix_match(struct sr_rt *rtable, sr_ip_hdr_t *ip_hdr){
 	struct sr_rt *best = NULL;
 	struct sr_rt *cur = rtable;
 	while(cur != NULL){
@@ -302,53 +302,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		cur = cur->next;
 	}
 	return best;
-}/* end sr_longest_prefix_match */
-
-struct sr_rt *sr_longest_prefix_match(struct sr_rt *rt_entry, sr_ip_hdr_t *ip_hdr){
-	struct sr_rt *lpm_result;
-		int lpm_mask_len;
-
-		/* Represents best matching candidate */
-		lpm_result = NULL;
-		lpm_mask_len = 0;
-
-		/* Find length of mask */
-		while (rt_entry != NULL) {
-
-			/* Find length of current mask (Count number of continuous bit with val 1) */
-			in_addr_t cur_mask = rt_entry->mask.s_addr;
-			int cur_mask_len = 0;
-			uint32_t cmp_mask = 0x80000000; /*1000 0000 0000 0000 0000 0000 0000 0000*/
-
-			while (cmp_mask != 0) {
-				if ((cur_mask & cmp_mask) != 0) {
-					cur_mask_len++;
-					cmp_mask >>= 1;
-				}
-				else {
-					break;
-				}
-			}
-
-			/* Current mask length is longer*/
-			if (cur_mask_len > lpm_mask_len) {
-
-				/* Now Compare destination */
-				if ((ip_hdr->ip_dst & rt_entry->mask.s_addr) ==
-						(ntohl(rt_entry->dest.s_addr) & rt_entry->mask.s_addr)) {
-
-					/* Found a better candidate */
-					lpm_result = rt_entry;
-					lpm_mask_len = cur_mask_len;
-				}
-			}
-
-			rt_entry = rt_entry->next;
-		}
-
-		return lpm_result;
-
-}/* end sr_longest_prefix_match */
+}/* end sr_longest_prefix_match
 
 void build_ip_header(uint8_t *_packet, sr_ip_hdr_t *ip_hdr, uint32_t length, uint32_t dest,
 		struct sr_if *interface, uint8_t icmp_type, uint8_t icmp_code){
