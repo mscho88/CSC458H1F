@@ -407,12 +407,15 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
     if (difftime(cur_time, req->sent) > 1.0) {
         if (req->times_sent >= 5) {
             packets = req->packets;
+            printf("3\n");
             while (packets != NULL) {
+            	printf("1\n");
                 sr_send_icmp_message(sr, packets->buf + sizeof(sr_ethernet_hdr_t), icmp_type3, icmp_code1);
                 packets = packets->next;
             }
             sr_arpreq_destroy(&sr->cache, req);
         }else{
+        	printf("2\n");
             int len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_arp_hdr_t);
 			uint8_t *_packet = (uint8_t *)malloc(len);
 			struct sr_if *interface = sr_get_interface(sr, req->packets->iface);
