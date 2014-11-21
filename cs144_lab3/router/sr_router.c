@@ -167,7 +167,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			/* build the Ethernet and ARP header */
 			build_ethernet_header(_packet, eth_hdr->ether_shost, sr->if_list, ethertype_arp);
 			build_arp_header(_packet, arp_hdr, sr->if_list, arp_op_reply);
-
+			printf("arp_request \n");
 			sr_send_packet(sr, _packet, length, interface);
 			free(_packet);
 		}
@@ -181,6 +181,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		while (packets != NULL) {
 			if (arp_packet->ip != arp_hdr->ar_sip){
 				sr_send_packet(sr, packets->buf, packets->len, packets->iface);
+				printf("arp reply \n");
 				/*eth_hdr_2send = (sr_ethernet_hdr_t *)(packets->buf);
 				memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
 				sr_send_packet(sr, packets->buf, packets->len, packets->iface);*/
@@ -196,6 +197,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
         unsigned int len,
         char* interface/* lent */){
 	sr_ip_hdr_t* ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
+
+	printf("handlepacket_ip\n");
 
 	/* Check Sum */
 	uint16_t given_len = ip_hdr->ip_sum;
@@ -329,7 +332,7 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t *ip_hdr, uint32_t length, uin
 
 void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp_type, uint16_t icmp_code) {
 	int length;
-
+	printf("send icmp message \n");
 	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)packet;
 
 	if (icmp_type == icmp_type0){
@@ -394,6 +397,9 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
     time_t cur_time = time(NULL);
     struct sr_packet *packets;
+
+    printf("arp cache handle\n");
+
     if (difftime(cur_time, req->sent) > 1.0) {
         if (req->times_sent >= 5) {
             packets = req->packets;
