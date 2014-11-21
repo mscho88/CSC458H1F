@@ -175,21 +175,19 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		/* In case, the packet is the arp reply packet .. */
 		struct sr_arpreq *arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
 		if(arp_packet == NULL){ return; }
-/***something is wrong here...***/
-		printf("1\n");
+
 		struct sr_packet *packets = arp_packet->packets;
 		sr_ethernet_hdr_t *eth_hdr_2send;
-		printf("2\n");
 		while (packets != NULL) {
-			printf("3\n");
-			eth_hdr_2send = (sr_ethernet_hdr_t *)(packets->buf);
-			memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
-			sr_send_packet(sr, packets->buf, packets->len, packets->iface);
+			if (arp_packet->ip != arp_hdr->ar_sip){
+				sr_send_packet(sr, packets->buf, packets->len, packets->iface);
+				/*eth_hdr_2send = (sr_ethernet_hdr_t *)(packets->buf);
+				memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
+				sr_send_packet(sr, packets->buf, packets->len, packets->iface);*/
+			}
 			packets = packets->next;
 		}
-		printf("4\n");
 		sr_arpreq_destroy(&sr->cache, arp_packet);
-		printf("5\n");
 	}
 }
 
