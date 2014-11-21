@@ -247,6 +247,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			/* If the router cannot find the longest prefix matching ip, then
 			 * re-send a packet of ICMP destination unreachable.*/
 		    uint8_t *eth_data = (uint8_t *)(packet + sizeof(sr_ethernet_hdr_t));
+		    printf("this may happen\n");
 		    sr_send_icmp_message(sr, eth_data, icmp_type3, icmp_code0);
 			return;
 		}
