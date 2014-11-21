@@ -278,12 +278,23 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 		struct sr_arpentry * arp_entry = sr_arpcache_lookup(&sr->cache, matching_ip->gw.s_addr);
 
+		printf("arp entry\n");
+		print_addr_ip_int(arp_entry->ip);
+		print_addr_eth(eth_hdr_2send);
+		print_addr_ip(ip_hdr_2send);
+
 		if(arp_entry != NULL){
 			memcpy(eth_hdr_2send->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
 			sr_send_packet(sr, _packet, len, matching_ip->interface);
 		}else{
 			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
 		}
+		printf("arp entry\n");
+		print_addr_ip_int(arp_entry->ip);
+		print_addr_eth(eth_hdr_2send);
+		print_addr_ip(ip_hdr_2send);
+
+
 		free(_packet);
 	}
 }
