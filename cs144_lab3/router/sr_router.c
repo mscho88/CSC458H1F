@@ -260,30 +260,29 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		print_addr_ip(matching_ip->mask);
 		printf("interface %s\n", matching_ip->interface);
 
+		/* Reset Check Sum due to the change of TTL */
 		ip_hdr->ip_ttl--;
-		uint8_t * _packet = malloc(len);
-		sr_ethernet_hdr_t *eth_header = (sr_ethernet_hdr_t *)_packet;
+		ip_hdr->ip_sum = 0;
+		ip_hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
 
 		struct sr_if *router_interface = sr_get_interface(sr, matching_ip->interface);
 		if (router_interface == NULL){ return; }
 
-		memcpy(eth_header->ether_shost, router_interface->addr, ETHER_ADDR_LEN);
-		eth_header->ether_type = htons(ethertype_ip);
-		memcpy(_packet + sizeof(sr_ethernet_hdr_t), ip_hdr, (len - sizeof(sr_ethernet_hdr_t)));
+		uint8_t * _packet = malloc(len);
+		sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)_packet;
+		sr_ip_hdr_t *ip_hdr_2send = (sr_ip_hdr_t *)(eth_hdr_2send + sizeof(sr_ethernet_hdr_t));
+
+		memcpy(eth_hdr_2send->ether_shost, router_interface->addr, ETHER_ADDR_LEN);
+		eth_hdr_2send->ether_type = htons(ethertype_ip);
+		memcpy(ip_hdr_2send, ip_hdr, (len - sizeof(sr_ethernet_hdr_t)));
 
 		struct sr_arpentry * arp_entry = sr_arpcache_lookup(&sr->cache, matching_ip->gw.s_addr);
 
-		if (arp_entry == NULL){
-			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
-		}else{
-			memcpy(eth_header->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
-
-			/* Set Check Sum */
-			ip_hdr->ip_sum = 0;
-			ip_hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
-
+		if(arp_entry != NULL){
+			memcpy(eth_hdr_2send->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
 			sr_send_packet(sr, _packet, len, matching_ip->interface);
-
+		}else{
+			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
 		}
 		free(_packet);
 	}
