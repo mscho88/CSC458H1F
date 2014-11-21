@@ -87,8 +87,10 @@ void sr_handlepacket(struct sr_instance* sr,
 	uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
 
 	if(ethernet_protocol_type == ethertype_arp){
+		printf("11\n");
 		sr_handlepacket_arp(sr, packet, len, interface);
 	}else if(ethernet_protocol_type == ethertype_ip){
+		printf("22\n");
 		sr_handlepacket_ip(sr, packet, len, interface);
 	}
 }/* end sr_ForwardPacket */
