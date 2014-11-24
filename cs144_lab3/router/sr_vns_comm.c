@@ -579,6 +579,7 @@ int sr_send_packet(struct sr_instance* sr /* borrowed */,
     }
 
     /* Create packet */
+    printf("%d\n", len);
     printf("111\n");
     sr_pkt = (c_packet_header *)malloc(len +
             sizeof(c_packet_header));
