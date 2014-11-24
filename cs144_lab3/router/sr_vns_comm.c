@@ -564,7 +564,6 @@ int sr_send_packet(struct sr_instance* sr /* borrowed */,
                          unsigned int len,
                          const char* iface /* borrowed */)
 {
-	printf("11\n");
     c_packet_header *sr_pkt;
     unsigned int total_len =  len + (sizeof(c_packet_header));
 
@@ -573,8 +572,6 @@ int sr_send_packet(struct sr_instance* sr /* borrowed */,
     assert(buf);
     assert(iface);
 
-    printf("22\n");
-
     /* don't waste my time ... */
     if ( len < sizeof(struct sr_ethernet_hdr) ){
         fprintf(stderr , "** Error: packet is wayy to short \n");
@@ -582,17 +579,16 @@ int sr_send_packet(struct sr_instance* sr /* borrowed */,
     }
 
     /* Create packet */
+    printf("111\n");
     sr_pkt = (c_packet_header *)malloc(len +
             sizeof(c_packet_header));
+    printf("222\n");
     assert(sr_pkt);
     sr_pkt->mLen  = htonl(total_len);
     sr_pkt->mType = htonl(VNSPACKET);
     strncpy(sr_pkt->mInterfaceName,iface,16);
     memcpy(((uint8_t*)sr_pkt) + sizeof(c_packet_header),
             buf,len);
-
-	printf("33\n");
-
 
     /* -- log packet -- */
     sr_log_packet(sr,buf,len);
@@ -608,8 +604,6 @@ int sr_send_packet(struct sr_instance* sr /* borrowed */,
         free(sr_pkt);
         return -1;
     }
-
-	printf("44\n");
 
     free(sr_pkt);
 
