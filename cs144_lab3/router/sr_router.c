@@ -175,7 +175,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 		}
 	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
 		/* In case, the packet is the arp reply packet .. */
-		struct sr_arpreq *arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
+		/*struct sr_arpreq *arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
 		if(arp_packet == NULL){ return; }
 
 		struct sr_packet *packets = arp_packet->packets;
@@ -186,11 +186,37 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 				printf("arp reply \n");
 				/*eth_hdr_2send = (sr_ethernet_hdr_t *)(packets->buf);
 				memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
-				sr_send_packet(sr, packets->buf, packets->len, packets->iface);*/
+				sr_send_packet(sr, packets->buf, packets->len, packets->iface);
 			}
 			packets = packets->next;
 		}
-		sr_arpreq_destroy(&sr->cache, arp_packet);
+		sr_arpreq_destroy(&sr->cache, arp_packet);*/
+
+		struct sr_if* iface = sr_get_interface(sr, interface);
+
+		sr_arp_hdr_t *arp_header_in = (sr_arp_hdr_t*) (packet + size(sr_ethernet_hdr_t));
+
+		uint32_t ip = arp_header_in->ar_sip;
+		unsigned char mac[ETHER_ADDR_LEN];
+
+		memcpy(mac, arp_header_in->ar_sha, ETHER_ADDR_LEN);
+
+		struct sr_arpreq* req = sr_arpcache_insert(&(sr->cache), mac, ip);
+
+		if(!req){
+			return;
+		} else {
+			struct sr_packet* pack = req->packets;
+			while(pack){
+				sr_ethernet_hdr_t *packet_eth_header = (sr_ethernet_hdr_t*) pack->buf;
+				memcpy(packet_eth_header->ether_dhost, mac, ETHER_ADDR_LEN);
+
+				sr_send_packet(sr, pack->buf, pack->len, pack->iface);
+
+				pack = pack->next;
+			}
+			sr_arpreq_destroy(&(sr->cache), req);
+		}
 	}
 }
 
