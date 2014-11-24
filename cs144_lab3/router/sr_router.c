@@ -173,6 +173,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			sr_send_packet(sr, _packet, length, interface);
 			free(_packet);
 		}
+
 	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
 		/* In case, the packet is the arp reply packet .. */
 		/*struct sr_arpreq *arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
@@ -310,14 +311,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		if(arp_entry != NULL){
 			printf("no arp_entry \n");
 			memcpy(eth_hdr_2send->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
-			/*printf("Something is wrong before here");
+			printf("Something is wrong before here");
 
 			print_hdr_eth(eth_hdr_2send);
 			print_hdr_ip(ip_hdr_2send);
 			printf("%d\n", len);
 			print_addr_ip(matching_ip->dest);
 			print_addr_ip(matching_ip->gw);
-			print_addr_ip(matching_ip->mask);*/
+			print_addr_ip(matching_ip->mask);
 
 			sr_send_packet(sr, _packet, len, matching_ip->interface);
 			printf("hohoho??\n");
@@ -325,8 +326,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			printf("arp_entry exist\n");
 			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
 		}
-		free(arp_entry);
-		free(_packet);
+		/*free(arp_entry);
+		free(_packet);*/
 	}
 }
 
@@ -422,7 +423,7 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 	if (arp_entry){
 		sr_send_packet (sr, _packet, length, matching_ip->interface);
 	}else{
-		sr_arpcache_handle(sr, sr_arpcache_queuereq (&sr->cache, matching_ip->gw.s_addr, _packet, length, matching_ip->interface));
+		sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, length, matching_ip->interface));
 	}
 	free(arp_entry);
 	free(_packet);
@@ -461,11 +462,13 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
 /*			print_hdr_eth(_packet);
 			print_hdr_arp(_packet+sizeof(sr_ethernet_hdr_t));*/
 
-			free(_packet);
 
 			/* Renew the cached ARP packets */
 			req->sent = cur_time;
             req->times_sent++;
+
+            free(_packet);
+
         }
     }
 }
