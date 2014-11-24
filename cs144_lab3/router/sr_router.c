@@ -225,6 +225,99 @@ void sr_handlepacket_ip(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
         char* interface/* lent */){
+	struct sr_if* iface = sr_get_interface(sr, interface);
+
+	sr_ip_hdr_t *ip_header_in = (sr_ip_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
+
+	uint32_t dest = ip_header_in->ip_dst;
+
+	/* send error if ttl is 0 */
+	/*if(ip_header_in->ip_ttl <= 1){
+		send_icmp_error(sr, packet, len, interface, 11, 0);
+		return;
+	}*/
+
+	/* If it's for us, remind sender not to bother us */
+	if (dest == iface->ip) {
+		/* Pretend we can't be reached for most */
+		if (ip_header_in->ip_p > 0x1)
+			/*send_icmp_error(sr, packet, len, interface, 3, 3);*/
+			sr_send_icmp_message(sr, packet, icmp_type3, icmp_type3);
+
+		/* ... but echo all echo packets */
+		else {
+			sr_icmp_hdr_t *icmp_header_in =
+					(sr_icmp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+			if (icmp_header_in->icmp_type == 0x8
+					&& icmp_header_in->icmp_code == 0x0) {
+				sr_send_icmp_message(sr, packet, icmp_type0, icmp_type0);
+				/*send_icmp_error(sr, packet, len, interface, 0, 0);*/
+			}
+		}
+		return;
+	}
+
+
+	struct sr_rt* rt = sr->routing_table;
+
+	int num_matching = 0;
+	uint32_t best_match_gw = 0;
+	char best_match_iface[sr_IFACE_NAMELEN];
+
+	while(rt){
+
+		if(!((( rt->dest.s_addr) ^ dest) & (rt->mask.s_addr))){
+			uint32_t a = !(rt->mask.s_addr);
+			a++;
+			int match = 0;
+			while(a != 1){
+				a /= 2;
+				match++;
+			}
+			match = 32 - match;
+			if(match > num_matching){
+				num_matching = match;
+				best_match_gw =  rt->gw.s_addr;
+				memcpy(best_match_iface, rt->interface, sr_IFACE_NAMELEN);
+			}
+		}
+		rt = rt->next;
+	}
+
+	if(num_matching == 0){
+		/*send_icmp_error(sr, packet, len, interface, 3, 0);*/
+		sr_send_icmp_message(sr, packet, icmp_type3, icmp_type0);
+		return;
+	}
+
+	/* Get the iface of the best match */
+	struct sr_if *best_iface = sr_get_interface(sr, best_match_iface);
+
+	sr_ethernet_hdr_t *eth_header_out = (sr_ethernet_hdr_t*) packet;
+	memcpy(eth_header_out->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
+
+	/* DECREMENT TTL */
+	ip_header_in->ip_ttl--;
+
+	/* Fill in the IP checksum */
+	ip_header_in->ip_sum = 0x0;
+	ip_header_in->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
+			/*get_checksum_16(packet+IP_HEAD_OFF, IP_HEAD_SIZE);*/
+
+	struct sr_arpentry *addr;
+	if((addr = sr_arpcache_lookup(&(sr->cache), dest))){
+		memcpy(eth_header_out->ether_dhost, addr->mac, ETHER_ADDR_LEN);
+		memcpy(eth_header_out->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
+		sr_send_packet(sr, packet, len, best_match_iface);
+	} else {
+		sr_arpcache_queuereq(&(sr->cache), best_match_gw, packet, len, best_match_iface);
+	}
+
+	return;
+
+
+    /*till here*/
+
 	sr_ip_hdr_t* ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 
 	printf("handlepacket_ip\n");
@@ -326,8 +419,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			printf("arp_entry exist\n");
 			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
 		}
-		/*free(arp_entry);
-		free(_packet);*/
+		free(arp_entry);
+		free(_packet);
 	}
 }
 
