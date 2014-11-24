@@ -194,7 +194,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
 		struct sr_if* iface = sr_get_interface(sr, interface);
 
-		sr_arp_hdr_t *arp_header_in = (sr_arp_hdr_t*) (packet + size(sr_ethernet_hdr_t));
+		sr_arp_hdr_t *arp_header_in = (sr_arp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
 
 		uint32_t ip = arp_header_in->ar_sip;
 		unsigned char mac[ETHER_ADDR_LEN];
