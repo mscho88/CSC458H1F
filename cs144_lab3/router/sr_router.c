@@ -311,7 +311,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			printf("no arp_entry \n");
 			memcpy(eth_hdr_2send->ether_dhost, arp_entry->mac, ETHER_ADDR_LEN);
 			printf("%d\n", len);
-
+			printf("Something is wrong before here")
 			sr_send_packet(sr, _packet, len, matching_ip->interface);
 			printf("hohoho??\n");
 		}else{

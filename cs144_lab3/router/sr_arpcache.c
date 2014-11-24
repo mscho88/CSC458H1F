@@ -183,7 +183,6 @@ void sr_arpreq_destroy(struct sr_arpcache *cache, struct sr_arpreq *entry) {
         
         free(entry);
     }
-    printf("this ??\n");
     pthread_mutex_unlock(&(cache->lock));
 }
 
