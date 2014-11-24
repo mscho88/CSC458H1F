@@ -151,7 +151,7 @@ struct sr_arpreq *sr_arpcache_insert(struct sr_arpcache *cache,
    entry is on the arp request queue, it is removed from the queue. */
 void sr_arpreq_destroy(struct sr_arpcache *cache, struct sr_arpreq *entry) {
     pthread_mutex_lock(&(cache->lock));
-    
+
     if (entry) {
         struct sr_arpreq *req, *prev = NULL, *next = NULL; 
         for (req = cache->requests; req != NULL; req = req->next) {
@@ -183,7 +183,7 @@ void sr_arpreq_destroy(struct sr_arpcache *cache, struct sr_arpreq *entry) {
         
         free(entry);
     }
-    
+    printf("this ??\n");
     pthread_mutex_unlock(&(cache->lock));
 }
 
