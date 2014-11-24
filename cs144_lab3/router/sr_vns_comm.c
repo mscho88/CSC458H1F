@@ -564,7 +564,7 @@ int sr_send_packet(struct sr_instance* sr /* borrowed */,
                          unsigned int len,
                          const char* iface /* borrowed */)
 {
-    c_packet_header *sr_pkt;
+    /*c_packet_header *sr_pkt;*/
     unsigned int total_len =  len + (sizeof(c_packet_header));
 
     /* REQUIRES */
@@ -581,7 +581,7 @@ int sr_send_packet(struct sr_instance* sr /* borrowed */,
     /* Create packet */
     printf("%d\n", len);
     printf("111\n");
-    sr_pkt = (c_packet_header *)malloc(len +
+    c_packet_header *sr_pkt = (c_packet_header *)malloc(len +
             sizeof(c_packet_header));
     printf("222\n");
     assert(sr_pkt);
