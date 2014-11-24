@@ -313,6 +313,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			printf("%d\n", len);
 
 			sr_send_packet(sr, _packet, len, matching_ip->interface);
+			printf("hohoho??\n");
 		}else{
 			printf("arp_entry exist\n");
 			sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, len, matching_ip->interface));
