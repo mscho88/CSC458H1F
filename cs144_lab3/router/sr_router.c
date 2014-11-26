@@ -248,7 +248,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	/* send error if ttl is 0 */
 	if(ip_hdr->ip_ttl <= 1){
-		sr_send_icmp_message(sr, packet, icmp_type11, icmp_code0);
+		send_icmp_error(sr, packet, len, interface, icmp_type11, icmp_code0);
 		return;
 	}
 
@@ -290,13 +290,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	ip_hdr->ip_ttl--;
 
 	/* Fill in the IP checksum */
+	ip_hdr->ip_sum = 0;
+	ip_hdr->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
 	struct sr_arpentry *cached_entry;
 	if((cached_entry = sr_arpcache_lookup(&(sr->cache), dest))){
 		memcpy(eth_header_out->ether_dhost, cached_entry->mac, ETHER_ADDR_LEN);
-		/*memcpy(eth_header_out->ether_shost, best_iface->addr, ETHER_ADDR_LEN);*/
+		memcpy(eth_header_out->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
 		sr_send_packet(sr, packet, len, matching_ip->interface);
-
 	} else {
 		sr_arpcache_queuereq(&(sr->cache), 	matching_ip->gw.s_addr, packet, len, matching_ip->interface);
 	}
