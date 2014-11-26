@@ -256,10 +256,11 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			memcpy(eth_header_out->ether_dhost, cached_entry->mac, ETHER_ADDR_LEN);
 			memcpy(eth_header_out->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
 			sr_send_packet(sr, packet, len, matching_ip->interface);
-			free(cached_entry);
 		} else {
 			sr_arpcache_queuereq(&(sr->cache), 	matching_ip->gw.s_addr, packet, len, matching_ip->interface);
 		}
+		free(cached_entry);
+
 	}
 }
 
