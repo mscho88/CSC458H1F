@@ -145,6 +145,28 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig, struct sr_if* in
 	}
 }/* end build_arp_header */
 
+void set_eth_hdr(uint8_t *packet, uint8_t  *dhost, uint8_t *shost, uint16_t ether_type) {
+
+	sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *) packet;
+	memcpy(eth_hdr->ether_dhost, dhost, sizeof(uint8_t) * ETHER_ADDR_LEN);
+	memcpy(eth_hdr->ether_shost, shost, sizeof(uint8_t) * ETHER_ADDR_LEN);
+	eth_hdr->ether_type = htons(ether_type);
+}
+void set_arp_hdr(uint8_t *arp_hdr, uint16_t hrd, uint16_t pro, uint16_t op,
+		uint8_t *sha, uint32_t sip, uint8_t *tha, uint32_t tip) {
+
+	sr_arp_hdr_t *hdr = (sr_arp_hdr_t *) arp_hdr;
+
+	hdr->ar_hrd = htons(hrd); /* format of hardware address   */
+	hdr->ar_pro = htons(pro); /* format of protocol address   */
+	hdr->ar_hln = ETHER_ADDR_LEN; /* length of hardware address   */
+	hdr->ar_pln = 4;  /* length of protocol address   */
+	hdr->ar_op = htons(op); /* ARP opcode (command)         */
+	memcpy(hdr->ar_sha, sha, ETHER_ADDR_LEN); /* sender hardware address      */
+	hdr->ar_sip = sip; /* sender IP address            */
+	memcpy(hdr->ar_tha, tha, ETHER_ADDR_LEN); /* target hardware address      */
+	hdr->ar_tip = tip;  /* target IP address            */
+}
 void sr_handlepacket_arp(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
@@ -168,8 +190,11 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			struct sr_if *iface = sr_get_interface(sr, interface);
 
 			/* build the Ethernet and ARP header */
-			build_ethernet_header(_packet, eth_hdr->ether_shost, sr->if_list, ethertype_arp);
-			build_arp_header(_packet, arp_hdr, sr->if_list, arp_op_reply);
+			/*build_ethernet_header(_packet, eth_hdr->ether_shost, iface, ethertype_arp);*/
+			set_eth_hdr(_packet, eth_hdr->ether_shost, iface->addr, ethertype_arp);
+			set_arp_hdr(_packet + sizeof(sr_ethernet_hdr_t), arp_hrd_ethernet, ethertype_ip, arp_op_reply,
+								iface->addr, iface->ip, arp_hdr->ar_sha, arp_hdr->ar_sip);
+			build_arp_header(_packet, arp_hdr, iface, arp_op_reply);
 			printf("arp_request \n");
 			sr_send_packet(sr, _packet, length, iface);
 			free(_packet);
