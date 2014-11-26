@@ -654,3 +654,74 @@ int send_packet_using_arpcache(struct sr_instance *sr,
 
 	return 0;
 }
+
+struct sr_rt* perform_lpm(struct sr_rt *rt_entry, in_addr_t dest) {
+
+	struct sr_rt *lpm_result;
+	int lpm_mask_len;
+
+	/* Represents best matching candidate */
+	lpm_result = NULL;
+	lpm_mask_len = 0;
+
+	/* Find length of mask */
+	while (rt_entry != NULL) {
+
+		/* Find length of current mask (Count number of continuous bit with val 1) */
+		in_addr_t cur_mask = rt_entry->mask.s_addr;
+		int cur_mask_len = 0;
+		uint32_t cmp_mask = 0x80000000; /*1000 0000 0000 0000 0000 0000 0000 0000*/
+
+		while (cmp_mask != 0) {
+			if ((cur_mask & cmp_mask) != 0) {
+				cur_mask_len++;
+				cmp_mask >>= 1;
+			}
+			else {
+				break;
+			}
+		}
+
+		/* Current mask length is longer*/
+		if (cur_mask_len > lpm_mask_len) {
+
+			/* Now Compare destination */
+			if ((dest & rt_entry->mask.s_addr) ==
+					(ntohl(rt_entry->dest.s_addr) & rt_entry->mask.s_addr)) {
+
+				/* Found a better candidate */
+				lpm_result = rt_entry;
+				lpm_mask_len = cur_mask_len;
+			}
+		}
+
+		rt_entry = rt_entry->next;
+	}
+
+	return lpm_result;
+}
+
+struct sr_if * sr_get_interface_by_ip(struct sr_instance *sr, uint32_t ip) {
+
+	struct sr_if* if_walker = 0;
+	/* -- REQUIRES -- */
+	assert(sr);
+	assert(ip);
+
+	if_walker = sr->if_list;
+
+	while (if_walker)
+	{
+		if (ip == if_walker->ip){
+			return if_walker;
+		}
+
+		else{
+			if_walker = if_walker->next;
+		}
+	}
+
+	return 0;
+
+} /* -- sr_get_interface_by_ip -- */
+

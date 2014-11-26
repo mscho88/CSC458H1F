@@ -86,6 +86,9 @@ int send_packet_using_arpcache(struct sr_instance *,
 								uint8_t *,
 								unsigned int ,
 								uint32_t );
+struct sr_if * sr_get_interface_by_ip(struct sr_instance *, uint32_t ) {
+	struct sr_rt* perform_lpm(struct sr_rt *, in_addr_t ) {
+
 
 /* -- sr_if.c -- */
 void sr_add_interface(struct sr_instance* , const char* );
