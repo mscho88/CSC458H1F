@@ -172,6 +172,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			printf("arp_request \n");
 			sr_send_packet(sr, _packet, length, interface);
 			free(_packet);
+
 		}
 
 	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
@@ -357,7 +358,7 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp
 	/* build the Ethernet header */
 	struct sr_arpentry *arp_entry = sr_arpcache_lookup(&sr->cache, matching_ip->gw.s_addr);
 	if(arp_entry == NULL){
-		build_ethernet_header(_packet, '\0', interface, ethertype_ip);
+		build_ethernet_header(_packet, NULL, interface, ethertype_ip);
 	}
 	build_ethernet_header(_packet, arp_entry->mac, interface, ethertype_ip);
 
