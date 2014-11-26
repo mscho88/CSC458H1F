@@ -431,38 +431,15 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
 			/* Build the Ethernet and ARP header
 			 * Note : This case ARP header is constructed as ARP request. */
 			build_ethernet_header(_packet, NULL, interface, ethertype_arp);
-			unsigned char tha[ETHER_ADDR_LEN] = "\xff\xff\xff\xff\xff\xff";
-
-			struct sr_rt *rt_entry = sr->routing_table;
-			struct sr_if *target_if = NULL;
-
-			while (rt_entry != NULL) {
-
-				if (rt_entry->dest.s_addr == (req->ip & rt_entry->mask.s_addr)) {
-					target_if = sr_get_interface(sr, rt_entry->interface);
-					break;
-				}
-
-				rt_entry = rt_entry->next;
-			}
-			sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)_packet;
-			sr_arp_hdr_t *arp_hdr_2send = (sr_arp_hdr_t *) (eth_hdr_2send + sizeof(sr_ethernet_hdr_t));
-
-			memcpy(eth_hdr_2send->ether_dhost, tha, sizeof(uint8_t) * ETHER_ADDR_LEN);
-			memcpy(eth_hdr_2send->ether_shost, target_if->addr, sizeof(uint8_t) * ETHER_ADDR_LEN);
-			eth_hdr_2send->ether_type = htons(ethertype_arp);
-
-			arp_hdr_2send->ar_hrd = htons(arp_hrd_ethernet);
-			arp_hdr_2send->ar_pro = htons(ethertype_ip);
-			arp_hdr_2send->ar_hln = ETHER_ADDR_LEN;
-			arp_hdr_2send->ar_pln = 4;
-			arp_hdr_2send->ar_op = htons(arp_op_request);
-			memcpy(arp_hdr_2send->ar_sha, target_if->addr, ETHER_ADDR_LEN);
-			arp_hdr_2send->ar_sip = target_if->ip;
-			memcpy(arp_hdr_2send->ar_tha, (uint8_t *) tha, ETHER_ADDR_LEN);
-			arp_hdr_2send->ar_tip = req->ip;
+			build_arp_header(_packet, (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t)), interface, arp_op_request);
+			sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
+			arp_hdr->ar_tip = req->ip;
 
 			sr_send_packet(sr, _packet, len, req->packets->iface);
+
+/*			print_hdr_eth(_packet);
+			print_hdr_arp(_packet+sizeof(sr_ethernet_hdr_t));*/
+
 
 			/* Renew the cached ARP packets */
 			req->sent = cur_time;
