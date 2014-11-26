@@ -622,7 +622,7 @@ int send_packet_using_arpcache(struct sr_instance *sr,
 								uint32_t dip){
 
 	struct sr_if *iface;
-	if ((iface = sr_get_interface_by_ip(sr, sr_get_interface(sr, sr->if_list))) != NULL) {
+	if ((iface = sr_get_interface_by_ip(sr, dip)) != NULL) {
 		return sr_send_packet(sr,buf,len, iface->name);
 	}
 
@@ -700,3 +700,28 @@ struct sr_rt* perform_lpm(struct sr_rt *rt_entry, in_addr_t dest) {
 
 	return lpm_result;
 }
+
+struct sr_if * sr_get_interface_by_ip(struct sr_instance *sr, uint32_t ip) {
+
+	struct sr_if* if_walker = 0;
+	/* -- REQUIRES -- */
+	assert(sr);
+	assert(ip);
+
+	if_walker = sr->if_list;
+
+	while (if_walker)
+	{
+		if (ip == if_walker->ip){
+			return if_walker;
+		}
+
+		else{
+			if_walker = if_walker->next;
+		}
+	}
+
+	return 0;
+
+} /* -- sr_get_interface_by_ip -- */
+
