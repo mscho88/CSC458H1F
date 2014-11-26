@@ -721,7 +721,7 @@ struct sr_if * sr_get_interface_by_ip(struct sr_instance *sr, uint32_t ip) {
 		}
 	}
 
-	return 0;
+	return NULL;
 
 } /* -- sr_get_interface_by_ip -- */
 
