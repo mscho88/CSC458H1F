@@ -614,3 +614,43 @@ void set_ip_hdr(uint8_t *ip_hdr, uint16_t id, uint16_t data_len, uint8_t protoco
 	hdr->ip_sum = 0;
 	hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
 }
+
+
+int send_packet_using_arpcache(struct sr_instance *sr,
+								uint8_t *buf,
+								unsigned int len,
+								uint32_t dip){
+
+	struct sr_if *iface;
+	if ((iface = sr_get_interface_by_ip(sr, dip)) != NULL) {
+		return sr_send_packet(sr,buf,len, iface->name);
+	}
+
+	struct sr_rt *rt = perform_lpm(sr->routing_table, ntohl(dip));
+
+
+	if (rt == NULL) {
+		fprintf(stderr, "send_packet_using_arpcache() - Could not find dip when performing lpm");
+		print_addr_ip_int(dip);
+		return -1;
+	}
+
+	iface = sr_get_interface(sr, rt->interface);
+	struct sr_arpentry *arp_entry = sr_arpcache_lookup(&(sr->cache), rt->gw.s_addr);
+
+
+	/* Cache Miss */
+	if (arp_entry == NULL) {
+
+		struct sr_arpreq *arp_req = sr_arpcache_queuereq(&(sr->cache), rt->gw.s_addr, buf, len, iface->name);
+		sr_arpcache_handle(sr, arp_req);
+
+	}
+
+	/* Cache Hit */
+	else {
+		return sr_send_packet(sr, buf, len, iface->name);
+	}
+
+	return 0;
+}

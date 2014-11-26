@@ -82,6 +82,10 @@ void set_arp_hdr(uint8_t *, uint16_t , uint16_t , uint16_t ,
 void set_eth_hdr(uint8_t *, uint8_t  *, uint8_t *, uint16_t );
 void set_ip_hdr(uint8_t *, uint16_t , uint16_t , uint8_t , uint32_t , uint32_t );
 
+int send_packet_using_arpcache(struct sr_instance *,
+								uint8_t *,
+								unsigned int ,
+								uint32_t );
 
 /* -- sr_if.c -- */
 void sr_add_interface(struct sr_instance* , const char* );
