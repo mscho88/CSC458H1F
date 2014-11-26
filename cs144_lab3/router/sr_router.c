@@ -188,8 +188,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
 	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
 		/* In case, the packet is the arp reply packet .. */
-		struct sr_if* iface = sr_get_interface(sr, interface);
-
 		sr_arp_hdr_t *arp_header_in = (sr_arp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
 
 		uint32_t ip = arp_header_in->ar_sip;
@@ -244,9 +242,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}
 		return;
 	}
-
-
-	struct sr_rt* rt = sr->routing_table;
 
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 
