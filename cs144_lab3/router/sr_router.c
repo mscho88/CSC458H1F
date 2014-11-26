@@ -257,7 +257,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		/* Pretend we can't be reached for most */
 		if (ip_hdr->ip_p > 0x1)
 			/*send_icmp_error(sr, packet, len, interface, 3, 3);*/
-			sr_send_icmp_message(sr, packet, interface,icmp_type3, icmp_type3);
+			sr_send_icmp_message(sr, packet, icmp_type3, icmp_type3);
 
 		/* ... but echo all echo packets */
 		else {
@@ -265,7 +265,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					(sr_icmp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 			if (icmp_header_in->icmp_type == 0x8
 					&& icmp_header_in->icmp_code == 0x0) {
-				sr_send_icmp_message(sr, packet, interface, icmp_type0, icmp_type0);
+				sr_send_icmp_message(sr, packet, icmp_type0, icmp_type0);
 				/*send_icmp_error(sr, packet, len, interface, 0, 0);*/
 			}
 		}
@@ -281,7 +281,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 
 	if(matching_ip == NULL){
-		sr_send_icmp_message(sr, packet, interface, icmp_type3, icmp_type0);
+		sr_send_icmp_message(sr, packet, icmp_type3, icmp_type0);
 		return;
 	}
 
@@ -344,118 +344,7 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t *ip_hdr, uint32_t length, uin
 	ip_hdr_2send->ip_sum = cksum(ip_hdr_2send, sizeof(sr_ip_hdr_t));
 }
 
-void sr_send_icmp_message(struct sr_instance *sr, uint8_t *old_packet, char *iface, uint16_t type, uint16_t code) {
-	unsigned int new_packet_len, icmp_len;
-
-	sr_ethernet_hdr_t *old_eth_hdr = (sr_ethernet_hdr_t *) old_packet;
-	sr_ip_hdr_t *old_ip_hdr = (sr_ip_hdr_t *) (old_packet + sizeof(sr_ethernet_hdr_t));
-
-	new_packet_len = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t);
-
-
-	/* Find out size of given icmp type struct */
-	switch (type) {
-
-	case icmp_type11:
-		fprintf(stderr, "send_icmp_packet() - ICMP_TIME_EXCEEDED_TYPE\n");
-		icmp_len = sizeof(sr_icmp_t3_hdr_t);
-		break;
-
-	case icmp_type3:
-		fprintf(stderr, "send_icmp_packet() - ICMP_DESTINATION_UNREACHABLE\n");
-		icmp_len = sizeof(sr_icmp_t3_hdr_t);
-		break;
-
-	case icmp_type0:
-		icmp_len = ntohs(old_ip_hdr->ip_len) - sizeof(sr_ip_hdr_t);
-		fprintf(stderr, "send_icmp_packet() - ICMP_ECHO_REPLY icmp_len : %u\n", icmp_len);
-		break;
-	}
-
-	new_packet_len += icmp_len;
-
-	/* Let's construct new packet*/
-	uint8_t *new_packet = malloc(new_packet_len);
-
-	uint8_t *new_ip_hdr = new_packet + sizeof(sr_ethernet_hdr_t);
-	uint8_t *new_icmp_hdr = new_ip_hdr + sizeof(sr_ip_hdr_t);
-
-	/* Set Ethernet and IP header */
-	struct sr_if *target_if = sr_get_interface(sr, iface);
-	set_eth_hdr(new_packet, old_eth_hdr->ether_shost, target_if->addr, ethertype_ip);
-
-
-	/* Set ICMP Header and data depending on ICMP type */
-	if (type == icmp_type11) {
-		struct sr_if* received_if = sr_get_interface(sr, iface);
-		if (received_if == 0) {
-			fprintf(stderr, "WARNING : send_icmp_packet() - Cannot find received interface\n");
-			return ;
-		}
-		set_ip_hdr(new_ip_hdr, old_ip_hdr->ip_id, 20 + icmp_len, ip_protocol_icmp, received_if->ip, old_ip_hdr->ip_src);
-		sr_icmp_t3_hdr_t *icmp;
-		icmp = (sr_icmp_t3_hdr_t *) new_icmp_hdr;
-		icmp->icmp_type = type;
-		icmp->icmp_code = code;
-		icmp->icmp_sum = 0;
-		icmp->unused = 0;
-
-		/* IP header and first 8 bytes of original datagram's data */
-		memcpy(icmp->data, old_ip_hdr, ICMP_DATA_SIZE);
-
-		icmp->icmp_sum = cksum(new_icmp_hdr, sizeof(sr_icmp_t3_hdr_t));
-	}
-
-	else if (type == icmp_type3) {
-		struct sr_if* received_if = sr_get_interface(sr, iface);
-		if (received_if == 0) {
-			fprintf(stderr, "WARNING : send_icmp_packet() - Cannot find received interface\n");
-			return;
-		}
-		set_ip_hdr(new_ip_hdr, old_ip_hdr->ip_id, 20 + icmp_len, ip_protocol_icmp, received_if->ip, old_ip_hdr->ip_src);
-		sr_icmp_t3_hdr_t *icmp;
-		icmp = (sr_icmp_t3_hdr_t *) new_icmp_hdr;
-		icmp->icmp_type = type;
-		icmp->icmp_code = code;
-		icmp->icmp_sum = 0;
-		icmp->next_mtu = 0; /* Only if a code 4 error occurs.*/
-		icmp->unused = 0;
-
-		memcpy(icmp->data, old_ip_hdr, ICMP_DATA_SIZE);
-
-		icmp->icmp_sum = cksum(new_icmp_hdr, sizeof(sr_icmp_t3_hdr_t));
-	}
-
-	else if (type == icmp_type0) {
-		set_ip_hdr(new_ip_hdr, old_ip_hdr->ip_id, 20 + icmp_len, ip_protocol_icmp, old_ip_hdr->ip_dst, old_ip_hdr->ip_src);
-		/* Note that we need to keep id, sequence number and data received from echo request */
-		sr_icmp_t3_hdr_t *icmp_echo_req = (sr_icmp_t3_hdr_t *)
-				(old_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
-
-		sr_icmp_t3_hdr_t *icmp;
-		icmp = (sr_icmp_t3_hdr_t *) new_icmp_hdr;
-		icmp->icmp_type = type;
-		icmp->icmp_code = code;
-		icmp->icmp_sum = 0;
-		unsigned int icmp_data_size = ntohs(old_ip_hdr->ip_len) - sizeof(sr_ip_hdr_t) - sizeof(sr_icmp_t3_hdr_t) + 1; /*+ 1 for uint8_t data*/
-		memcpy(&(icmp->data), &(icmp_echo_req->data), icmp_data_size);
-
-		icmp->icmp_sum = cksum(new_icmp_hdr, sizeof(sr_icmp_t3_hdr_t) - 1 + icmp_data_size);
-	}
-
-
-	else {
-		fprintf(stderr, "send_icmp - Unsupported ICMP");
-		return;
-	}
-
-
-	/* Send ICMP Packet */
-	int retval = send_packet_using_arpcache(sr, new_packet, new_packet_len, old_ip_hdr->ip_src);
-	free(new_packet);
-
-	return;
-/*
+void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp_type, uint16_t icmp_code) {
 	int length;
 	printf("send icmp message \n");
 	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
@@ -466,31 +355,31 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *old_packet, char *ifa
 		length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 	}
 
-	/* Longest Prefix Match *
+	/* Longest Prefix Match */
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_src);
 	if (matching_ip == NULL){
 		/* If the router cannot find the longest prefix matching ip, then
-		 * re-send a packet of ICMP destination unreachable.*
+		 * re-send a packet of ICMP destination unreachable.*/
 		return;
 	}
-	/* end of Longest Prefix Matching*
+	/* end of Longest Prefix Matching*/
 
 	/* Find the destination port to send the packet along the longest prefix
-	 * matching ip *
+	 * matching ip */
 	struct sr_if *interface = sr_get_interface(sr, matching_ip->interface);
 	uint8_t *_packet = (uint8_t *)malloc(length);
 
-	/* build the Ethernet header *
+	/* build the Ethernet header */
 	struct sr_arpentry *arp_entry = sr_arpcache_lookup(&sr->cache, matching_ip->gw.s_addr);
 	if(arp_entry == NULL){
 		build_ethernet_header(_packet, NULL, interface, ethertype_ip);
 	}
 	build_ethernet_header(_packet, arp_entry->mac, interface, ethertype_ip);
 
-	/* build the IP header *
+	/* build the IP header */
 	build_ip_header(_packet, ip_hdr, length, ip_hdr->ip_src, interface, icmp_type, icmp_code);
 
-	/* build ICMP header regarding to the type of ICMP *
+	/* build ICMP header regarding to the type of ICMP */
 	if(icmp_type == icmp_type0){
 		sr_icmp_hdr_t *icmp_hdr_2send = (sr_icmp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 		icmp_hdr_2send->icmp_type = icmp_type;
@@ -515,7 +404,7 @@ void sr_send_icmp_message(struct sr_instance *sr, uint8_t *old_packet, char *ifa
 		sr_arpcache_handle(sr, sr_arpcache_queuereq(&sr->cache, matching_ip->gw.s_addr, _packet, length, matching_ip->interface));
 	}
 	free(arp_entry);
-	free(_packet);*/
+	free(_packet);
 }
 
 
@@ -523,11 +412,13 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
     time_t cur_time = time(NULL);
     struct sr_packet *packets;
 
+    printf("arp cache handle\n");
+
     if (difftime(cur_time, req->sent) > 1.0) {
         if (req->times_sent >= 5) {
             packets = req->packets;
             while (packets){
-                sr_send_icmp_message(sr, packets->buf, packets->iface, icmp_type3, icmp_code1);
+                sr_send_icmp_message(sr, packets->buf, icmp_type3, icmp_code1);
                 packets = packets->next;
             }
             sr_arpreq_destroy(&sr->cache, req);
@@ -559,169 +450,4 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
         }
     }
 }
-
-
-void set_eth_hdr(uint8_t *packet, uint8_t  *dhost, uint8_t *shost, uint16_t ether_type) {
-
-	sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *) packet;
-	memcpy(eth_hdr->ether_dhost, dhost, sizeof(uint8_t) * ETHER_ADDR_LEN);
-	memcpy(eth_hdr->ether_shost, shost, sizeof(uint8_t) * ETHER_ADDR_LEN);
-	eth_hdr->ether_type = htons(ether_type);
-}
-
-/*---------------------------------------------------------------------
- * Method: set_arp_hdr
- * Scope:  Global
- *
- * Given entry point to ARP header, set values according to arguments.
- *---------------------------------------------------------------------*/
-void set_arp_hdr(uint8_t *arp_hdr, uint16_t hrd, uint16_t pro, uint16_t op,
-		uint8_t *sha, uint32_t sip, uint8_t *tha, uint32_t tip) {
-
-	sr_arp_hdr_t *hdr = (sr_arp_hdr_t *) arp_hdr;
-
-	hdr->ar_hrd = htons(hrd); /* format of hardware address   */
-	hdr->ar_pro = htons(pro); /* format of protocol address   */
-	hdr->ar_hln = ETHER_ADDR_LEN; /* length of hardware address   */
-	hdr->ar_pln = 4;  /* length of protocol address   */
-	hdr->ar_op = htons(op); /* ARP opcode (command)         */
-	memcpy(hdr->ar_sha, sha, ETHER_ADDR_LEN); /* sender hardware address      */
-	hdr->ar_sip = sip; /* sender IP address            */
-	memcpy(hdr->ar_tha, tha, ETHER_ADDR_LEN); /* target hardware address      */
-	hdr->ar_tip = tip;  /* target IP address            */
-}
-
-/*---------------------------------------------------------------------
- * Method: set_ip_hdr
- * Scope:  Global
- *
- * Given entry point to IP header, set values according to arguments.
- *---------------------------------------------------------------------*/
-void set_ip_hdr(uint8_t *ip_hdr, uint16_t id, uint16_t data_len, uint8_t protocol, uint32_t ip_src, uint32_t ip_dest) {
-
-	sr_ip_hdr_t *hdr = (sr_ip_hdr_t *) ip_hdr;
-
-	hdr->ip_v = 4;
-	hdr->ip_hl = 5; /* We set to minimum */
-	hdr->ip_tos = 0;
-	hdr->ip_len = htons(data_len);
-	hdr->ip_id = id;
-	hdr->ip_off = htons(IP_DF);
-	hdr->ip_ttl = INIT_TTL;
-	hdr->ip_p = protocol;
-	hdr->ip_src = ip_src;
-	hdr->ip_dst = ip_dest;
-	hdr->ip_sum = 0;
-	hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
-}
-
-
-int send_packet_using_arpcache(struct sr_instance *sr,
-								uint8_t *buf,
-								unsigned int len,
-								uint32_t dip){
-
-	struct sr_if *iface;
-	if ((iface = sr_get_interface_by_ip(sr, dip)) != NULL) {
-		return sr_send_packet(sr,buf,len, iface->name);
-	}
-
-	struct sr_rt *rt = perform_lpm(sr->routing_table, ntohl(dip));
-
-
-	if (rt == NULL) {
-		fprintf(stderr, "send_packet_using_arpcache() - Could not find dip when performing lpm");
-		print_addr_ip_int(dip);
-		return -1;
-	}
-
-	iface = sr_get_interface(sr, rt->interface);
-	struct sr_arpentry *arp_entry = sr_arpcache_lookup(&(sr->cache), rt->gw.s_addr);
-
-
-	/* Cache Miss */
-	if (arp_entry == NULL) {
-
-		struct sr_arpreq *arp_req = sr_arpcache_queuereq(&(sr->cache), rt->gw.s_addr, buf, len, iface->name);
-		sr_arpcache_handle(sr, arp_req);
-
-	}
-
-	/* Cache Hit */
-	else {
-		return sr_send_packet(sr, buf, len, iface->name);
-	}
-
-	return 0;
-}
-
-struct sr_rt* perform_lpm(struct sr_rt *rt_entry, in_addr_t dest) {
-
-	struct sr_rt *lpm_result;
-	int lpm_mask_len;
-
-	/* Represents best matching candidate */
-	lpm_result = NULL;
-	lpm_mask_len = 0;
-
-	/* Find length of mask */
-	while (rt_entry != NULL) {
-
-		/* Find length of current mask (Count number of continuous bit with val 1) */
-		in_addr_t cur_mask = rt_entry->mask.s_addr;
-		int cur_mask_len = 0;
-		uint32_t cmp_mask = 0x80000000; /*1000 0000 0000 0000 0000 0000 0000 0000*/
-
-		while (cmp_mask != 0) {
-			if ((cur_mask & cmp_mask) != 0) {
-				cur_mask_len++;
-				cmp_mask >>= 1;
-			}
-			else {
-				break;
-			}
-		}
-
-		/* Current mask length is longer*/
-		if (cur_mask_len > lpm_mask_len) {
-
-			/* Now Compare destination */
-			if ((dest & rt_entry->mask.s_addr) ==
-					(ntohl(rt_entry->dest.s_addr) & rt_entry->mask.s_addr)) {
-
-				/* Found a better candidate */
-				lpm_result = rt_entry;
-				lpm_mask_len = cur_mask_len;
-			}
-		}
-
-		rt_entry = rt_entry->next;
-	}
-
-	return lpm_result;
-}
-
-struct sr_if * sr_get_interface_by_ip(struct sr_instance *sr, uint32_t ip) {
-
-	struct sr_if* if_walker = 0;
-	/* -- REQUIRES -- */
-	assert(sr);
-	assert(ip);
-
-	if_walker = sr->if_list;
-
-	while (if_walker)
-	{
-		if (ip == if_walker->ip){
-			return if_walker;
-		}
-
-		else{
-			if_walker = if_walker->next;
-		}
-	}
-
-	return 0;
-
-} /* -- sr_get_interface_by_ip -- */
 
