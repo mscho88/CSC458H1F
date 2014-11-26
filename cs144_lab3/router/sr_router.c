@@ -601,7 +601,7 @@ void set_ip_hdr(uint8_t *ip_hdr, uint16_t id, uint16_t data_len, uint8_t protoco
 
 	sr_ip_hdr_t *hdr = (sr_ip_hdr_t *) ip_hdr;
 
-	hdr->ip_v = IPv4;
+	hdr->ip_v = 4;
 	hdr->ip_hl = 5; /* We set to minimum */
 	hdr->ip_tos = 0;
 	hdr->ip_len = htons(data_len);
