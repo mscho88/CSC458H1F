@@ -109,7 +109,6 @@ void build_ethernet_header(uint8_t *_packet, uint8_t *addr, struct sr_if* interf
 		memcpy(eth_hdr->ether_dhost, addr, ETHER_ADDR_LEN);
 	}else{
 	    memset(eth_hdr->ether_dhost, 255, ETHER_ADDR_LEN);
-
 	}
 	memcpy(eth_hdr->ether_shost, interface->addr, ETHER_ADDR_LEN);
 	if(ethertype == ethertype_arp){
@@ -123,7 +122,7 @@ void build_arp_header(uint8_t *_packet, sr_arp_hdr_t* arp_orig, struct sr_if* in
 	sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
 	if(ethertype == arp_op_reply){
 		arp_hdr->ar_hrd = arp_orig->ar_hrd;
-		arp_hdr->ar_pro = arp_orig->ar_pro;/*htons(ethertype_ip);*/
+		arp_hdr->ar_pro = arp_orig->ar_pro;
 		arp_hdr->ar_hln = arp_orig->ar_hln;
 		arp_hdr->ar_pln = arp_orig->ar_pln;
 		arp_hdr->ar_op = htons(ethertype);
@@ -257,6 +256,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			memcpy(eth_header_out->ether_dhost, cached_entry->mac, ETHER_ADDR_LEN);
 			memcpy(eth_header_out->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
 			sr_send_packet(sr, packet, len, matching_ip->interface);
+			free(cached_entry);
 		} else {
 			sr_arpcache_queuereq(&(sr->cache), 	matching_ip->gw.s_addr, packet, len, matching_ip->interface);
 		}
@@ -300,7 +300,6 @@ void build_ip_header(uint8_t *_packet, sr_ip_hdr_t *ip_hdr, uint32_t length, uin
 
 void sr_send_icmp_message(struct sr_instance *sr, uint8_t *packet, uint16_t icmp_type, uint16_t icmp_code) {
 	int length;
-	printf("send icmp message \n");
 	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 
 	if (icmp_type == icmp_type0){
