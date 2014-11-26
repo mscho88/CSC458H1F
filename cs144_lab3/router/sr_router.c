@@ -181,7 +181,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			memcpy(arp_hdr_2send->ar_tha, arp_hdr->ar_sha, ETHER_ADDR_LEN);
 			arp_hdr_2send->ar_tip = arp_hdr->ar_sip;
 
-			sr_send_packet(sr, _packet, length, iface);
+			sr_send_packet(sr, _packet, length, interface);
 			free(_packet);
 
 		}
