@@ -416,8 +416,9 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
 
     if (difftime(cur_time, req->sent) > 1.0) {
         if (req->times_sent >= 5) {
+        	printf("this error?\n");
             packets = req->packets;
-            while (packets != NULL) {
+            while (packets){
                 sr_send_icmp_message(sr, packets->buf, icmp_type3, icmp_code1);
                 packets = packets->next;
             }
