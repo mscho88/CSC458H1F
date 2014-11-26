@@ -290,7 +290,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		memcpy(eth_header_out->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
 		sr_send_packet(sr, packet, len, matching_ip->interface);
 	} else {
-		sr_arpcache_queuereq(&(sr->cache), 	matching_ip->gw, packet, len, matching_ip->interface);
+		sr_arpcache_queuereq(&(sr->cache), 	matching_ip->gw.s_addr, packet, len, matching_ip->interface);
 	}
 }
 
