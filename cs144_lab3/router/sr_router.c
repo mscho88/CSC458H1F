@@ -87,10 +87,8 @@ void sr_handlepacket(struct sr_instance* sr,
 	uint16_t ethernet_protocol_type = htons(packet_header->ether_type);
 
 	if(ethernet_protocol_type == ethertype_arp){
-		printf("11\n");
 		sr_handlepacket_arp(sr, packet, len, interface);
 	}else if(ethernet_protocol_type == ethertype_ip){
-		printf("22\n");
 		sr_handlepacket_ip(sr, packet, len, interface);
 	}
 }/* end sr_ForwardPacket */
@@ -183,7 +181,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			memcpy(arp_hdr_2send->ar_tha, arp_hdr->ar_sha, ETHER_ADDR_LEN);
 			arp_hdr_2send->ar_tip = arp_hdr->ar_sip;
 
-			printf("arp_request \n");
 			sr_send_packet(sr, _packet, length, iface);
 			free(_packet);
 
@@ -191,23 +188,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 
 	}else if (ntohs(arp_hdr->ar_op) == arp_op_reply){
 		/* In case, the packet is the arp reply packet .. */
-		/*struct sr_arpreq *arp_packet = sr_arpcache_insert(&sr->cache, arp_hdr->ar_sha, arp_hdr->ar_sip);
-		if(arp_packet == NULL){ return; }
-
-		struct sr_packet *packets = arp_packet->packets;
-		sr_ethernet_hdr_t *eth_hdr_2send;
-		while (packets != NULL) {
-			if (arp_packet->ip != arp_hdr->ar_sip){
-				sr_send_packet(sr, packets->buf, packets->len, packets->iface);
-				printf("arp reply \n");
-				/*eth_hdr_2send = (sr_ethernet_hdr_t *)(packets->buf);
-				memcpy(eth_hdr_2send->ether_dhost, arp_hdr->ar_sha, ETHER_ADDR_LEN);
-				sr_send_packet(sr, packets->buf, packets->len, packets->iface);
-			}
-			packets = packets->next;
-		}
-		sr_arpreq_destroy(&sr->cache, arp_packet);*/
-
 		struct sr_if* iface = sr_get_interface(sr, interface);
 
 		sr_arp_hdr_t *arp_header_in = (sr_arp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
@@ -246,20 +226,15 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	uint32_t dest = ip_hdr->ip_dst;
 
-	/* send error if ttl is 0 */
 	if(ip_hdr->ip_ttl <= 1){
 		sr_send_icmp_message(sr, packet, icmp_type11, icmp_code0);
 		return;
 	}
 
-	/* If it's for us, remind sender not to bother us */
 	if (dest == iface->ip) {
-		/* Pretend we can't be reached for most */
 		if (ip_hdr->ip_p > 0x1)
-			/*send_icmp_error(sr, packet, len, interface, 3, 3);*/
 			sr_send_icmp_message(sr, packet, icmp_type3, icmp_code3);
 
-		/* ... but echo all echo packets */
 		else {
 			sr_icmp_hdr_t *icmp_header_in =
 					(sr_icmp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
@@ -280,16 +255,13 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		return;
 	}
 
-	/* Get the iface of the best match */
 	struct sr_if *best_iface = sr_get_interface(sr, matching_ip->interface);
 
 	sr_ethernet_hdr_t *eth_header_out = (sr_ethernet_hdr_t*) packet;
 	memcpy(eth_header_out->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
 
-	/* DECREMENT TTL */
 	ip_hdr->ip_ttl--;
 
-	/* Fill in the IP checksum */
 	ip_hdr->ip_sum = 0;
 	ip_hdr->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
@@ -406,8 +378,6 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
     time_t cur_time = time(NULL);
     struct sr_packet *packets;
 
-    printf("arp cache handle\n");
-
     if (difftime(cur_time, req->sent) > 1.0) {
         if (req->times_sent >= 5) {
             packets = req->packets;
@@ -430,10 +400,6 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
 			arp_hdr->ar_tip = req->ip;
 
 			sr_send_packet(sr, _packet, len, req->packets->iface);
-
-/*			print_hdr_eth(_packet);
-			print_hdr_arp(_packet+sizeof(sr_ethernet_hdr_t));*/
-
 
 			/* Renew the cached ARP packets */
 			req->sent = cur_time;
