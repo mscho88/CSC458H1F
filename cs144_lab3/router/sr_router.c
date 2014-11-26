@@ -165,7 +165,7 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			/* Transform the packet to the ethernet header and arp header to fill the informations. */
 			/*sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)arp_packet;*/
 			/*sr_arp_hdr_t *arp_hdr_2send = (sr_arp_hdr_t *)(arp_packet + sizeof(sr_ethernet_hdr_t));*/
-			struct sr_if *iface = sr_get_interface(sr, arp_hdr->ar_tip);
+			struct sr_if *iface = sr_get_interface(sr, interface);
 
 			/* build the Ethernet and ARP header */
 			build_ethernet_header(_packet, eth_hdr->ether_shost, sr->if_list, ethertype_arp);
