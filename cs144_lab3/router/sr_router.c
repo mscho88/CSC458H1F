@@ -248,7 +248,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 	/* send error if ttl is 0 */
 	if(ip_hdr->ip_ttl <= 1){
-		send_icmp_error(sr, packet, len, interface, icmp_type11, icmp_code0);
+		sr_send_icmp_message(sr, packet, icmp_type11, icmp_code0);
 		return;
 	}
 
