@@ -185,16 +185,26 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 			uint8_t *_packet = (uint8_t *)malloc(length);
 
 			/* Transform the packet to the ethernet header and arp header to fill the informations. */
-			/*sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)arp_packet;*/
-			/*sr_arp_hdr_t *arp_hdr_2send = (sr_arp_hdr_t *)(arp_packet + sizeof(sr_ethernet_hdr_t));*/
+			sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *)_packet;
+			sr_arp_hdr_t *arp_hdr_2send = (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
+
 			struct sr_if *iface = sr_get_interface(sr, interface);
 
 			/* build the Ethernet and ARP header */
-			/*build_ethernet_header(_packet, eth_hdr->ether_shost, iface, ethertype_arp);*/
-			set_eth_hdr(_packet, eth_hdr->ether_shost, iface->addr, ethertype_arp);
-			set_arp_hdr(_packet + sizeof(sr_ethernet_hdr_t), arp_hrd_ethernet, ethertype_ip, arp_op_reply,
-								iface->addr, iface->ip, arp_hdr->ar_sha, arp_hdr->ar_sip);
-			build_arp_header(_packet, arp_hdr, iface, arp_op_reply);
+			memcpy(eth_hdr_2send->ether_dhost, eth_hdr->ether_shost, sizeof(uint8_t) * ETHER_ADDR_LEN);
+			memcpy(eth_hdr_2send->ether_shost, iface->addr, sizeof(uint8_t) * ETHER_ADDR_LEN);
+			eth_hdr_2send->ether_type = htons(ethertype_arp);
+
+			arp_hdr_2send->ar_hrd = htons(arp_hrd_ethernet);
+			arp_hdr_2send->ar_pro = htons(ethertype_ip);
+			arp_hdr_2send->ar_hln = ETHER_ADDR_LEN;
+			arp_hdr_2send->ar_pln = 4;
+			arp_hdr_2send->ar_op = htons(arp_op_reply);
+			memcpy(arp_hdr_2send->ar_sha, iface->addr, ETHER_ADDR_LEN);
+			arp_hdr_2send->ar_sip = iface->ip;
+			memcpy(arp_hdr_2send->ar_tha, arp_hdr->ar_sha, ETHER_ADDR_LEN);
+			arp_hdr_2send->ar_tip = arp_hdr->ar_sip;
+
 			printf("arp_request \n");
 			sr_send_packet(sr, _packet, length, iface);
 			free(_packet);
