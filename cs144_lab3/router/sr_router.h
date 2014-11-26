@@ -80,6 +80,7 @@ void sr_arpcache_handle(struct sr_instance *, struct sr_arpreq *);
 void set_arp_hdr(uint8_t *, uint16_t , uint16_t , uint16_t ,
 		uint8_t *, uint32_t , uint8_t *, uint32_t );
 void set_eth_hdr(uint8_t *, uint8_t  *, uint8_t *, uint16_t );
+void set_ip_hdr(uint8_t *, uint16_t , uint16_t , uint8_t , uint32_t , uint32_t );
 
 
 /* -- sr_if.c -- */

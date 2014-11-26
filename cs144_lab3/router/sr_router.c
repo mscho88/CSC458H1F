@@ -560,3 +560,57 @@ void sr_arpcache_handle(struct sr_instance *sr, struct sr_arpreq *req) {
     }
 }
 
+
+void set_eth_hdr(uint8_t *packet, uint8_t  *dhost, uint8_t *shost, uint16_t ether_type) {
+
+	sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *) packet;
+	memcpy(eth_hdr->ether_dhost, dhost, sizeof(uint8_t) * ETHER_ADDR_LEN);
+	memcpy(eth_hdr->ether_shost, shost, sizeof(uint8_t) * ETHER_ADDR_LEN);
+	eth_hdr->ether_type = htons(ether_type);
+}
+
+/*---------------------------------------------------------------------
+ * Method: set_arp_hdr
+ * Scope:  Global
+ *
+ * Given entry point to ARP header, set values according to arguments.
+ *---------------------------------------------------------------------*/
+void set_arp_hdr(uint8_t *arp_hdr, uint16_t hrd, uint16_t pro, uint16_t op,
+		uint8_t *sha, uint32_t sip, uint8_t *tha, uint32_t tip) {
+
+	sr_arp_hdr_t *hdr = (sr_arp_hdr_t *) arp_hdr;
+
+	hdr->ar_hrd = htons(hrd); /* format of hardware address   */
+	hdr->ar_pro = htons(pro); /* format of protocol address   */
+	hdr->ar_hln = ETHER_ADDR_LEN; /* length of hardware address   */
+	hdr->ar_pln = 4;  /* length of protocol address   */
+	hdr->ar_op = htons(op); /* ARP opcode (command)         */
+	memcpy(hdr->ar_sha, sha, ETHER_ADDR_LEN); /* sender hardware address      */
+	hdr->ar_sip = sip; /* sender IP address            */
+	memcpy(hdr->ar_tha, tha, ETHER_ADDR_LEN); /* target hardware address      */
+	hdr->ar_tip = tip;  /* target IP address            */
+}
+
+/*---------------------------------------------------------------------
+ * Method: set_ip_hdr
+ * Scope:  Global
+ *
+ * Given entry point to IP header, set values according to arguments.
+ *---------------------------------------------------------------------*/
+void set_ip_hdr(uint8_t *ip_hdr, uint16_t id, uint16_t data_len, uint8_t protocol, uint32_t ip_src, uint32_t ip_dest) {
+
+	sr_ip_hdr_t *hdr = (sr_ip_hdr_t *) ip_hdr;
+
+	hdr->ip_v = IPv4;
+	hdr->ip_hl = 5; /* We set to minimum */
+	hdr->ip_tos = 0;
+	hdr->ip_len = htons(data_len);
+	hdr->ip_id = id;
+	hdr->ip_off = htons(IP_DF);
+	hdr->ip_ttl = INIT_TTL;
+	hdr->ip_p = protocol;
+	hdr->ip_src = ip_src;
+	hdr->ip_dst = ip_dest;
+	hdr->ip_sum = 0;
+	hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
+}
