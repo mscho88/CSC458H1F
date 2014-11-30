@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 
     printf("Using %s\n", VERSION_INFO);
 
-    while ((c = getopt(argc, argv, "hs:v:p:u:t:r:l:T:")) != EOF)
+    while ((c = getopt(argc, argv, "hs:v:p:u:t:r:l:T:n:")) != EOF)
     {
         switch (c)
         {
@@ -101,6 +101,9 @@ int main(int argc, char **argv)
             case 'T':
                 template = optarg;
                 break;
+            case 'n':
+            	sr->nat_active = 1;
+            	break;
         } /* switch */
     } /* -- while -- */
 

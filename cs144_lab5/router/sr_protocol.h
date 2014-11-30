@@ -102,8 +102,19 @@ struct sr_icmp_t3_hdr {
 } __attribute__ ((packed)) ;
 typedef struct sr_icmp_t3_hdr sr_icmp_t3_hdr_t;
 
-
-
+struct sr_tcp_hdr {
+  uint16_t src_port;	/* Source Port */
+  uint16_t dest_port;	/* Destination Port */
+  uint32_t seq_num;		/* Sequence Number */
+  uint32_t ack_num;		/* Acknowledgment number (if ACK set) */
+  uint8_t offset;		/* Data offset */
+  uint8_t flags;		/* Control bits */
+  uint16_t window;		/* Window size */
+  uint16_t checksum;	/* Check Sum */
+  uint16_t urgent;
+} __attribute__ ((packed)) ;
+typedef struct sr_tcp_hdr sr_tcp_hdr_t;
+/* Referenced from : http://en.wikipedia.org/wiki/Transmission_Control_Protocol */
 
 /*
  * Structure of an internet header, naked of options.
@@ -165,6 +176,8 @@ enum sr_icmp_type {
 
 enum sr_ip_protocol {
   ip_protocol_icmp = 0x0001,
+  ip_protocol_tcp = 0x0006,
+  ip_protocol_udp = 0x0011,
 };
 
 enum sr_ethertype {

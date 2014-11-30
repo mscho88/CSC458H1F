@@ -18,6 +18,7 @@
 
 #include "sr_if.h"
 #include "sr_rt.h"
+#include "sr_nat.h"
 #include "sr_router.h"
 #include "sr_protocol.h"
 #include "sr_arpcache.h"
@@ -41,6 +42,10 @@ void sr_init(struct sr_instance* sr)
     /* Initialize cache and cache cleanup thread */
     sr_arpcache_init(&(sr->cache));
 
+    if(sr->nat->nat_active){
+    	sr_nat_init(&(sr->nat));
+    }
+
     pthread_attr_init(&(sr->attr));
     pthread_attr_setdetachstate(&(sr->attr), PTHREAD_CREATE_JOINABLE);
     pthread_attr_setscope(&(sr->attr), PTHREAD_SCOPE_SYSTEM);
@@ -50,7 +55,6 @@ void sr_init(struct sr_instance* sr)
     pthread_create(&thread, &(sr->attr), sr_arpcache_timeout, sr);
     
     /* Add initialization code here! */
-
 } /* -- sr_init -- */
 
 /*---------------------------------------------------------------------
@@ -215,46 +219,67 @@ void sr_handlepacket_ip(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
         char* interface/* lent */){
+	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
 	struct sr_if* iface = sr_get_interface(sr, interface);
 
-	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
+	/* Sanity Check */
+	/* end of Sanity Check */
 
-	if(ip_hdr->ip_ttl <= 1){
+	if(ip_hdr->ip_ttl < 1){
+		/* TTL timeout */
 		sr_send_icmp_message(sr, packet, icmp_type11, icmp_code0);
 		return;
 	}
 
+	if(sr->nat->nat_active){
+		/* Since NAT is on active, separate the interval and external IP and port. */
+		sr->nat->external_ip
+	}
+
 	sr_icmp_hdr_t *icmp_hdr;
 	if (ip_hdr->ip_dst == iface->ip) {
-		if (ip_hdr->ip_p == 0x1){
+		/* the packet is for me */
+		if (ip_hdr->ip_p == ip_protocol_icmp){
+			/* ICMP */
 			icmp_hdr = (sr_icmp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 			if (icmp_hdr->icmp_type == icmp_type8 && icmp_hdr->icmp_code == icmp_code0) {
 				sr_send_icmp_message(sr, packet, icmp_type0, icmp_code0);
 			}
+		}else if(ip_hdr->ip_p == ip_protocol_tcp){
+			/* TCP */
+			sr_tcp_hdr_t *tcp_hdr = (sr_tcp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+
 		}else{
+			/* UDP : ICMP port unreachable and ICMP destination unreachable */
 			sr_send_icmp_message(sr, packet, icmp_type3, icmp_code3);
 		}
 	}else{
+		/* the packet is not for me */
+
+		/* firstly, find the longest prefix match from the routing table */
 		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 
 		if(matching_ip == NULL){
+			/* any matching prefix is found, then send a packet back :
+			 * ICMP port unreachable and ICMP echo reply */
 			sr_send_icmp_message(sr, packet, icmp_type3, icmp_type0);
 			return;
 		}
 
 		struct sr_if *best_iface = sr_get_interface(sr, matching_ip->interface);
 
-		sr_ethernet_hdr_t *eth_header_out = (sr_ethernet_hdr_t*) packet;
-		memcpy(eth_header_out->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
+		sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t*) packet;
+		memcpy(eth_hdr->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
 
+		/* Decrement TTL and recalculate the check sum */
 		ip_hdr->ip_ttl--;
 		ip_hdr->ip_sum = 0;
 		ip_hdr->ip_sum = cksum(packet + sizeof(sr_ethernet_hdr_t), sizeof(sr_ip_hdr_t));
 
 		struct sr_arpentry *cached_entry;
 		if((cached_entry = sr_arpcache_lookup(&(sr->cache), ip_hdr->ip_dst))){
-			memcpy(eth_header_out->ether_dhost, cached_entry->mac, ETHER_ADDR_LEN);
-			memcpy(eth_header_out->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
+			memcpy(eth_hdr->ether_dhost, cached_entry->mac, ETHER_ADDR_LEN);
+			memcpy(eth_hdr->ether_shost, best_iface->addr, ETHER_ADDR_LEN);
 			sr_send_packet(sr, packet, len, matching_ip->interface);
 		} else {
 			sr_arpcache_queuereq(&(sr->cache), 	matching_ip->gw.s_addr, packet, len, matching_ip->interface);
