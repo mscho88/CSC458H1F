@@ -104,6 +104,7 @@ int main(int argc, char **argv)
                 template = optarg;
                 break;
             case 'n':
+            	printf("nat activated\n");
             	nat_active = 1;
             	break;
         } /* switch */
