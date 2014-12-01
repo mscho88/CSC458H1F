@@ -66,6 +66,7 @@ int main(int argc, char **argv)
     unsigned int topo = DEFAULT_TOPO;
     char *logfile = 0;
     struct sr_instance sr;
+    int nat_active = 0 ;
 
     printf("Using %s\n", VERSION_INFO);
 
@@ -102,13 +103,19 @@ int main(int argc, char **argv)
                 template = optarg;
                 break;
             case 'n':
-            	sr->nat->nat_active = 1;
+            	nat_active = 1;
             	break;
         } /* switch */
     } /* -- while -- */
 
     /* -- zero out sr instance -- */
     sr_init_instance(&sr);
+
+    if(nat_active){
+    	sr->nat->nat_active = 1;
+    }else{
+    	sr->nat->nat_active = 0;
+    }
 
     /* -- set up routing table from file -- */
     if(template == NULL) {
