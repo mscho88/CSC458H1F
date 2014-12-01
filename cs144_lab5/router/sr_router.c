@@ -226,6 +226,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
         unsigned int len,
         char* interface/* lent */){
 	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
+
 	struct sr_if* iface = sr_get_interface(sr, interface);
 
 	/* Sanity Check */
@@ -244,20 +245,32 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		/* Since NAT is on active, figure out what the external and internal IP and port */
 		/* Firstly, we need to check whether the destination is outbound or not */
 		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
-
+		print_addr_ip(matching_ip->dest);
+		printf("%s\n", matching_ip->interface);
+		struct sr_if *ifa = sr_get_interface(sr, OUTBOUND);
+		print_addr_ip_int(ifa->ip);
+		printf("%s\n", ifa->name);
+		sr_icmp_t3_hdr_t *icmp_t3_hdr = (sr_icmp_t3_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 		if(matching_ip){
+			struct sr_nat_mapping *mappings ;
 			if (strcmp(matching_ip->interface, OUTBOUND)){
-				/* Outbound packet requires to be translated its destination address.
-				 * Otherwise, it's inbound packet.*/
-				printf("the packet is going outbound\n");
-				if(ip_hdr->ip_p == ip_protocol_icmp){
-					/*sr_nat_lookup_internal()*/
-				}else if(ip_hdr->ip_p == ip_protocol_tcp){
-
-				}else{
-					fprintf(stderr, "Unsupported protocol \n");
-					return;
-				}
+				/* If the packet is for outbound packet .. */
+//				if(ip_hdr->ip_p == ip_protocol_icmp){
+//					mappings = sr_nat_lookup_internal(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
+//					if(mappings == NULL){
+//						mappings = sr_nat_insert_mapping(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
+//					}
+//					struct sr_if *iface = sr_get_interface(sr, OUTBOUND);
+//					ip_hdr->ip_src = iface->ip;
+//
+//				}else if(ip_hdr->ip_p == ip_protocol_tcp){
+//
+//				}else{
+//					fprintf(stderr, "Unsupported protocol \n");
+//					return;
+//				}
+			}else{
+				/* If the packet is for inbound packet .. */
 			}
 		}
 	}

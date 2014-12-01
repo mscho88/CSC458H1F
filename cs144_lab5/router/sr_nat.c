@@ -24,6 +24,7 @@ int sr_nat_init(struct sr_nat *nat) { /* Initializes the nat */
   /* CAREFUL MODIFYING CODE ABOVE THIS LINE! */
 
   nat->mappings = NULL;
+  nat->id = 0;
   /* Initialize any variables here */
 
   return success;
@@ -80,7 +81,18 @@ struct sr_nat_mapping *sr_nat_lookup_internal(struct sr_nat *nat,
 
   /* handle lookup here, malloc and assign to copy. */
   struct sr_nat_mapping *copy = NULL;
-
+  struct sr_nat_mapping *cur = nat->mappings;
+  while(cur != NULL){
+	  if(cur->ip_int == ip_int && cur->aux_int == aux_int && cur->type == type){
+		  /* Copy the current mapping and return */
+          cur->last_updated = time(NULL);
+		  copy = malloc(sizeof(struct sr_nat_mapping));
+          memcpy(copy, cur, sizeof(struct sr_nat_mapping));
+          pthread_mutex_unlock(&(nat->lock));
+          return copy;
+	  }
+	  cur = cur->next;
+  }
   pthread_mutex_unlock(&(nat->lock));
   return copy;
 }
@@ -95,6 +107,28 @@ struct sr_nat_mapping *sr_nat_insert_mapping(struct sr_nat *nat,
 
   /* handle insert here, create a mapping, and then return a copy of it */
   struct sr_nat_mapping *mapping = NULL;
+
+  mapping = malloc(sizeof(struct sr_nat_mapping));
+  mapping->aux_int = aux_int;
+  if (type == nat_mapping_icmp){
+	  /* ICMP id */
+	  mapping->aux_ext = 0;
+	  mapping->conns = NULL;
+  }else if(type == nat_mapping_tcp){
+	  /* Internal port and external port */
+	  /* TODO */
+	  mapping->aux_ext = nat->external_port;
+	  mapping->conns = NULL;
+  }
+  mapping->ip_ext = nat->external_ip;
+  mapping->ip_int = ip_int;
+  mapping->last_updated = time(NULL);
+  mapping->type = type;
+
+  /* Insert newly built mapping to the mappings */
+  struct sr_nat_mapping *temp = nat->mappings;
+  mapping->next = temp;
+  nat->mappings = mapping;
 
   pthread_mutex_unlock(&(nat->lock));
   return mapping;
