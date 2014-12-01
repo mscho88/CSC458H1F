@@ -32,7 +32,7 @@ ARCH = -D_DARWIN_
 SOCK = -lresolv
 endif
 
-CFLAGS = -v -g -Wall -ansi -D_DEBUG_ -D_GNU_SOURCE $(ARCH)
+CFLAGS = -g -Wall -ansi -D_DEBUG_ -D_GNU_SOURCE $(ARCH)
 
 LIBS= $(SOCK) -lm -lpthread
 PFLAGS= -follow-child-processes=yes -cache-dir=/tmp/${USER} 
@@ -50,10 +50,10 @@ sr_OBJS = $(patsubst %.c,%.o,$(sr_SRCS))
 sr_DEPS = $(patsubst %.c,.%.d,$(sr_SRCS))
 
 $(sr_OBJS) : %.o : %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c -v $(CFLAGS) $< -o $@
 
 $(sr_DEPS) : .%.d : %.c
-	$(CC) -MM $(CFLAGS) $<  > $@
+	$(CC) -MM -v $(CFLAGS) $<  > $@
 
 -include $(sr_DEPS)	
 
