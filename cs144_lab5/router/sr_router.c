@@ -93,19 +93,11 @@ void sr_handlepacket(struct sr_instance* sr,
 	}else if(ethernet_protocol_type == ethertype_ip){
 
 	    if(sr->nat_active){
-
 	    	/* Set the IN&OUT BOUND ip port address */
 	    	struct sr_if *in_iface = sr_get_interface(sr, INBOUND);
-	    	print_addr_ip(in_iface->addr);
-	    	fprintf(stderr, "%s has been set to INBOUND IP address\n", in_iface->addr);
-	    	print_addr_ip_int(in_iface->ip);
 	    	sr->nat->internal_ip = in_iface->ip;
 	    	struct sr_if *out_iface = sr_get_interface(sr, OUTBOUND);
-	    	print_addr_ip(out_iface->addr);
-	    	fprintf(stderr, "%s has been set to OUTBOUND IP address\n", out_iface->addr);
-	    	print_addr_ip_int(out_iface->ip);
 	    	sr->nat->external_ip = out_iface->ip;
-
 	    }
 		sr_handlepacket_ip(sr, packet, len, interface);
 	}
@@ -237,6 +229,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	struct sr_if* iface = sr_get_interface(sr, interface);
 
 	/* Sanity Check */
+	if (len < sizeof(sr_ethernet_hdr_t) || len > 1514){
+		return;
+	}
 	/* end of Sanity Check */
 
 	if(ip_hdr->ip_ttl < 1){
@@ -254,7 +249,15 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			if (strcmp(matching_ip->interface, OUTBOUND)){
 				/* Outbound packet requires to be translated its destination address.
 				 * Otherwise, it's inbound packet.*/
+				printf("the packet is going outbound\n");
+				if(ip_hdr->ip_p == ip_protocol_icmp){
+					/*sr_nat_lookup_internal()*/
+				}else if(ip_hdr->ip_p == ip_protocol_tcp){
 
+				}else{
+					fprintf(stderr, "Unsupported protocol \n");
+					return;
+				}
 			}
 		}
 	}
