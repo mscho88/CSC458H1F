@@ -173,10 +173,12 @@ struct sr_ethernet_hdr
 } __attribute__ ((packed)) ;
 typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
-enum nat_bound{
-	INBOUND = "eth1",
-	OUTBOUND = "eth2",
-};
+#ifndef INBOUND
+#define INBOUND eth1
+#endif
+#ifndef OUTBOUND
+#define OUTBOUND eth2
+#endif
 
 enum sr_icmp_code {
 	icmp_code0 = 0x0000,	/* ICMP default */
