@@ -42,18 +42,6 @@ void sr_init(struct sr_instance* sr)
     sr_arpcache_init(&(sr->cache));
 	sr_nat_init(sr->nat);
 
-    if(sr->nat->nat_active){
-
-    	/* Set the IN&OUT BOUND ip port address */
-    	struct sr_if *in_iface = sr_get_interface(sr, INBOUND);
-    	fprintf(stderr, "%s has been set to INBOUND IP address\n", in_iface->addr);
-    	sr->nat->internal_ip = in_iface->ip;
-    	struct sr_if *out_iface = sr_get_interface(sr, OUTBOUND);
-    	fprintf(stderr, "%s has been set to OUTBOUND IP address\n", out_iface->addr);
-    	sr->nat->external_ip = out_iface->ip;
-
-    }
-
     pthread_attr_init(&(sr->attr));
     pthread_attr_setdetachstate(&(sr->attr), PTHREAD_CREATE_JOINABLE);
     pthread_attr_setscope(&(sr->attr), PTHREAD_SCOPE_SYSTEM);
@@ -102,6 +90,17 @@ void sr_handlepacket(struct sr_instance* sr,
 		sr_handlepacket_arp(sr, packet, len, interface);
 	}else if(ethernet_protocol_type == ethertype_ip){
 
+	    if(sr->nat->nat_active){
+
+	    	/* Set the IN&OUT BOUND ip port address */
+	    	struct sr_if *in_iface = sr_get_interface(sr, INBOUND);
+	    	fprintf(stderr, "%s has been set to INBOUND IP address\n", in_iface->addr);
+	    	sr->nat->internal_ip = in_iface->ip;
+	    	struct sr_if *out_iface = sr_get_interface(sr, OUTBOUND);
+	    	fprintf(stderr, "%s has been set to OUTBOUND IP address\n", out_iface->addr);
+	    	sr->nat->external_ip = out_iface->ip;
+
+	    }
 		sr_handlepacket_ip(sr, packet, len, interface);
 	}
 }/* end sr_ForwardPacket */
