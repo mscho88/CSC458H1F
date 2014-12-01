@@ -112,9 +112,9 @@ int main(int argc, char **argv)
     sr_init_instance(&sr);
 
     if(nat_active){
-    	sr->nat->nat_active = 1;
+    	sr.nat->nat_active = 1;
     }else{
-    	sr->nat->nat_active = 0;
+    	sr.nat->nat_active = 0;
     }
 
     /* -- set up routing table from file -- */
