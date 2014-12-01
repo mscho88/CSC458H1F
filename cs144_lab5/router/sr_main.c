@@ -104,7 +104,6 @@ int main(int argc, char **argv)
                 template = optarg;
                 break;
             case 'n':
-            	printf("nat activated\n");
             	nat_active = 1;
             	break;
         } /* switch */
@@ -166,14 +165,7 @@ int main(int argc, char **argv)
 
     /* call router init (for arp subsystem etc.) */
     sr_init(&sr);
-
-    printf("11\n");
-    if(nat_active){
-    	sr.nat_active = 1;
-    }else{
-    	sr.nat_active = 0;
-    }
-    printf("2\n");
+    nat_active ? sr.nat_active = 1 : sr.nat_active = 0;
 
     /* -- whizbang main loop ;-) */
     while( sr_read_from_server(&sr) == 1);
