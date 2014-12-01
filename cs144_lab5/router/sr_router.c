@@ -40,9 +40,9 @@ void sr_init(struct sr_instance* sr)
 
     /* Initialize cache and cache cleanup thread */
     sr_arpcache_init(&(sr->cache));
+	sr_nat_init(sr->nat);
 
     if(sr->nat->nat_active){
-    	sr_nat_init(sr->nat);
 
     	/* Set the IN&OUT BOUND ip port address */
     	struct sr_if *in_iface = sr_get_interface(sr, INBOUND);
