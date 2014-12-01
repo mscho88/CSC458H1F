@@ -102,7 +102,7 @@ int main(int argc, char **argv)
                 template = optarg;
                 break;
             case 'n':
-            	sr->nat_active = 1;
+            	sr->nat->nat_active = 1;
             	break;
         } /* switch */
     } /* -- while -- */
