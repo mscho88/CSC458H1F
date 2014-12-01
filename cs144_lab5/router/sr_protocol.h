@@ -114,7 +114,20 @@ struct sr_tcp_hdr {
   uint16_t urgent;
 } __attribute__ ((packed)) ;
 typedef struct sr_tcp_hdr sr_tcp_hdr_t;
+
 /* Referenced from : http://en.wikipedia.org/wiki/Transmission_Control_Protocol */
+
+struct sr_tcp_pseudo_hdr {
+  uint32_t source_addr;
+  uint32_t destination_addr;
+  uint8_t  zero;
+  uint8_t  protocol;
+  uint16_t TCP_length;
+
+} __attribute__ ((packed)) ;
+typedef struct sr_tcp_pseudo_hdr sr_tcp_pseudo_hdr_t;
+
+/* Referenced from : http://www.freesoft.org/CIE/Course/Section4/8.htm */
 
 /*
  * Structure of an internet header, naked of options.
@@ -159,6 +172,11 @@ struct sr_ethernet_hdr
     uint16_t ether_type;                     /* packet type ID */
 } __attribute__ ((packed)) ;
 typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
+
+enum nat_bound{
+	INBOUND = "eth1",
+	OUTBOUND = "eth2",
+};
 
 enum sr_icmp_code {
 	icmp_code0 = 0x0000,	/* ICMP default */

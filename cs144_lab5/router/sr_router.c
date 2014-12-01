@@ -44,6 +44,15 @@ void sr_init(struct sr_instance* sr)
 
     if(sr->nat->nat_active){
     	sr_nat_init(&(sr->nat));
+
+    	/* Set the IN&OUT BOUND ip port address */
+    	struct sr_if *in_iface = sr_get_interface(sr, INBOUND);
+    	fprintf(stderr, "%s has been set to INBOUND IP address\n", in_iface->addr);
+    	sr->nat->internal_ip = in_iface->ip;
+    	struct sr_if *out_iface = sr_get_interface(sr, OUTBOUND);
+    	fprintf(stderr, "%s has been set to OUTBOUND IP address\n", out_iface->addr);
+    	sr->nat->external_ip = out_iface->ip;
+
     }
 
     pthread_attr_init(&(sr->attr));
@@ -93,6 +102,7 @@ void sr_handlepacket(struct sr_instance* sr,
 	if(ethernet_protocol_type == ethertype_arp){
 		sr_handlepacket_arp(sr, packet, len, interface);
 	}else if(ethernet_protocol_type == ethertype_ip){
+
 		sr_handlepacket_ip(sr, packet, len, interface);
 	}
 }/* end sr_ForwardPacket */
@@ -232,8 +242,17 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}
 
 	if(sr->nat->nat_active){
-		/* Since NAT is on active, separate the interval and external IP and port. */
-		sr->nat->external_ip
+		/* Since NAT is on active, figure out what the external and internal IP and port */
+		/* Firstly, we need to check whether the destination is outbound or not */
+		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
+
+		if(matching_ip){
+			if (strcmp(matching_ip->interface, OUTBOUND)){
+				/* Outbound packet requires to be translated its destination address.
+				 * Otherwise, it's inbound packet.*/
+
+			}
+		}
 	}
 
 	sr_icmp_hdr_t *icmp_hdr;
@@ -248,6 +267,13 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}else if(ip_hdr->ip_p == ip_protocol_tcp){
 			/* TCP */
 			sr_tcp_hdr_t *tcp_hdr = (sr_tcp_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+
+			/* TCP header Check Sum*/
+			uint16_t orig_cs_val = tcp_hdr->checksum;
+			tcp_hdr->checksum = 0;
+			cksum(packet, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t) + sizeof(sr_tcp_pseudo_hdr_t));
+			tcp_hdr->checksum = orig_cs_val;
+			/* end of TCP header Check Sum */
 
 		}else{
 			/* UDP : ICMP port unreachable and ICMP destination unreachable */
