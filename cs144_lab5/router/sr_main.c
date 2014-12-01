@@ -165,7 +165,7 @@ int main(int argc, char **argv)
 
     /* call router init (for arp subsystem etc.) */
     sr_init(&sr);
-    nat_active ? sr.nat_active = 1 : sr.nat_active = 0;
+    sr.nat_active = (nat_active ? 1 : 0);
 
     /* -- whizbang main loop ;-) */
     while( sr_read_from_server(&sr) == 1);
