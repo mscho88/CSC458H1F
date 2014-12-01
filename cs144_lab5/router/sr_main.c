@@ -112,13 +112,7 @@ int main(int argc, char **argv)
     /* -- zero out sr instance -- */
     sr_init_instance(&sr);
 
-    printf("11\n");
-    if(nat_active){
-    	sr.nat->nat_active = 1;
-    }else{
-    	sr.nat->nat_active = 0;
-    }
-    printf("2\n");
+
     /* -- set up routing table from file -- */
     if(template == NULL) {
         sr.template[0] = '\0';
@@ -170,6 +164,15 @@ int main(int argc, char **argv)
 
     /* call router init (for arp subsystem etc.) */
     sr_init(&sr);
+
+    printf("11\n");
+        if(nat_active){
+        	sr.nat->nat_active = 1;
+        }else{
+        	sr.nat->nat_active = 0;
+        }
+        printf("2\n");
+
 
     /* -- whizbang main loop ;-) */
     while( sr_read_from_server(&sr) == 1);
