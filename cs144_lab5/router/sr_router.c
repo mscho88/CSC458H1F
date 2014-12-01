@@ -97,9 +97,11 @@ void sr_handlepacket(struct sr_instance* sr,
 	    	/* Set the IN&OUT BOUND ip port address */
 	    	struct sr_if *in_iface = sr_get_interface(sr, 'eth1');
 	    	fprintf(stderr, "%s has been set to INBOUND IP address\n", in_iface->addr);
+	    	print_addr_ip(in_iface->ip);
 	    	sr->nat->internal_ip = in_iface->ip;
 	    	struct sr_if *out_iface = sr_get_interface(sr, OUTBOUND);
 	    	fprintf(stderr, "%s has been set to OUTBOUND IP address\n", out_iface->addr);
+	    	print_addr_ip(out_iface->ip);
 	    	sr->nat->external_ip = out_iface->ip;
 
 	    }
