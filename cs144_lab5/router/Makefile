@@ -50,10 +50,10 @@ sr_OBJS = $(patsubst %.c,%.o,$(sr_SRCS))
 sr_DEPS = $(patsubst %.c,.%.d,$(sr_SRCS))
 
 $(sr_OBJS) : %.o : %.c
-	$(CC) -c -v $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 $(sr_DEPS) : .%.d : %.c
-	$(CC) -MM -v $(CFLAGS) $<  > $@
+	$(CC) -MM $(CFLAGS) $<  > $@
 
 -include $(sr_DEPS)	
 
