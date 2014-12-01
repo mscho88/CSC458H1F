@@ -255,20 +255,20 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			struct sr_nat_mapping *mappings ;
 			if (strcmp(matching_ip->interface, OUTBOUND)){
 				/* If the packet is for outbound packet .. */
-//				if(ip_hdr->ip_p == ip_protocol_icmp){
-//					mappings = sr_nat_lookup_internal(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
-//					if(mappings == NULL){
-//						mappings = sr_nat_insert_mapping(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
-//					}
-//					struct sr_if *iface = sr_get_interface(sr, OUTBOUND);
-//					ip_hdr->ip_src = iface->ip;
-//
-//				}else if(ip_hdr->ip_p == ip_protocol_tcp){
-//
-//				}else{
-//					fprintf(stderr, "Unsupported protocol \n");
-//					return;
-//				}
+				/*if(ip_hdr->ip_p == ip_protocol_icmp){
+					mappings = sr_nat_lookup_internal(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
+					if(mappings == NULL){
+						mappings = sr_nat_insert_mapping(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
+					}
+					struct sr_if *iface = sr_get_interface(sr, OUTBOUND);
+					ip_hdr->ip_src = iface->ip;
+
+				}else if(ip_hdr->ip_p == ip_protocol_tcp){
+
+				}else{
+					fprintf(stderr, "Unsupported protocol \n");
+					return;
+				}*/
 			}else{
 				/* If the packet is for inbound packet .. */
 			}
