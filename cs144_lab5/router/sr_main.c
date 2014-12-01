@@ -162,9 +162,6 @@ int main(int argc, char **argv)
       sr_load_rt_wrap(&sr, rtable);
     }
 
-    /* call router init (for arp subsystem etc.) */
-    sr_init(&sr);
-
     printf("11\n");
         if(nat_active){
         	sr.nat->nat_active = 1;
@@ -172,6 +169,9 @@ int main(int argc, char **argv)
         	sr.nat->nat_active = 0;
         }
         printf("2\n");
+    /* call router init (for arp subsystem etc.) */
+    sr_init(&sr);
+
 
 
     /* -- whizbang main loop ;-) */
