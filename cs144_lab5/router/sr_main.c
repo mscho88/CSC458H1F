@@ -172,7 +172,7 @@ int main(int argc, char **argv)
     }else{
     	sr.nat->nat_active = 0;
     }
-    printf("2\n")
+    printf("2\n");
 
     /* -- whizbang main loop ;-) */
     while( sr_read_from_server(&sr) == 1);
