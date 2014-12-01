@@ -42,7 +42,7 @@ void sr_init(struct sr_instance* sr)
     sr_arpcache_init(&(sr->cache));
 
     if(sr->nat->nat_active){
-    	sr_nat_init(&(sr->nat));
+    	sr_nat_init(sr->nat);
 
     	/* Set the IN&OUT BOUND ip port address */
     	struct sr_if *in_iface = sr_get_interface(sr, INBOUND);
