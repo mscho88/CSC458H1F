@@ -33,8 +33,6 @@ struct sr_nat {
   /* add any fields here */
   struct sr_nat_mapping *mappings;
 
-  int nat_active;
-
   uint32_t internal_ip;
   uint32_t external_ip;
   uint16_t internal_port;

@@ -40,7 +40,9 @@ void sr_init(struct sr_instance* sr)
 
     /* Initialize cache and cache cleanup thread */
     sr_arpcache_init(&(sr->cache));
-	sr_nat_init(&(sr->nat));
+    if(sr->nat_active){
+    	sr_nat_init(sr->nat);
+    }
 
     pthread_attr_init(&(sr->attr));
     pthread_attr_setdetachstate(&(sr->attr), PTHREAD_CREATE_JOINABLE);
@@ -90,7 +92,7 @@ void sr_handlepacket(struct sr_instance* sr,
 		sr_handlepacket_arp(sr, packet, len, interface);
 	}else if(ethernet_protocol_type == ethertype_ip){
 
-	    if(sr->nat->nat_active){
+	    if(sr->nat_active){
 
 	    	/* Set the IN&OUT BOUND ip port address */
 	    	struct sr_if *in_iface = sr_get_interface(sr, INBOUND);
@@ -239,7 +241,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		return;
 	}
 
-	if(sr->nat->nat_active){
+	if(sr->nat_active){
 		/* Since NAT is on active, figure out what the external and internal IP and port */
 		/* Firstly, we need to check whether the destination is outbound or not */
 		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);

@@ -57,6 +57,7 @@ struct sr_instance
     FILE* logfile;
 
     struct sr_nat *nat;
+    int nat_active;
 };
 
 /* -- sr_main.c -- */
