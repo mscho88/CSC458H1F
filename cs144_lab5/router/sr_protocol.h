@@ -174,10 +174,10 @@ struct sr_ethernet_hdr
 typedef struct sr_ethernet_hdr sr_ethernet_hdr_t;
 
 #ifndef INBOUND
-#define INBOUND eth1
+#define INBOUND "eth1"
 #endif
 #ifndef OUTBOUND
-#define OUTBOUND eth2
+#define OUTBOUND "eth2"
 #endif
 
 enum sr_icmp_code {
