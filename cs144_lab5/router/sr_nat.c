@@ -97,8 +97,11 @@ struct sr_nat_mapping *sr_nat_lookup_internal(struct sr_nat *nat,
   struct sr_nat_mapping *copy = NULL;
   struct sr_nat_mapping *cur = nat->mappings;
 
-  while(cur != NULL){
+  if(cur == NULL){
 	  printf("55 look\n");
+  }
+  while(cur != NULL){
+
 	  if(cur->ip_int == ip_int && cur->aux_int == aux_int && cur->type == type){
 		  /* Copy the current mapping and return */
           cur->last_updated = time(NULL);
