@@ -40,8 +40,9 @@ void sr_init(struct sr_instance* sr)
 
     /* Initialize cache and cache cleanup thread */
     sr_arpcache_init(&(sr->cache));
-	sr_nat_init(sr->nat);
-
+    if(sr->nat_active){
+    	sr_nat_init(sr->nat);
+    }
     pthread_attr_init(&(sr->attr));
     pthread_attr_setdetachstate(&(sr->attr), PTHREAD_CREATE_JOINABLE);
     pthread_attr_setscope(&(sr->attr), PTHREAD_SCOPE_SYSTEM);
@@ -237,9 +238,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 
 		mappings = sr_nat_lookup_internal(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
 		print_nat_mappings(sr->nat);
-		printf("3333\n");
 		if(mappings == NULL){
-			printf("It works for outbound\n");
 			mappings = sr_nat_insert_mapping(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
 			sr->nat->mappings = mappings;
 		}
