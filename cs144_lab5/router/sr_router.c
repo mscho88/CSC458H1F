@@ -91,10 +91,10 @@ void sr_handlepacket(struct sr_instance* sr,
 	}else if(ethernet_protocol_type == ethertype_ip){
 	    if(sr->nat_active){
 	    	/* Set the IN&OUT BOUND ip port address */
-	    	struct sr_if *in_iface = sr_get_interface(sr, INBOUND);
-	    	sr->nat->internal_ip = in_iface->ip;
-	    	struct sr_if *out_iface = sr_get_interface(sr, OUTBOUND);
-	    	sr->nat->external_ip = out_iface->ip;
+	    	/*struct sr_if *in_iface = sr_get_interface(sr, INBOUND);*/
+	    	sr->nat->internal_ip = sr_get_interface(sr, INBOUND)->ip;
+	    	/*struct sr_if *out_iface = sr_get_interface(sr, OUTBOUND);*/
+	    	sr->nat->external_ip = sr_get_interface(sr, OUTBOUND)->ip;
 	    }
 		sr_handlepacket_ip(sr, packet, len, interface);
 	}
@@ -236,8 +236,8 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 		/* If the packet is for outbound packet .. */
 
 		mappings = sr_nat_lookup_internal(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
-		printf("It works for outbound\n");
 		if(mappings == NULL){
+			printf("It works for outbound\n");
 			mappings = sr_nat_insert_mapping(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
 		}
 
