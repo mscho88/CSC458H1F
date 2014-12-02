@@ -232,6 +232,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 	uint16_t* id = (uint16_t*)(packet+sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t));
 
 	struct sr_nat_mapping *mappings ;
+	printf("%s\n", matching_ip->interface);
 	if (strcmp(matching_ip->interface, OUTBOUND)){
 		/* If the packet is for outbound packet .. */
 		printf("It works \n");
