@@ -77,7 +77,7 @@ void sr_handlepacket(struct sr_instance* , uint8_t * , unsigned int , char* );
 void sr_nat_translate(struct sr_instance*, uint8_t*, int,  struct sr_nat_mapping*, sr_nat_trans_type);
 char* sr_rtable_lookup(struct sr_instance *sr, uint32_t destIP);
 uint16_t tcp_cksum(const void *, int);
-struct sr_nat_connection *build_connections(sr_ip_hdr_t *, sr_tcp_hdr_t *){
+struct sr_nat_connection *build_connections(sr_ip_hdr_t *, sr_tcp_hdr_t *);
 
 /* -- sr_if.c -- */
 void sr_add_interface(struct sr_instance* , const char* );
