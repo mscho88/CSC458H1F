@@ -698,7 +698,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					src_port = tcp_hdr->src_port;
 					proto_type = nat_mapping_tcp;
 					/*struct sr_nat_connection* conn = (struct sr_nat_connection *)malloc(sizeof(struct sr_nat_connection));*/
-					struct sr_nat_connection *conn = build_connections(conn, ip_hdr, tcp_hdr);
+					struct sr_nat_connection *conn = build_connections(ip_hdr, tcp_hdr);
 					/*conn->ip_src = ip_hdr->ip_src;
 					conn->src_seq = tcp_hdr->sequence_num;
 					conn->ip_dest = ip_hdr->ip_dst;
