@@ -73,7 +73,7 @@ int sr_nat_destroy(struct sr_nat *nat)
         pthread_mutexattr_destroy(&(nat->attr));
 }
 
-void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
+void *sr_nat_timeout(void *nat_ptr) {
 
     struct sr_nat *nat = (struct sr_nat *)nat_ptr;
     while (1) {
@@ -81,118 +81,72 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
         pthread_mutex_lock(&(nat->lock));
 
         time_t curtime = time(NULL);
-        /* handle periodic tasks here */
 
-        if (curtime == ((time_t)-1))
-        {
-            printf("Failure to compute the current time.\n");
-            return NULL;
-        }
-
-        /* loop through the nat and see if anything expired.  */
         unsigned int timeElapsed;
         struct sr_nat_mapping *expiredEntry = NULL;
         struct sr_nat_mapping *previous     = NULL;
         struct sr_nat_connection *currentConns  = NULL;
         struct sr_nat_connection *wasteConns    = NULL;
-        struct sr_nat_mapping *current = nat->mappings;
+        struct sr_nat_mapping *cur_mapping = nat->mappings;
 
-        while(current)
-        {
-            timeElapsed = curtime - current->last_updated;
-            if(current->type == nat_mapping_icmp && timeElapsed > (nat->icmp_query))
-            {
-                /* handle icmp timeout */
-                printf("ICMP time out\n");
-
-                /* delete the entry */
-                if (previous == NULL)
-                {
-                    nat->mappings = current->next;
-                }
-                else
-                {
-                    previous->next = current->next;
-                }
-                expiredEntry = current;
-                current = current->next;
-                free(expiredEntry);
-                continue; /* Changed RETURN to CONTINUE */
-            }
-            else if(current->type == nat_mapping_tcp)
-            {
-                /* handle tcp established idle timeout */
-                printf("TCP is checked for timeout\n");
-
-		/* loop through connection */
-                currentConns = current->conns;
-		while(currentConns)
-                {
-			timeElapsed = curtime - currentConns->last_updated;
-			if(currentConns->state == tcp_state_established && timeElapsed > nat->tcp_establish)
-			{
-				if(wasteConns)
-				{
-					wasteConns->next = currentConns->next;
-				}
-				else
-				{
-					current->conns = currentConns->next;
-					if(current->conns == NULL)
-					{
-						/* delete the entry */
-        				        if (previous == NULL)
-            					    {
-                  					  nat->mappings = current->next;
- 				                }
-				                else
-    				                {
-           					         previous->next = current->next;
-               				         }
+        /* Go through all the mapping */
+        while(cur_mapping){
+            if(cur_mapping->type == nat_mapping_icmp){
+            	if(curtime - cur_mapping->last_updated > (nat->icmp_query)){
+					if (previous == NULL){
+						nat->mappings = cur_mapping->next;
+					}else{
+						previous->next = cur_mapping->next;
 					}
-				}
-			}
-
-			else if (timeElapsed > nat->tcp_transitory)
-			{
-
-				if(wasteConns)
-                                 {
-                                         wasteConns->next = currentConns->next;
-                                 }
-                                 else
-                                 {
-	                                  current->conns = currentConns->next;
-                                         if(current->conns == NULL)
-                                         {
-                                                 if (previous == NULL)
-                                                     {
-                                                           nat->mappings = current->next;
-                                                 }
-                                                 else
-                                                 {
-                                                          previous->next = current->next;
-                                                  }
-                                         }
-                                 }
-
-			}
-
-			wasteConns = currentConns;
-			currentConns = currentConns->next;
+					expiredEntry = cur_mapping;
+					cur_mapping = cur_mapping->next;
+					free(expiredEntry);
+					continue;
+            	}
+            }else if(cur_mapping->type == nat_mapping_tcp){
+                printf("TCP is checked for timeout\n");
+                currentConns = cur_mapping->conns;
+                while(currentConns){
+					timeElapsed = curtime - currentConns->last_updated;
+					if(currentConns->state == tcp_state_established && timeElapsed > nat->tcp_establish){
+						if(wasteConns){
+							wasteConns->next = currentConns->next;
+						}else{
+							cur_mapping->conns = currentConns->next;
+							if(cur_mapping->conns == NULL){
+								/* delete the entry */
+								if (previous == NULL){
+									nat->mappings = cur_mapping->next;
+								}else{
+									previous->next = cur_mapping->next;
+								}
+							}
+						}
+					}else if (timeElapsed > nat->tcp_transitory){
+						if(wasteConns){
+							wasteConns->next = currentConns->next;
+						}else{
+							cur_mapping->conns = currentConns->next;
+							if(cur_mapping->conns == NULL){
+								if (previous == NULL){
+									nat->mappings = cur_mapping->next;
+								}else{
+									previous->next = cur_mapping->next;
+								}
+							}
+						}
+					}
+					wasteConns = currentConns;
+					currentConns = currentConns->next;
                 }
-	   }
-	    else
-            {
-                /* this entry is not expired */
-                previous = current;
-                current = current->next;
+            }else{
+            	/* this entry is not expired */
+            	previous = cur_mapping;
+            	cur_mapping = cur_mapping->next;
             }
         }
-	/*printf("\n******************* SR_NAT_TIMEOUT END***********************\n");*/
         pthread_mutex_unlock(&(nat->lock));
     }
-
     return NULL;
 }
 
