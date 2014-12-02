@@ -309,7 +309,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		/* Since NAT is on active, figure out what the external and internal IP and port */
 		/* Firstly, we need to check whether the destination is outbound or not */
 		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
-
+		print_addr_ip(matching_ip->dest);
+		printf("%s\n", matching_ip->interface);
 		if(matching_ip){
 			if(ip_hdr->ip_p == ip_protocol_icmp){
 		    	sr_nat_handle_icmp(sr, packet, len, interface, matching_ip);
