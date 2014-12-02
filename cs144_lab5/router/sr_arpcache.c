@@ -50,7 +50,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 	  {
 	    request->sent             = currentTime;
 	    request->times_sent       = request->times_sent + 1;
-        char* rInterface = sr_rtable_lookup(sr, request->ip);
+        char* rInterface = sr_longest_prefix_match(sr, request->ip);
         if(rInterface == NULL)
         {
             fprintf(stderr,"Fail due to empty rInterface in sr_arpcache\n");
