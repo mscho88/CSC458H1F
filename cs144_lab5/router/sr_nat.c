@@ -147,3 +147,25 @@ struct sr_nat_mapping *sr_nat_insert_mapping(struct sr_nat *nat,
   pthread_mutex_unlock(&(nat->lock));
   return mapping;
 }
+
+
+void print_nat_mappings(struct sr_nat *nat){
+
+    assert(nat);
+
+    struct sr_nat_mapping *mapping = nat->mappings;
+    while(mapping){
+        printf("************************\n");
+        printf("\nip_int: ");
+        print_addr_ip_int(htonl(mapping->ip_int));
+        printf("\naux_int: %d\n", mapping->aux_int);
+        printf("\nip_ext: ");
+        print_addr_ip_int(htonl(mapping->ip_ext));
+        printf("\naux_ext: %d\n", mapping->aux_ext);
+        printf("\n type: %i",mapping->type);
+
+        mapping = mapping->next;
+    }
+
+    return;
+}
