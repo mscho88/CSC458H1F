@@ -27,29 +27,26 @@
 
 
 /*---------------------------------------------------------------------
- * Method: sr_find_interface
+ * Method: sr_find_interface(struct sr_instance *, uint32_t)
  * Scope: Global
- *
- * Given an ip return the interface with that ip  or 0 if it doesn't
- * exist.
  *
  *---------------------------------------------------------------------*/
 
 struct sr_if* sr_find_interface(struct sr_instance* sr, uint32_t ip)
 {
-    struct sr_if* if_walker = 0;
+    struct sr_if* iface = 0;
 
     /* -- REQUIRES -- */
     assert(ip);
     assert(sr);
 
-    if_walker = sr->if_list;
+    iface = sr->if_list;
 
-    while(if_walker)
-    {
-       if(if_walker->ip == ip)
-        { return if_walker; }
-        if_walker = if_walker->next;
+    while(iface){
+    	if(iface->ip == ip){
+    		return iface;
+    	}
+    	iface = iface->next;
     }
 
     return 0;

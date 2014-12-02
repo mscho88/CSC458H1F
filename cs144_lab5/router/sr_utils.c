@@ -37,6 +37,7 @@ uint16_t tcp_cksum(const void *packet, int len){
     free(pseudo_hdr);
     free(buf);
 
+    printf("11\n");
     return checksum;
 }
 

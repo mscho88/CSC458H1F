@@ -82,7 +82,6 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
 
         time_t curtime = time(NULL);
         /* handle periodic tasks here */
-	/*printf("\n******************* SR_NAT_TIMEOUT STARTS***********************\n");*/
 
         if (curtime == ((time_t)-1))
         {
