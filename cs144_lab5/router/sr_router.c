@@ -233,13 +233,29 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 	printf("11\n");
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 	print_hdr_ip(ip_hdr);
-	if (strcmp(matching_ip->interface, OUTBOUND) == 0){
+
+	if(matching_ip == NULL){
+		if(ip_hdr->ip_dst == sr->nat->external_ip){
+			mappings = sr_nat_lookup_external(sr->nat, ip_hdr->ip_dst, nat_mapping_icmp);
+			if(mappings == NULL){
+				return;
+			}else{
+				ip_hdr->ip_dst = mappings->ip_int;
+				/* Recalculate the Check Sum */
+				ip_hdr->ip_sum = 0;
+				icmp_hdr->icmp_sum = 0;
+
+				ip_hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
+				icmp_hdr->icmp_sum = cksum(icmp_hdr, len - sizeof(sr_ethernet_hdr_t) - sizeof(sr_ip_hdr_t));
+				printf("666\n");
+				/* end of setting the Check Sum */
+			}
+		}
+	}else if (strcmp(matching_ip->interface, OUTBOUND) == 0){
 		/* If the packet is for outbound packet .. */
 		printf("22\n");
 		mappings = sr_nat_lookup_internal(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
 		printf("33\n");
-		print_nat_mappings(&(sr->nat));
-		printf("44\n");
 		if(mappings == NULL){
 			mappings = sr_nat_insert_mapping(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
 		}
