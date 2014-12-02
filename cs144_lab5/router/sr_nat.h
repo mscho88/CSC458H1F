@@ -99,7 +99,6 @@ struct sr_nat_connection*
 sr_nat_lookup_connection(struct sr_nat* nat, struct sr_nat_mapping* mapping,
   uint32_t ip_src, uint32_t ip_dest, uint32_t src_seq, uint16_t port_dest);
 
-void sr_nat_translate(struct sr_instance*, uint8_t*, int,  struct sr_nat_mapping*, sr_nat_trans_type);
 
 struct sr_nat_connection *build_connections(sr_ip_hdr_t *, sr_tcp_hdr_t *);
 
