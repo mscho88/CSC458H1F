@@ -817,8 +817,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				{
 					/*handle forward icmp while getting icmp id*/
 					/* Check length */
-					if (len < sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t)))
-					{
+					if (len < sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t)){
 						fprintf(stderr, "sr_handlepacket: insufficient length\n");
 						return;
 					}
