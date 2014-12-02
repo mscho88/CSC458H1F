@@ -20,6 +20,9 @@
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
     struct sr_arpreq* request = sr->cache.requests;
 
+    uint8_t broadcast_addr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    uint8_t zeros_addr[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
     while(request){
 		if(request->times_sent < 5){
 			/* If the packet in the cache had been sent a second ago, then resend
