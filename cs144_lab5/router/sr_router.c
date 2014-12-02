@@ -109,36 +109,18 @@ void sr_handlepacket(struct sr_instance* sr,
     }
 }/* end sr_handlepacket */
 
-char *sr_rtable_lookup(struct sr_instance *sr, uint32_t ip_dest){
-	struct sr_rt *best = NULL;
-	struct sr_rt *cur = sr->routing_table;
-	while(cur != NULL){
-		if((ip_dest & cur->mask.s_addr) == (cur->dest.s_addr & cur->mask.s_addr)){
-			if(best == NULL || cur->mask.s_addr > best->mask.s_addr){
-				best = cur;
-			}
-		}
-		cur = cur->next;
-	}
-	return best->interface;
-}/* end sr_longest_prefix_match */
-
-char* sr_rtable_lookup1(struct sr_instance *sr, uint32_t dest_ip){
-    struct sr_rt* rtable = sr->routing_table;
+char* sr_longest_prefix_match(struct sr_instance *sr, uint32_t dest_ip){
+    struct sr_rt* cur = sr->routing_table;
     char* iface = NULL;
-    uint32_t rMask = 0;
-    while(rtable){
-        uint32_t curMask = rtable->mask.s_addr;
-        uint32_t curDest = rtable->dest.s_addr;
-        if(rMask == 0 || curMask > rMask){
-            uint32_t newDestIP = (dest_ip & curMask);
-            if(newDestIP == curDest)
-            {
-                rMask = curMask;
-                iface = rtable->interface;
+    uint32_t mask = 0;
+    while(cur){
+        if(cur->mask.s_addr > mask || mask == 0){
+            if((dest_ip & cur->mask.s_addr) == cur->dest.s_addr){
+            	mask = cur->mask.s_addr;
+                iface = cur->interface;
             }
         }
-        rtable = rtable->next;
+        cur = cur->next;
     }
     return iface;
 }
@@ -385,8 +367,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			return;
 		}
 
-		char* rInterface = sr_rtable_lookup(sr, ip_hdr->ip_dst);
-		if(sr_rtable_lookup(sr, ip_hdr->ip_dst) == NULL){
+		char* rInterface = sr_longest_prefix_match(sr, ip_hdr->ip_dst);
+		if(sr_longest_prefix_match(sr, ip_hdr->ip_dst) == NULL){
 			sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 			return;
 		}
