@@ -21,7 +21,6 @@
 #include "sr_router.h"
 #include "sr_protocol.h"
 #include "sr_arpcache.h"
-#include "sr_nat.h"
 #include "sr_utils.h"
 
 /*---------------------------------------------------------------------
