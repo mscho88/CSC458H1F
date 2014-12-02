@@ -300,7 +300,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		return;
 	}
 	/* end of TTL Check */
-	printf("It works \n");
+
 	if(sr->nat_active){
 		/* Since NAT is on active, figure out what the external and internal IP and port */
 		/* Firstly, we need to check whether the destination is outbound or not */
@@ -314,7 +314,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		    }
 		}
 	}
-
+	printf("It works \n");
 	sr_icmp_hdr_t *icmp_hdr;
 	if (ip_hdr->ip_dst == iface->ip) {
 		/* the packet is for me */
