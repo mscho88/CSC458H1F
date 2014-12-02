@@ -173,7 +173,7 @@ void sr_handlepacket(struct sr_instance* sr,
         if(destInterface) /* is there an interface that has destIP ? */
         {
             /* NAT enabled ? */
-            if(sr->nat->activated)
+            if(sr->nat.activated)
             {
                 /* External to External */
                 if(!strcmp(interface,OUTBOUND) && !strcmp(destInterface,OUTBOUND))
@@ -364,7 +364,7 @@ void sr_handlepacket(struct sr_instance* sr,
                 return;
             }
 
-            if(sr->nat->activated)
+            if(sr->nat.activated)
             {
                 /*find internal interface name by src ip*/
                 if (strcmp(interface, INBOUND) == 0 && strcmp(rInterface, OUTBOUND) == 0)
