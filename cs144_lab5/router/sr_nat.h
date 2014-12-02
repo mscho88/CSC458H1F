@@ -56,10 +56,11 @@ struct sr_nat_mapping {
 struct sr_nat {
   /* add any fields here */
   struct sr_nat_mapping *mappings;
-  unsigned int icmpTimeout;
-  unsigned int tcpEstTimeout;
-  unsigned int tcpTransTimeout;
-  unsigned int activated;
+
+  int icmp_query;
+  int tcp_establish;
+  int tcp_transitory;
+
   uint32_t auxCounter; /* used to generate source port/ID */
   uint32_t nat_external_ip;
 

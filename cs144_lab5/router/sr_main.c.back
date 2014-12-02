@@ -164,7 +164,12 @@ int main(int argc, char **argv)
 
 
     /* call router init (for arp subsystem etc.) */
-    sr.nat.activated = (nat_active ? 1 : 0);
+    if(natUsage){
+		sr.nat.icmpTimeout = icmpTimeout;
+		sr.nat.tcpEstTimeout = tcpEstTimeout;
+		sr.nat.tcpTransTimeout = tcpTransTimeout;
+		sr.nat_active = natUsage;
+	}
     sr_init(&sr);
 
     /* -- whizbang main loop ;-) */

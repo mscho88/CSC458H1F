@@ -25,9 +25,9 @@ int sr_nat_init(struct sr_nat *nat) { /* Initializes the nat */
     /* CAREFUL MODIFYING CODE ABOVE THIS LINE! */
 
     nat->mappings = NULL;
-    nat->icmpTimeout = 60;
-    nat->tcpEstTimeout = 7440;
-    nat->tcpTransTimeout = 300;
+    nat->icmp_query = 60;
+    nat->tcp_establish = 7440;
+    nat->tcp_transitory = 300;
     nat->auxCounter = 0;
     nat->nat_external_ip = 0;
 
@@ -99,7 +99,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
         while(current)
         {
             timeElapsed = curtime - current->last_updated;
-            if(current->type == nat_mapping_icmp && timeElapsed > (nat->icmpTimeout))
+            if(current->type == nat_mapping_icmp && timeElapsed > (nat->icmp_query))
             {
                 /* handle icmp timeout */
                 printf("ICMP time out\n");
@@ -128,7 +128,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
 		while(currentConns)
                 {
 			timeElapsed = curtime - currentConns->last_updated;
-			if(currentConns->state == tcp_state_established && timeElapsed > nat->tcpEstTimeout)
+			if(currentConns->state == tcp_state_established && timeElapsed > nat->tcp_establish)
 			{
 				if(wasteConns)
 				{
@@ -152,7 +152,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
 				}
 			}
 
-			else if (timeElapsed > nat->tcpTransTimeout)
+			else if (timeElapsed > nat->tcp_transitory)
 			{
 
 				if(wasteConns)

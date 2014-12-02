@@ -55,9 +55,12 @@ struct sr_instance
     struct sr_if* if_list; /* list of interfaces */
     struct sr_rt* routing_table; /* routing table */
     struct sr_arpcache cache;   /* ARP cache */
-    struct sr_nat nat;   /* NAT cache */
     pthread_attr_t attr;
     FILE* logfile;
+
+    struct sr_nat nat;	/* NAT */
+    int nat_active;		/* NAT active : 1
+     	 	 	 	 	 * NAT inactive : 0 */
 };
 
 /* -- sr_main.c -- */

@@ -72,10 +72,12 @@ int main(int argc, char **argv)
     unsigned int topo = DEFAULT_TOPO;
     char *logfile = 0;
 
-    unsigned int icmpTimeout = DEFAULT_ICMP_TIMEOUT;
-    unsigned int tcpEstTimeout = DEFAULT_TCP_ESTABLISHED_TIMEOUT;
-    unsigned int tcpTransTimeout = DEFAULT_TCP_TRANSITORY_TIMEOUT;
-    unsigned int natUsage = DEFAULT_NAT_USED;
+    /* Default values are given from the handout, Cleaning up defunct mappings
+     * http://www.cs.toronto.edu/~yganjali/courses/csc458/assignments/nat/ */
+    int icmp_query = 60;
+    int tcp_est = 7440;
+    int tcp_trans = 300;
+    int nat_active = 0;
 
     struct sr_instance sr;
 
@@ -114,25 +116,20 @@ int main(int argc, char **argv)
                 template = optarg;
                 break;
             case 'I':
-                icmpTimeout = atoi((char *) optarg);
-                printf("I %i\n", icmpTimeout);
+            	icmp_query = atoi((char *) optarg);
                 break;
             case 'E':
-                tcpEstTimeout = atoi((char *) optarg);
-                printf("E: %i\n", tcpEstTimeout);
+            	tcp_est = atoi((char *) optarg);
                 break;
             case 'R':
-                tcpTransTimeout = atoi((char *) optarg);
-                printf("R: %i\n", tcpTransTimeout);
+            	tcp_trans = atoi((char *) optarg);
                 break;
             case 'n':
-                natUsage = 1;
-                printf("N is there.\n");
+                nat_active = 1;
                 break;
         } /* switch */
     } /* -- while -- */
 
-    printf("INPUT-- N: %i, I: %i, E: %i, R: %i\n", natUsage, icmpTimeout, tcpEstTimeout, tcpTransTimeout);
     /* -- zero out sr instance -- */
     sr_init_instance(&sr);
 
@@ -186,15 +183,15 @@ int main(int argc, char **argv)
     }
 
     /* call router init (for arp subsystem etc.) */
+
+    /* If NAT option is given, activate NAT.
+     * If the other options are not given, set it as its default values. */
+	sr.nat_active = nat_active;
     sr_init(&sr);
-    if(natUsage)
-    {
-        printf("INITIAL-- N: %i, I: %i, E: %i, R: %i\n", sr.nat.activated, sr.nat.icmpTimeout, sr.nat.tcpEstTimeout, sr.nat.tcpTransTimeout);
-        sr.nat.icmpTimeout = icmpTimeout;
-        sr.nat.tcpEstTimeout = tcpEstTimeout;
-        sr.nat.tcpTransTimeout = tcpTransTimeout;
-        sr.nat.activated = natUsage;
-        printf("FINAL-- N: %i, I: %i, E: %i, R: %i\n", sr.nat.activated, sr.nat.icmpTimeout, sr.nat.tcpEstTimeout, sr.nat.tcpTransTimeout);
+    if(sr.nat_active){
+		sr.nat.icmp_query = icmp_query;
+		sr.nat.tcp_establish = tcp_est;
+		sr.nat.tcp_transitory = tcp_trans;
     }
 
     /* -- whizbang main loop ;-) */
@@ -260,8 +257,9 @@ static void sr_destroy_instance(struct sr_instance* sr)
     {
         sr_dump_close(sr->logfile);
     }
-    if(sr->nat.activated)
-    {
+
+    /* Destory the created NAT mappings */
+    if(sr){
         sr_nat_destroy(&sr->nat);
     }
     /*
