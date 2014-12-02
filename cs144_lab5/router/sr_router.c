@@ -186,8 +186,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	/* Checksum */
 	int orig_sum = ip_hdr->ip_sum;
 	ip_hdr->ip_sum = 0;
-	printf("hohoho ??? %d\n",ip_hdr->ip_hl * 4);
-	if(orig_sum != cksum(ip_hdr, (ip_hdr->ip_hl * 4))){
+	if(orig_sum != cksum(ip_hdr, sizeof(sr_ip_hdr_t))){
 		return;
 	}
 	ip_hdr->ip_sum = orig_sum;
@@ -334,11 +333,11 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					conn = build_connections(ip_hdr, tcp_hdr);
 				}
 
-				/* If there any mapping regarding to the src ip address, insert it to mappings */
+				/* If there any mapping regarding to the src IP address, insert it to mappings */
 				struct sr_nat_mapping *mappings = sr_nat_lookup_internal(&sr->nat, ip_hdr->ip_src, src_port, proto_type);
 				if(mappings == NULL){
 					mappings = sr_nat_insert_mapping(&sr->nat, ip_hdr->ip_src, src_port, proto_type);
-					/* If the protocol is tcp, then connections must be set.
+					/* If the protocol is TCP, then connections must be set.
 					 * Otherwise, it is ICMP where connections must be set to NULL. */
 					mappings->conns = proto_type == nat_mapping_tcp ? conn : NULL;
 					mappings = sr_nat_lookup_internal(&sr->nat, ip_hdr->ip_src, src_port, proto_type);
@@ -367,9 +366,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			ip_hdr->ip_ttl--;
 
 			ip_hdr->ip_sum = 0;
-			ip_hdr->ip_sum = cksum((packet + sizeof(sr_ethernet_hdr_t)), (ip_hdr->ip_hl * 4));
+			ip_hdr->ip_sum = cksum((packet + sizeof(sr_ethernet_hdr_t)), sizeof(sr_ip_hdr_t));
 
-			/* build the ethernet header */
+			/* build the Ethernet header */
 			memcpy(eth_hdr->ether_shost, curInterface->addr, ETHER_ADDR_LEN);
 			memcpy(eth_hdr->ether_dhost, arp_cache->mac, ETHER_ADDR_LEN);
 
@@ -390,10 +389,9 @@ void sr_nat_translate(struct sr_instance* sr,
     /* Thread_safety */
     pthread_mutex_lock(&(sr->nat.lock));
 
-    /*sr_ethernet_hdr_t *ehdr = (sr_ethernet_hdr_t *) packet;*/
     sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
-    sr_icmp_t3_hdr_t *icmphdr  = (sr_icmp_t3_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
-    sr_tcp_hdr_t *tcphdr  = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+    sr_icmp_t3_hdr_t *icmp_hdr  = (sr_icmp_t3_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+    sr_tcp_hdr_t *tcp_hdr  = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
     struct sr_if *interface = NULL;
 
@@ -402,42 +400,42 @@ void sr_nat_translate(struct sr_instance* sr,
     	ip_hdr->ip_src = mapping->ip_ext;
 
         if(mapping->type == nat_mapping_icmp){
-            icmphdr->unused = mapping->aux_ext;
-            icmphdr->icmp_sum  = 0;
-            icmphdr->icmp_sum  = cksum(icmphdr, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t));
+        	icmp_hdr->unused = mapping->aux_ext;
+        	icmp_hdr->icmp_sum  = 0;
+        	icmp_hdr->icmp_sum  = cksum(icmp_hdr, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t));
         }else if(mapping->type == nat_mapping_tcp){
-            uint32_t src_seq = tcphdr->ack_num - 1;
+            uint32_t src_seq = tcp_hdr->ack_num - 1;
             struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_dst, src_seq, tcphdr->dest_port);
             if(conn){
             	if(conn->state == tcp_state_syn_sent){
-					int ackBit = ((tcphdr->flag_state >> 4)&1)%2;
-					int syncBit = ((tcphdr->flag_state >> 1)&1)%2;
+					int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
+					int syncBit = ((tcp_hdr->flag_state >> 1)&1)%2;
 					if(ackBit && syncBit){
 						conn->state = tcp_state_syn_recv;
                     }
                 }else if(conn->state == tcp_state_syn_recv){
-					int ackBit = ((tcphdr->flag_state >> 4)&1)%2;
+					int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
 					if(ackBit){
 						conn->state = tcp_state_established;
 					}
                 }else if(conn->state == tcp_state_established){
-                	int finBit = ((tcphdr->flag_state)&1)%2;
+                	int finBit = ((tcp_hdr->flag_state)&1)%2;
 					if(finBit){
 						conn->state = tcp_state_closed;
 					}
 				}
 				/*update the sequence number*/
-				conn->src_seq = tcphdr->sequence_num;
+				conn->src_seq = tcp_hdr->sequence_num;
 				/* Update the timer */
 				conn->last_updated = time(NULL);
 			}else{
 				printf("Ext to In: no connection found.\n");
 					/*wait 6 seconds and if link exist then drop it. If not, then sent icmp unreachable.*/
 			}
-			tcphdr->src_port = mapping->aux_ext;
-			tcphdr->checksum = 0; /* Clear first */
-			tcphdr->checksum  = tcp_cksum(packet,len);
-			printf("The returned Checksum is: %i\n", tcphdr->checksum);
+            tcp_hdr->src_port = mapping->aux_ext;
+            tcp_hdr->checksum = 0; /* Clear first */
+            tcp_hdr->checksum  = tcp_cksum(packet,len);
+			printf("The returned Checksum is: %i\n", tcp_hdr->checksum);
 		}
 
         /* Change Ethernet Source and Destination ADDR */
@@ -449,52 +447,51 @@ void sr_nat_translate(struct sr_instance* sr,
 
         /* ICMP: Set new icmp ID and redo Checksum */
         if(mapping->type == nat_mapping_icmp){
-            icmphdr->unused = mapping->aux_int;
-            icmphdr->icmp_sum  = 0;
-            icmphdr->icmp_sum  = cksum(icmphdr, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t));
+        	icmp_hdr->unused = mapping->aux_int;
+        	icmp_hdr->icmp_sum  = 0;
+        	icmp_hdr->icmp_sum  = cksum(icmp_hdr, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t));
         }
         /* TCP: Set new source port and redo Checksum */
         else if(mapping->type == nat_mapping_tcp){
-            uint32_t src_seq = tcphdr->ack_num-1;
+            uint32_t src_seq = tcp_hdr->ack_num-1;
             /* Update Connection State */
             struct sr_nat_connection* conn =
               sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int,
-            		  ip_hdr->ip_src, src_seq, tcphdr->src_port);
+            		  ip_hdr->ip_src, src_seq, tcp_hdr->src_port);
             if(conn){
                 printf("Ext to Int: found a connection.\n");
                 /* Determine the packet type (syn,ack,etc...) */
                 /* Change the connection state accordingly */
 
 				if(conn->state == tcp_state_syn_sent){
-					int ackBit = ((tcphdr->flag_state >> 4)&1)%2;
-					int syncBit = ((tcphdr->flag_state >> 1)&1)%2;
+					int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
+					int syncBit = ((tcp_hdr->flag_state >> 1)&1)%2;
 					if(ackBit && syncBit){
 						conn->state = tcp_state_syn_recv;
 					}
 				}else if(conn->state == tcp_state_syn_recv){
-					int ackBit = ((tcphdr->flag_state >> 4)&1)%2;
+					int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
 					if(ackBit){
 						conn->state = tcp_state_established;
 					}
 				}else if(conn->state == tcp_state_established){
-					int finBit = ((tcphdr->flag_state)&1)%2;
+					int finBit = ((tcp_hdr->flag_state)&1)%2;
 					if(finBit){
 						conn->state = tcp_state_closed;
 					}
 				}
 
 				/*update the sequence number*/
-				conn->src_seq = tcphdr->sequence_num;
+				conn->src_seq = tcp_hdr->sequence_num;
 				/* Update the timer */
 				conn->last_updated = time(NULL);
 			}else{
 				printf("Ext to In: no connection found.\n");
-				/*wait 6 seconds and if link exist then drop it. If not, then sent icmp unreachable.*/
 			}
 
-			tcphdr->dest_port = mapping->aux_int;
-			tcphdr->checksum = 0; /* Clear first */
-			tcphdr->checksum  = tcp_cksum(packet,len);
+            tcp_hdr->dest_port = mapping->aux_int;
+            tcp_hdr->checksum = 0;
+            tcp_hdr->checksum  = tcp_cksum(packet,len);
         }
 
         /* Change Ethernet Source and Destination ADDR */
@@ -506,103 +503,87 @@ void sr_nat_translate(struct sr_instance* sr,
     memcpy(((sr_ethernet_hdr_t *)packet)->ether_shost, interface->addr, ETHER_ADDR_LEN);
 
     ip_hdr->ip_sum = 0;
-    ip_hdr->ip_sum = cksum((packet + sizeof(sr_ethernet_hdr_t)), (ip_hdr->ip_hl * 4));
+    ip_hdr->ip_sum = cksum((packet + sizeof(sr_ethernet_hdr_t)), sizeof(sr_ip_hdr_t));
 
     mapping->last_updated = time(NULL);
 
     pthread_mutex_unlock(&(sr->nat.lock));
 }
 
-void sr_send_icmp(struct sr_instance *sr, uint8_t *oldpacket,
+/*---------------------------------------------------------------------
+ * Method: sr_send_icmp(struct sr_instance *, uint8_t *,
+        				unsigned int , uint8_t , uint8_t ,
+        				char* ){
+ * Scope:  Global
+ *
+ * Fill the Ethernet, IP and ICMP header and send the packet. The
+ * information can vary regarding to the type of ICMP
+ *---------------------------------------------------------------------*/
+void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
         unsigned int len, uint8_t type, uint8_t code,
         char* interface){
 
-    /* Sanity check on params */
-    if(!sr || !oldpacket || !interface || !len){
-        fprintf(stderr,"sr_send_icmp: bad parameters");
-        return;
-    }
+	assert(sr);
+	assert(packet);
+	assert(interface);
 
-    /* Create new buff */
-    size_t buff_size = sizeof(sr_ethernet_hdr_t) +
-        sizeof(sr_ip_hdr_t) +
-        sizeof(sr_icmp_t3_hdr_t);
+    int length = type == icmp_type0 ? len : sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 
-    /* if echo reply, sizes should match */
-    if(type == 0)
-        buff_size = len;
+    uint8_t *_packet = (uint8_t*) malloc(length);
 
-    uint8_t *buff = (uint8_t*) malloc(buff_size);
-
-    memset(buff,0,buff_size);
-
-    /* init protocol data structures for buff and oldpacket */
-    sr_ethernet_hdr_t *ehdr = (sr_ethernet_hdr_t *) buff;
-    sr_ip_hdr_t *iphdr      = (sr_ip_hdr_t*) (buff + sizeof(sr_ethernet_hdr_t));
-    sr_icmp_t3_hdr_t *icmphdr  = (sr_icmp_t3_hdr_t*) (buff + sizeof(sr_ethernet_hdr_t) +
+    sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *) _packet;
+    sr_ip_hdr_t *ip_hdr_2send      = (sr_ip_hdr_t*) (_packet + sizeof(sr_ethernet_hdr_t));
+    sr_icmp_t3_hdr_t *icmp_hdr_2send  = (sr_icmp_t3_hdr_t*) (_packet + sizeof(sr_ethernet_hdr_t) +
             sizeof(sr_ip_hdr_t));
 
-    sr_ethernet_hdr_t *old_ehdr = (sr_ethernet_hdr_t *) oldpacket;
-    sr_ip_hdr_t *old_iphdr      = (sr_ip_hdr_t*) (oldpacket + sizeof(sr_ethernet_hdr_t));
-    sr_icmp_t3_hdr_t *old_icmphdr  = (sr_icmp_t3_hdr_t*) (oldpacket + sizeof(sr_ethernet_hdr_t) +
-            sizeof(sr_ip_hdr_t));
+    sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *) packet;
+    sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
+    sr_icmp_t3_hdr_t *icmp_hdr = (sr_icmp_t3_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
     struct sr_if *src_if = sr_get_interface(sr,interface);
 
-    /* fill in ICMP */
-    if(type == 0){
-        /* echo back the originial data from echo request */
-        memcpy(buff,oldpacket,buff_size);
-        /* Same ID and Seq fields are required in reply packet */
-        icmphdr->unused    = old_icmphdr->unused;   /* ID Section */
-        icmphdr->next_mtu  = old_icmphdr->next_mtu; /* Sequence Section */
-    }
-    else if(type == 3 || type== 11){
-        /* Set data to old ip header + 8 bytes of its data */
-        memcpy(icmphdr->data,old_iphdr,ICMP_DATA_SIZE);
-    }
-    else{
-        fprintf(stderr,"sr_send_icmp: Unknown ICMP type %d",type);
+    /* build Ethernet header */
+	memcpy(eth_hdr_2send->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
+	memcpy(eth_hdr_2send->ether_shost, eth_hdr->ether_dhost, ETHER_ADDR_LEN);
+	eth_hdr_2send->ether_type = htons(ethertype_ip);
+
+	/* build IP header */
+	ip_hdr_2send->ip_tos = 0;
+	ip_hdr_2send->ip_hl  = 5;
+	ip_hdr_2send->ip_v   = 4;
+	ip_hdr_2send->ip_len = htons(length - sizeof(sr_ethernet_hdr_t));
+	ip_hdr_2send->ip_id  = htons(ip_hdr->ip_id);
+	ip_hdr_2send->ip_off = htons(IP_DF);
+	ip_hdr_2send->ip_ttl = 64;
+	ip_hdr_2send->ip_p   = ip_protocol_icmp;
+	ip_hdr_2send->ip_dst = ip_hdr->ip_src;
+	ip_hdr_2send->ip_src = src_if->ip;
+
+    /* build ICMP header */
+    if(type == icmp_type0){
+        memcpy(_packet, packet, length);
+        icmp_hdr_2send->unused    = icmp_hdr->unused;
+        icmp_hdr_2send->next_mtu  = icmp_hdr->next_mtu;
+        icmp_hdr_2send->icmp_type = type;
+        icmp_hdr_2send->icmp_code = code;
+    }else if(type == icmp_type3 || type == icmp_type11){
+        memcpy(icmp_hdr_2send->data, ip_hdr, ICMP_DATA_SIZE);
+        icmp_hdr_2send->icmp_type = type;
+        icmp_hdr_2send->icmp_code = code;
+    }else{
         return;
     }
 
-    icmphdr->icmp_type = type;
-    icmphdr->icmp_code = code;
-    icmphdr->icmp_sum  = 0;
+    ip_hdr_2send->ip_sum = 0;
+    icmp_hdr_2send->icmp_sum  = 0;
 
+    icmp_hdr_2send->icmp_sum  = cksum(icmp_hdr_2send,ntohs(ip_hdr_2send->ip_len) - sizeof(sr_ip_hdr_t));
+    ip_hdr_2send->ip_sum      = cksum((_packet + sizeof(sr_ethernet_hdr_t)), sizeof(sr_ip_hdr_t));
 
-    /* fill in IP */
-    iphdr->ip_tos = 0;
-    iphdr->ip_hl  = 5;
-    iphdr->ip_v   = 4;
-    iphdr->ip_len = htons(buff_size - sizeof(sr_ethernet_hdr_t));
-    iphdr->ip_id  = htons(old_iphdr->ip_id);
-    iphdr->ip_off = htons(IP_DF);
-    iphdr->ip_ttl = 64;
-    iphdr->ip_p   = ip_protocol_icmp;
-    iphdr->ip_dst = old_iphdr->ip_src;
-    iphdr->ip_src = src_if->ip;
-    iphdr->ip_sum = 0;
+    sr_send_packet(sr,_packet, length,interface);
 
-    /* Calculate the checksums */
-    icmphdr->icmp_sum  = cksum(icmphdr,ntohs(iphdr->ip_len) - sizeof(sr_ip_hdr_t));
-    iphdr->ip_sum      = cksum((buff + sizeof(sr_ethernet_hdr_t)),(iphdr->ip_hl * 4));
-
-
-    /* fill in ethernet */
-    memcpy(ehdr->ether_dhost,old_ehdr->ether_shost,ETHER_ADDR_LEN);
-    memcpy(ehdr->ether_shost,old_ehdr->ether_dhost,ETHER_ADDR_LEN);
-    ehdr->ether_type = htons(ethertype_ip);
-
-    /* DEBUG */
-    /* print_hdrs(buff,buff_size); */
-
-    /* Send it out */
-    sr_send_packet(sr,buff,buff_size,interface);
-
-    free(buff);
+    free(_packet);
 }
-
 
 /*---------------------------------------------------------------------
  * Method: sr_longest_prefix_match(struct sr_instance *, uint32_t)
