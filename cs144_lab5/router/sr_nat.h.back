@@ -1,3 +1,4 @@
+
 #ifndef SR_NAT_TABLE_H
 #define SR_NAT_TABLE_H
 
@@ -29,17 +30,16 @@ typedef enum {
     tcp_state_closed
 } sr_tcp_state;
 
-
 struct sr_nat_connection {
   /* add TCP connection state data members here */
-  uint32_t ip_src;
-  uint16_t src_seq;
-  uint32_t ip_dest;
-  uint16_t port_dest;
-  time_t last_updated;
-  sr_tcp_state state;
+	uint32_t ip_src;
+	uint16_t src_seq;
+	uint32_t ip_dest;
+	uint16_t port_dest;
+	time_t last_updated;
+	sr_tcp_state state;
 
-  struct sr_nat_connection *next;
+	struct sr_nat_connection *next;
 };
 
 struct sr_nat_mapping {
@@ -56,12 +56,19 @@ struct sr_nat_mapping {
 struct sr_nat {
   /* add any fields here */
   struct sr_nat_mapping *mappings;
+
   unsigned int icmpTimeout;
   unsigned int tcpEstTimeout;
   unsigned int tcpTransTimeout;
-  unsigned int activated;
-  uint32_t auxCounter; /* used to generate source port/ID */
-  uint32_t nat_external_ip;
+
+    uint32_t auxCounter; /* used to generate source port/ID */
+    uint32_t nat_external_ip;
+
+  /*int id;
+  uint32_t internal_ip;
+  uint16_t internal_port;
+  uint32_t external_ip;
+  uint16_t external_port;*/
 
   /* threading */
   pthread_mutex_t lock;
@@ -90,12 +97,5 @@ struct sr_nat_mapping *sr_nat_lookup_internal(struct sr_nat *nat,
 struct sr_nat_mapping *sr_nat_insert_mapping(struct sr_nat *nat,
   uint32_t ip_int, uint16_t aux_int, sr_nat_mapping_type type );
 
-uint32_t sr_nat_genAux(struct sr_nat *nat);
-
-void print_nat_mappings(struct sr_nat *nat);
-
-struct sr_nat_connection*
-sr_nat_lookup_connection(struct sr_nat* nat, struct sr_nat_mapping* mapping,
-  uint32_t ip_src, uint32_t ip_dest, uint32_t src_seq, uint16_t port_dest);
 
 #endif
