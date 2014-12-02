@@ -232,9 +232,11 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 	struct sr_nat_mapping *mappings ;
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 
+
 	if(matching_ip == NULL){
+		printf("no longest prefix\n");
 		/* External to Internal */
-		if(ip_hdr->ip_dst == sr->nat->external_ip || ip_hdr->ip_dst == sr->nat->internal_ip){
+		if(ip_hdr->ip_dst == sr->nat->external_ip){
 			mappings = sr_nat_lookup_external(sr->nat, 0, nat_mapping_icmp);
 			if(mappings == NULL){
 				printf("this??");
