@@ -23,6 +23,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
     uint8_t broadcast_addr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     uint8_t zeros_addr[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
+    int length = sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t);
     while(request){
 		if(request->times_sent < 5){
 			/* If the packet in the cache had been sent a second ago, then resend
@@ -38,7 +39,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 				if(!iface2){
 					fprintf(stderr,"Failed\n");
 				}
-				uint8_t *_packet = (uint8_t *)malloc(42);
+				uint8_t *_packet = (uint8_t *)malloc(length);
 
 				sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *) _packet;
 
@@ -59,7 +60,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 				memcpy(arp_hdr->ar_tha, zeros_addr, ETHER_ADDR_LEN);
 				arp_hdr->ar_tip = request->ip;
 
-				sr_send_packet(sr, _packet, 42, iface2->name);
+				sr_send_packet(sr, _packet, length, iface2->name);
 				free(_packet);
 			}
 		}else{

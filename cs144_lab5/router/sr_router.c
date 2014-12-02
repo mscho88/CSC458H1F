@@ -78,10 +78,6 @@ void sr_handlepacket(struct sr_instance* sr,
     assert(packet);
     assert(interface);
 
-    printf("eth %d\n", sizeof(sr_ethernet_hdr_t));
-    printf("arp %d\n", sizeof(sr_arp_hdr_t));
-    printf("ip %d\n", sizeof(sr_ip_hdr_t));
-    printf("icmp %d\n", sizeof(sr_icmp_hdr_t));
     printf("*** -> Received packet of length %d \n",len);
 
     /* Sanity Check*/
@@ -190,6 +186,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	/* Checksum */
 	int orig_sum = ip_hdr->ip_sum;
 	ip_hdr->ip_sum = 0;
+	printf("hohoho ??? %d\n",ip_hdr->ip_hl * 4);
 	if(orig_sum != cksum(ip_hdr, (ip_hdr->ip_hl * 4))){
 		return;
 	}
