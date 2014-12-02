@@ -7,6 +7,7 @@
 #include <string.h>
 #include "sr_if.h"
 #include "sr_router.h"
+#include "sr_utils.h"
 
 typedef enum {
   nat_mapping_icmp,
