@@ -232,7 +232,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 	struct sr_nat_mapping *mappings ;
 	printf("11\n");
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
-	printf("15\n");
+	print_hdr_ip(ip_hdr);
 	if (strcmp(matching_ip->interface, OUTBOUND) == 0){
 		/* If the packet is for outbound packet .. */
 		printf("22\n");
