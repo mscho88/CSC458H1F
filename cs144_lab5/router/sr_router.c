@@ -416,6 +416,7 @@ void sr_nat_translate(struct sr_instance* sr,
         }else if(mapping->type == nat_mapping_tcp){
         	printf("44\n");
             uint32_t src_seq = tcp_hdr->ack_num - 1;
+            printf("4545\n");
             struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_dst, src_seq, tcp_hdr->dest_port);
             printf("444\n");
             if(conn){
