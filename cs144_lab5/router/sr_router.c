@@ -80,7 +80,7 @@ void sr_handlepacket(struct sr_instance* sr,
     assert(interface);
 
 	/* Initialize NAT external IP if it is not already */
-    if(sr->nat->activated && sr->nat->nat_external_ip == 0)
+    if(sr->nat.activated && sr->nat->nat_external_ip == 0)
     {
         struct sr_if* natExternalInterface = sr_get_interface(sr, OUTBOUND);
         sr->nat->nat_external_ip = natExternalInterface->ip;
