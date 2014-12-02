@@ -625,7 +625,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			icmp_hdr = orig_sum;
 			/* end Checksum */
 
+			printf("11\n");
 			if(icmp_hdr->icmp_type == icmp_type8){
+				printf("22\n");
 				if(icmp_hdr->icmp_code == icmp_code0){
 					sr_send_icmp(sr, packet, len, icmp_code0, icmp_type0, interface);
 				}
