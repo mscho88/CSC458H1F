@@ -330,7 +330,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 					src_port = tcp_hdr->src_port;
 					proto_type = nat_mapping_tcp;
-					struct sr_nat_connection *conn = build_connections(ip_hdr, tcp_hdr);
+					conn = build_connections(ip_hdr, tcp_hdr);
 				}
 
 				/* If there any mapping regarding to the src ip address, insert it to mappings */
