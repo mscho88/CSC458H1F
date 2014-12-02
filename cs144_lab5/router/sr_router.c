@@ -348,6 +348,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				sr_nat_translate(sr, packet, len, mappings, nat_trans_int_to_ext);
 				sr_handlepacket(sr, packet, len, OUTBOUND);
 
+				printf("55\n");
 				/* if any mapping found, then it need to be freed */
 				if(mappings){
 					free(mappings);
@@ -359,12 +360,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				return;
 			}
 		}
-
+		printf("66\n");
 		sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
 		struct sr_arpentry* arp_cache = sr_arpcache_lookup(&sr->cache, ip_hdr->ip_dst);
 		if(arp_cache == NULL){
+			printf("77\n");
 			struct sr_arpreq* currentRequest = sr_arpcache_queuereq(&sr->cache, ip_hdr->ip_dst, packet, len, interface);
 		}else{
+			printf("88\n");
 			struct sr_if* curInterface = sr_get_interface(sr, rInterface);
 			ip_hdr->ip_ttl--;
 
@@ -377,6 +380,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 			sr_send_packet(sr, packet, len, rInterface);
 			free(arp_cache);
+			printf("99\n");
 		}
 	}
 }
