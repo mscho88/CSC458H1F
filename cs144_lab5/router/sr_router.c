@@ -237,6 +237,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 		if(ip_hdr->ip_dst == sr->nat->external_ip){
 			mappings = sr_nat_lookup_external(sr->nat, 0, nat_mapping_icmp);
 			if(mappings == NULL){
+				printf("this??");
 				return;
 			}else{
 				ip_hdr->ip_dst = mappings->ip_int;
@@ -323,7 +324,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 
 		if(ip_hdr->ip_p == ip_protocol_icmp){
-			/*sr_nat_handle_icmp(sr, packet, len, interface);*/
+			sr_nat_handle_icmp(sr, packet, len, interface);
 		}else if(ip_hdr->ip_p == ip_protocol_tcp){
 			/*sr_nat_handle_tcp(sr, packet, len, interface, matching_ip);*/
 		}
