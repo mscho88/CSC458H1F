@@ -347,6 +347,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				}
 				printf("4.5\n");
 				sr_nat_translate(sr, packet, len, mappings, nat_trans_int_to_ext);
+				printf("4.5.5\n");
 				sr_handlepacket(sr, packet, len, OUTBOUND);
 
 				printf("55\n");
