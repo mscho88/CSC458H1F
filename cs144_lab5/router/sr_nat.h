@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <time.h>
 #include <pthread.h>
+#include <netinet/in.h>
 
 typedef enum {
   nat_mapping_icmp,
