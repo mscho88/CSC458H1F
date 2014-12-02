@@ -405,7 +405,7 @@ void sr_nat_translate(struct sr_instance* sr,
         	icmp_hdr->icmp_sum  = cksum(icmp_hdr, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t));
         }else if(mapping->type == nat_mapping_tcp){
             uint32_t src_seq = tcp_hdr->ack_num - 1;
-            struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_dst, src_seq, tcphdr->dest_port);
+            struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_dst, src_seq, tcp_hdr->dest_port);
             if(conn){
             	if(conn->state == tcp_state_syn_sent){
 					int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
