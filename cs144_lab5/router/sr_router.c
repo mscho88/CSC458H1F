@@ -88,7 +88,6 @@ void sr_handlepacket(struct sr_instance* sr,
 
 	/* Set the external IP when NAT is in active */
     if(sr->nat_active && sr->nat.nat_external_ip == 0){
-        /*struct sr_if* out_iface = sr_get_interface(sr, OUTBOUND);*/
         sr->nat.nat_external_ip = sr_get_interface(sr, OUTBOUND)->ip;
     }
 
@@ -279,7 +278,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			return;
 		}
 
-		char* rInterface = sr_longest_prefix_match(sr, ip_hdr->ip_dst);
+		char* matching_iface = sr_longest_prefix_match(sr, ip_hdr->ip_dst);
 		if(sr_longest_prefix_match(sr, ip_hdr->ip_dst) == NULL){
 			sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 			return;
@@ -291,7 +290,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}
 
 		if(sr->nat_active){
-			if (strcmp(interface, INBOUND) == 0 && strcmp(rInterface, OUTBOUND) == 0){
+			if (strcmp(interface, INBOUND) == 0 && strcmp(matching_iface, OUTBOUND) == 0){
 				sr_nat_mapping_type proto_type;
 				uint16_t src_port = 0;
 				struct sr_nat_connection* conn = NULL;
@@ -324,7 +323,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				}
 				return;
 			}
-			else if (strcmp(interface, OUTBOUND) + strcmp(rInterface, INBOUND) == 0){
+			else if (strcmp(interface, OUTBOUND) + strcmp(matching_iface, INBOUND) == 0){
 				sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 				return;
 			}
@@ -334,7 +333,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		if(arp_cache == NULL){
 			struct sr_arpreq* currentRequest = sr_arpcache_queuereq(&sr->cache, ip_hdr->ip_dst, packet, len, interface);
 		}else{
-			struct sr_if* curInterface = sr_get_interface(sr, rInterface);
+			struct sr_if* curInterface = sr_get_interface(sr, matching_iface);
 			ip_hdr->ip_ttl--;
 
 			ip_hdr->ip_sum = 0;
@@ -344,12 +343,48 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			memcpy(eth_hdr->ether_shost, curInterface->addr, ETHER_ADDR_LEN);
 			memcpy(eth_hdr->ether_dhost, arp_cache->mac, ETHER_ADDR_LEN);
 
-			sr_send_packet(sr, packet, len, rInterface);
+			sr_send_packet(sr, packet, len, matching_iface);
 			free(arp_cache);
 		}
 	}
 }
 
+/*---------------------------------------------------------------------
+ * Method: sr_nat_connection_state(struct sr_nat_connection* ,
+									sr_tcp_hdr_t *)
+ * Scope:  Global
+ *
+ * Check the connection state of the connection
+ *
+ *---------------------------------------------------------------------*/
+void sr_nat_connection_state(struct sr_nat_connection* conn, sr_tcp_hdr_t *tcp_hdr){
+	if(conn->state == tcp_state_syn_sent){
+		int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
+		int syncBit = ((tcp_hdr->flag_state >> 1)&1)%2;
+		if(ackBit && syncBit){
+			conn->state = tcp_state_syn_recv;
+		}
+	}else if(conn->state == tcp_state_syn_recv){
+		int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
+		if(ackBit){
+			conn->state = tcp_state_established;
+		}
+	}else if(conn->state == tcp_state_established){
+		int finBit = ((tcp_hdr->flag_state)&1)%2;
+		if(finBit){
+			conn->state = tcp_state_closed;
+		}
+	}
+}/* end sr_nat_connection_state */
+
+/*---------------------------------------------------------------------
+ * Method: sr_nat_translate(struct sr_instance* ,
+							uint8_t* , int ,
+							struct sr_nat_mapping* ,
+							sr_nat_trans_type )
+ * Scope:  Global
+ *
+ *---------------------------------------------------------------------*/
 void sr_nat_translate(struct sr_instance* sr,
 		uint8_t* packet, int len,
 		struct sr_nat_mapping* mapping,
@@ -377,27 +412,9 @@ void sr_nat_translate(struct sr_instance* sr,
         	uint32_t src_seq = tcp_hdr->ack_num - 1;
             struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_dst, src_seq, tcp_hdr->dest_port);
             if(conn){
-            	if(conn->state == tcp_state_syn_sent){
-					int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
-					int syncBit = ((tcp_hdr->flag_state >> 1)&1)%2;
-					if(ackBit && syncBit){
-						conn->state = tcp_state_syn_recv;
-                    }
-                }else if(conn->state == tcp_state_syn_recv){
-					int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
-					if(ackBit){
-						conn->state = tcp_state_established;
-					}
-                }else if(conn->state == tcp_state_established){
-                	int finBit = ((tcp_hdr->flag_state)&1)%2;
-					if(finBit){
-						conn->state = tcp_state_closed;
-					}
-				}
+            	sr_nat_connection_state(conn, tcp_hdr);
 				conn->src_seq = tcp_hdr->sequence_num;
 				conn->last_updated = time(NULL);
-			}else{
-				printf("Ext to In: no connection found.\n");
 			}
             tcp_hdr->src_port = mapping->aux_ext;
             tcp_hdr->checksum = 0;
@@ -417,29 +434,9 @@ void sr_nat_translate(struct sr_instance* sr,
         }
         else if(mapping->type == nat_mapping_tcp){
             uint32_t src_seq = tcp_hdr->ack_num-1;
-            struct sr_nat_connection* conn =
-              sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int,
-            		  ip_hdr->ip_src, src_seq, tcp_hdr->src_port);
+            struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_src, src_seq, tcp_hdr->src_port);
             if(conn){
-                printf("Ext to Int: found a connection.\n");
-
-				if(conn->state == tcp_state_syn_sent){
-					int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
-					int syncBit = ((tcp_hdr->flag_state >> 1)&1)%2;
-					if(ackBit && syncBit){
-						conn->state = tcp_state_syn_recv;
-					}
-				}else if(conn->state == tcp_state_syn_recv){
-					int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
-					if(ackBit){
-						conn->state = tcp_state_established;
-					}
-				}else if(conn->state == tcp_state_established){
-					int finBit = ((tcp_hdr->flag_state)&1)%2;
-					if(finBit){
-						conn->state = tcp_state_closed;
-					}
-				}
+            	sr_nat_connection_state(conn, tcp_hdr);
 				conn->src_seq = tcp_hdr->sequence_num;
 				conn->last_updated = time(NULL);
 			}
@@ -486,8 +483,7 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
 
     sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *) _packet;
     sr_ip_hdr_t *ip_hdr_2send      = (sr_ip_hdr_t*) (_packet + sizeof(sr_ethernet_hdr_t));
-    sr_icmp_t3_hdr_t *icmp_hdr_2send  = (sr_icmp_t3_hdr_t*) (_packet + sizeof(sr_ethernet_hdr_t) +
-            sizeof(sr_ip_hdr_t));
+    sr_icmp_t3_hdr_t *icmp_hdr_2send  = (sr_icmp_t3_hdr_t*) (_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
     sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *) packet;
     sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
