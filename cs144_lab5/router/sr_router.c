@@ -220,15 +220,6 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	}
 }
 
-void is_outbound(struct sr_rt *rtable, uint32_t dest_ip){
-	struct sr_rt *matching_ip = sr_longest_prefix_match(rtable, dest_ip);
-	if(strcmp(matching_ip->interface, OUTBOUND)){
-		return 1;
-	}else if(strcmp(matching_ip->interface, INBOUND)){
-
-	}
-}
-
 void sr_nat_handle_icmp(struct sr_instance* sr,
     uint8_t * packet/* lent */,
     unsigned int len,
