@@ -56,7 +56,7 @@ struct sr_instance
     pthread_attr_t attr;
     FILE* logfile;
 
-    struct sr_nat nat;
+    struct sr_nat *nat;
     int nat_active;
 };
 
