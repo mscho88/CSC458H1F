@@ -98,7 +98,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
 
         while(current){
             timeElapsed = curtime - current->last_updated;
-            if(current->type == nat_mapping_icmp && timeElapsed > (nat->icmp_query)){
+            if(current->type == nat_mapping_icmp && curtime - current->last_updated > (nat->icmp_query)){
 				if (previous == NULL){
                     nat->mappings = current->next;
                 }else{
@@ -147,9 +147,9 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
                 }
             }else{
             	/* this entry is not expired */
-		previous = current;
-		current = current->next;
-	}
+            	previous = current;
+            	current = current->next;
+            }
         }
         pthread_mutex_unlock(&(nat->lock));
     }
