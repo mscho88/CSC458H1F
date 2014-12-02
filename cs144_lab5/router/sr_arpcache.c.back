@@ -10,83 +10,21 @@
 #include "sr_router.h"
 #include "sr_if.h"
 #include "sr_protocol.h"
-#include "sr_utils.h"
-/*
-  Author: Tzu-Yao Chien 998758759
-          Pouria
-*/
+
 /* 
   This function gets called every second. For each request sent out, we keep
   checking whether we should resend an request or destroy the arp request.
   See the comments in the header file for an idea of what it should look like.
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
-    /*printf("************************Arpcache_Sweepreqs starts**********************\n");*/
-    /*sr_arpcache_dump(&sr->cache);*/
+	struct sr_arpreq *cur = sr->cache.requests;
+	struct sr_arpreq *temp;
 
-    /*Initialize variables variable*/
-    time_t currentTime;
-    time(&currentTime);
-    struct sr_arpreq* request = sr->cache.requests;
-    /*Loop through all process in queue for sending broadcast*/
-    while(request)
-    {
-	/*Sanity Check on the request*/
-	/*Check 1: if the total sent is 5 or more, then sent ICMP*/
-	if(request->times_sent > 4)
-	{
-	  fprintf(stderr,"The arp request with ip: %d has expired, Sent ICMP\n", request->ip);
-	  print_addr_ip_int(request->ip);
-      struct sr_packet *pkts;
-          for(pkts=request->packets; pkts != NULL; pkts = pkts->next){
-            sr_send_icmp(sr,pkts->buf,pkts->len,3,1,pkts->iface);
-          }
-          sr_arpreq_destroy(&sr->cache,request);
+	while (cur != NULL) {
+		temp = cur->next;
+		sr_arpcache_handle(sr, cur);
+		cur = temp;
 	}
-	else
-	{
- 	  /*Check 2: if sent time differ from current time, then sent ARP Request*/
-	  if(difftime(currentTime, request->sent)!=0)
-	  {
-	    request->sent             = currentTime;
-	    request->times_sent       = request->times_sent + 1;
-        char* rInterface = sr_rtable_lookup(sr, request->ip);
-        if(rInterface == NULL)
-        {
-            fprintf(stderr,"Fail due to empty rInterface in sr_arpcache\n");
-        }
-        struct sr_if* destIPInterface = sr_get_interface(sr, rInterface);
-        if(!destIPInterface)
-        {
-            fprintf(stderr,"Fail due to empty destIPInterface in sr_arpcache\n");
-        }
-        uint8_t *arpRequestPacket = (uint8_t *)malloc(42);
-        /*Set the ARP packet's ethernet header*/
-        sr_ethernet_hdr_t *ehdr   = (sr_ethernet_hdr_t *) arpRequestPacket;
-        uint8_t broadcastAddr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-        memcpy(ehdr->ether_dhost, broadcastAddr, ETHER_ADDR_LEN);
-        memcpy(ehdr->ether_shost, destIPInterface->addr, ETHER_ADDR_LEN);
-        ehdr->ether_type = htons(2054);
-        /*Set the ARP packet's ARP header*/
-        sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(arpRequestPacket + sizeof(sr_ethernet_hdr_t));
-        arp_hdr->ar_hrd = htons(1);
-        arp_hdr->ar_pro = htons(2048);
-        arp_hdr->ar_hln = 6;
-        arp_hdr->ar_pln = 4;
-        arp_hdr->ar_op = htons(1);
-        memcpy(arp_hdr->ar_sha, destIPInterface->addr, ETHER_ADDR_LEN);
-        arp_hdr->ar_sip = destIPInterface->ip;
-        uint8_t broadcastArpAddr[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        memcpy(arp_hdr->ar_tha, broadcastArpAddr, ETHER_ADDR_LEN);
-        arp_hdr->ar_tip = request->ip;
-        sr_send_packet(sr, arpRequestPacket, 42, destIPInterface->name);
-        free(arpRequestPacket);
-	  }
-	}
-	request = request->next;
-    }
-    /*printf("************************Arpcache_Sweepreqs ends**********************\n");*/
-
 }
 
 /* You should not need to touch the rest of this code. */
@@ -149,8 +87,8 @@ struct sr_arpreq *sr_arpcache_queuereq(struct sr_arpcache *cache,
     /* Add the packet to the list of packets for this request */
     if (packet && packet_len && iface) {
         struct sr_packet *new_pkt = (struct sr_packet *)malloc(sizeof(struct sr_packet));
-
-	new_pkt->buf = (uint8_t *)malloc(packet_len);
+        
+        new_pkt->buf = (uint8_t *)malloc(packet_len);
         memcpy(new_pkt->buf, packet, packet_len);
         new_pkt->len = packet_len;
 		new_pkt->iface = (char *)malloc(sr_IFACE_NAMELEN);
@@ -158,6 +96,7 @@ struct sr_arpreq *sr_arpcache_queuereq(struct sr_arpcache *cache,
         new_pkt->next = req->packets;
         req->packets = new_pkt;
     }
+    
     pthread_mutex_unlock(&(cache->lock));
     
     return req;
@@ -244,7 +183,6 @@ void sr_arpreq_destroy(struct sr_arpcache *cache, struct sr_arpreq *entry) {
         
         free(entry);
     }
-
     pthread_mutex_unlock(&(cache->lock));
 }
 
