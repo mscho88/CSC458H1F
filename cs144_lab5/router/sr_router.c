@@ -230,19 +230,15 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 	uint16_t* id = (uint16_t*)(packet+sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t));
 
 	struct sr_nat_mapping *mappings ;
-	printf("11\n");
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
-	/*print_hdr_ip(ip_hdr);*/
 
 	if(matching_ip == NULL){
 		/* External to Internal */
 		if(ip_hdr->ip_dst == sr->nat->external_ip){
 			mappings = sr_nat_lookup_external(sr->nat, 0, nat_mapping_icmp);
 			if(mappings == NULL){
-				printf("found mapping??\n");
 				return;
 			}else{
-				printf("found mapping \n");
 				ip_hdr->ip_dst = mappings->ip_int;
 				/* Recalculate the Check Sum */
 				ip_hdr->ip_sum = 0;
@@ -250,19 +246,15 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 
 				ip_hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
 				icmp_hdr->icmp_sum = cksum(icmp_hdr, len - sizeof(sr_ethernet_hdr_t) - sizeof(sr_ip_hdr_t));
-				printf("666\n");
 				/* end of setting the Check Sum */
 			}
 		}
 	}else if (strcmp(matching_ip->interface, OUTBOUND) == 0){
 		/* Internal to External */
-		printf("22\n");
 		mappings = sr_nat_lookup_internal(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
-		printf("33\n");
 		if(mappings == NULL){
 			mappings = sr_nat_insert_mapping(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
 		}
-		printf("55\n");
 		/* Find the interface of the external port */
 		struct sr_if *ext_iface = sr_get_interface(sr, OUTBOUND);
 
@@ -275,7 +267,6 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 
 		ip_hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
 		icmp_hdr->icmp_sum = cksum(icmp_hdr, len - sizeof(sr_ethernet_hdr_t) - sizeof(sr_ip_hdr_t));
-		printf("66\n");
 		/* end of setting the Check Sum */
 	}else if(strcmp(matching_ip->interface, INBOUND) == 0){
 		/* Internal to Internal */
@@ -290,8 +281,8 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 		*id = mappings->aux_int;
 
 		ip_hdr->ip_sum = 0;
-		ip_hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
 		icmp_hdr->icmp_sum = 0;
+		ip_hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
 		icmp_hdr->icmp_sum = cksum(icmp_hdr, len - sizeof(sr_ethernet_hdr_t) - sizeof(sr_ip_hdr_t));
 	}
 }
@@ -332,9 +323,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 
 		if(ip_hdr->ip_p == ip_protocol_icmp){
-			sr_nat_handle_icmp(sr, packet, len, interface);
+			/*sr_nat_handle_icmp(sr, packet, len, interface);*/
 		}else if(ip_hdr->ip_p == ip_protocol_tcp){
-			sr_nat_handle_tcp(sr, packet, len, interface, matching_ip);
+			/*sr_nat_handle_tcp(sr, packet, len, interface, matching_ip);*/
 		}
 	}
 	print_hdr_ip(ip_hdr);
