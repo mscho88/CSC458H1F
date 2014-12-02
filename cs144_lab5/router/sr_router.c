@@ -109,27 +109,25 @@ void sr_handlepacket(struct sr_instance* sr,
     }
 }/* end sr_handlepacket */
 
-char* sr_rtable_lookup(struct sr_instance *sr, uint32_t destIP){
-    struct sr_rt* rTable = sr->routing_table;
-    char* rInterface = NULL;
+char* sr_rtable_lookup(struct sr_instance *sr, uint32_t dest_ip){
+    struct sr_rt* rtable = sr->routing_table;
+    char* iface = NULL;
     uint32_t rMask = 0;
-    while(rTable)
-    {
-        uint32_t curMask = rTable->mask.s_addr;
-        uint32_t curDest = rTable->dest.s_addr;
-        if(rMask == 0 || curMask > rMask)
-        {
+    while(rtable){
+        uint32_t curMask = rtable->mask.s_addr;
+        uint32_t curDest = rtable->dest.s_addr;
+        if(rMask == 0 || curMask > rMask){
             /*Check with Longest Prefix Match Algorithm*/
-            uint32_t newDestIP = (destIP & curMask);
+            uint32_t newDestIP = (dest_ip & curMask);
             if(newDestIP == curDest)
             {
                 rMask = curMask;
-                rInterface = rTable->interface;
+                iface = rtable->interface;
             }
         }
-        rTable = rTable->next;
+        rtable = rtable->next;
     }
-    return rInterface;
+    return iface;
 }
 
 void sr_send_icmp(struct sr_instance *sr, uint8_t *oldpacket,
