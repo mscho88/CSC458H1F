@@ -362,7 +362,7 @@ struct sr_nat_connection* sr_nat_lookup_connection(
     assert(mapping);
     printf("11\n");
     struct sr_nat_connection* walker = mapping->conns;
-    while(walker){
+    while(walker !=  NULL){
     	printf("222\n");
         if((ip_src == walker->ip_src) &&
          (ip_dest == walker->ip_dest) &&
