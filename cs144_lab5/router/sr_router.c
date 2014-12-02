@@ -254,7 +254,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 		/* end of setting the Check Sum */
 	}else if(strcmp(matching_ip->interface, INBOUND)){
 		/* If the packet is for inbound packet .. */
-
+		printf("It works \n");
 		mappings = sr_nat_lookup_external(sr->nat, 0, nat_mapping_icmp);
 		if(mappings == NULL){
 			return;
@@ -314,7 +314,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		    }
 		}
 	}
-	printf("It works \n");
+
 	sr_icmp_hdr_t *icmp_hdr;
 	if (ip_hdr->ip_dst == iface->ip) {
 		/* the packet is for me */
