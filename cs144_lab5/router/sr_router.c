@@ -389,7 +389,7 @@ void sr_nat_translate(struct sr_instance* sr,
     /* Thread_safety */
     pthread_mutex_lock(&(sr->nat.lock));
 
-    //sr_ethernet_hdr_t *ehdr = (sr_ethernet_hdr_t *) packet;
+    /*sr_ethernet_hdr_t *ehdr = (sr_ethernet_hdr_t *) packet;*/
     sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
     sr_icmp_t3_hdr_t *icmphdr  = (sr_icmp_t3_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
     sr_tcp_hdr_t *tcphdr  = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
