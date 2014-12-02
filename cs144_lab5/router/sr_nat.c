@@ -140,8 +140,8 @@ struct sr_nat_mapping *sr_nat_insert_mapping(struct sr_nat *nat,
   mapping->type = type;
 
   /* Insert newly built mapping to the mappings */
-  struct sr_nat_mapping temp = nat->mappings;
-  mapping->next = temp;
+  /*struct sr_nat_mapping temp = nat->mappings;*/
+  mapping->next = nat->mappings;
   nat->mappings = mapping;
 
   pthread_mutex_unlock(&(nat->lock));
