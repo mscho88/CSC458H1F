@@ -232,8 +232,10 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 	uint16_t* id = (uint16_t*)(packet+sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t));
 
 	struct sr_nat_mapping *mappings ;
-	printf("%s\n", matching_ip->interface);
-	if (strcmp(matching_ip->interface, OUTBOUND)){
+
+	struct sr_if *dest_iface = sr_get_interface(sr, interface);
+	printf("dest_iface %s\n", dest_iface->name);
+	if (strcmp(dest_iface->name, OUTBOUND)){
 		/* If the packet is for outbound packet .. */
 		printf("It works \n");
 
@@ -304,18 +306,16 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		return;
 	}
 	/* end of TTL Check */
-printf("%s\n", interface);
+
 	if(sr->nat_active){
 		/* Since NAT is on active, figure out what the external and internal IP and port */
 		/* Firstly, we need to check whether the destination is outbound or not */
 		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 
-		if(matching_ip){
-			if(ip_hdr->ip_p == ip_protocol_icmp){
-		    	sr_nat_handle_icmp(sr, packet, len, interface, matching_ip);
-		    }else if(ip_hdr->ip_p == ip_protocol_tcp){
-		    	sr_nat_handle_tcp(sr, packet, len, interface, matching_ip);
-		    }
+		if(ip_hdr->ip_p == ip_protocol_icmp){
+			sr_nat_handle_icmp(sr, packet, len, interface, matching_ip);
+		}else if(ip_hdr->ip_p == ip_protocol_tcp){
+			sr_nat_handle_tcp(sr, packet, len, interface, matching_ip);
 		}
 	}
 
