@@ -572,8 +572,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	/* end Checksum*/
 
 	/*Check Dest IP*/
-	//uint32_t destIP = ip_hdr->ip_dst;
-	//uint32_t ip_proto = ip_hdr->ip_p;
 	struct sr_if* dest_if = sr_find_interface(sr, ip_hdr->ip_dst);
 	char* destInterface = dest_if->name;
 
