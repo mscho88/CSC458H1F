@@ -241,6 +241,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 		if(mappings == NULL){
 			printf("It works for outbound\n");
 			mappings = sr_nat_insert_mapping(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
+			sr->nat->mappings = mappings;
 		}
 
 		/* Find the interface of the external port */
