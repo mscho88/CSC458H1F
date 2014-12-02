@@ -220,11 +220,19 @@ void sr_handlepacket_arp(struct sr_instance* sr,
 	}
 }
 
+void is_outbound(struct sr_rt *rtable, uint32_t dest_ip){
+	struct sr_rt *matching_ip = sr_longest_prefix_match(rtable, dest_ip);
+	if(strcmp(matching_ip->interface, OUTBOUND)){
+		return 1;
+	}else if(strcmp(matching_ip->interface, INBOUND)){
+
+	}
+}
+
 void sr_nat_handle_icmp(struct sr_instance* sr,
     uint8_t * packet/* lent */,
     unsigned int len,
-    char* interface/* lent */,
-	struct sr_rt *matching_ip){
+    char* interface/* lent */){
 
 	sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t));
 	sr_icmp_t3_hdr_t *icmp_t3_hdr = (sr_icmp_t3_hdr_t *)(packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
@@ -233,12 +241,11 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 
 	struct sr_nat_mapping *mappings ;
 
-	struct sr_if *dest_iface = sr_get_interface(sr, interface);
-	printf("dest_iface %s\n", dest_iface->name);
-	if (strcmp(dest_iface->name, OUTBOUND)){
-		/* If the packet is for outbound packet .. */
-		printf("It works \n");
+	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 
+	if (strcmp(matching_ip->interface, OUTBOUND)){
+		/* If the packet is for outbound packet .. */
+		printf("It works for outbound\n");
 
 		mappings = sr_nat_lookup_internal(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
 		if(mappings == NULL){
@@ -260,7 +267,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 		/* end of setting the Check Sum */
 	}else if(strcmp(matching_ip->interface, INBOUND)){
 		/* If the packet is for inbound packet .. */
-		printf("It works \n");
+		printf("It works for inbound\n");
 		mappings = sr_nat_lookup_external(sr->nat, 0, nat_mapping_icmp);
 		if(mappings == NULL){
 			return;
@@ -313,7 +320,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
 
 		if(ip_hdr->ip_p == ip_protocol_icmp){
-			sr_nat_handle_icmp(sr, packet, len, interface, matching_ip);
+			sr_nat_handle_icmp(sr, packet, len, interface);
 		}else if(ip_hdr->ip_p == ip_protocol_tcp){
 			sr_nat_handle_tcp(sr, packet, len, interface, matching_ip);
 		}
