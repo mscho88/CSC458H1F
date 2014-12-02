@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 
 int sr_nat_init(struct sr_nat *nat) { /* Initializes the nat */
