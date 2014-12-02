@@ -102,7 +102,7 @@ struct sr_icmp_t3_hdr {
 } __attribute__ ((packed)) ;
 typedef struct sr_icmp_t3_hdr sr_icmp_t3_hdr_t;
 
-struct sr_tcp_hdr {
+struct sr_tcp_hdrt {
   uint16_t src_port;	/* Source Port */
   uint16_t dest_port;	/* Destination Port */
   uint32_t seq_num;		/* Sequence Number */
@@ -113,11 +113,11 @@ struct sr_tcp_hdr {
   uint16_t checksum;	/* Check Sum */
   uint16_t urgent;
 } __attribute__ ((packed)) ;
-typedef struct sr_tcp_hdr sr_tcp_hdr_t;
+typedef struct sr_tcp_hdrt sr_tcp_hdr_tt;
 
 /* Referenced from : http://en.wikipedia.org/wiki/Transmission_Control_Protocol */
 
-struct sr_tcp_pseudo_hdr {
+struct sr_tcp_pseudo_hdrt {
   uint32_t source_addr;
   uint32_t destination_addr;
   uint8_t  zero;
@@ -125,9 +125,35 @@ struct sr_tcp_pseudo_hdr {
   uint16_t TCP_length;
 
 } __attribute__ ((packed)) ;
-typedef struct sr_tcp_pseudo_hdr sr_tcp_pseudo_hdr_t;
+typedef struct sr_tcp_pseudo_hdrt sr_tcp_pseudo_hdr_tt;
 
 /* Referenced from : http://www.freesoft.org/CIE/Course/Section4/8.htm */
+
+struct sr_tcp_hdr {
+  uint16_t src_port;
+  uint16_t dest_port;
+  uint32_t sequence_num;
+  uint32_t ack_num;
+  uint8_t x2:4 ; /* reserved */
+  uint8_t doff:4 ; /* TCP Header Size */
+  uint8_t flag_state;
+  uint16_t window_size;
+  uint16_t checksum;
+  uint16_t urgent;
+
+} __attribute__ ((packed)) ;
+typedef struct sr_tcp_hdr sr_tcp_hdr_t;
+
+
+struct sr_tcp_pseudo_hdr {
+  uint32_t ip_src;
+  uint32_t ip_dst;
+  uint8_t  reserved;
+  uint8_t  protocol;
+  uint16_t len;
+
+} __attribute__ ((packed)) ;
+typedef struct sr_tcp_pseudo_hdr sr_tcp_pseudo_hdr_t;
 
 /*
  * Structure of an internet header, naked of options.

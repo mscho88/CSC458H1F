@@ -12,10 +12,34 @@ typedef enum {
   /* nat_mapping_udp, */
 } sr_nat_mapping_type;
 
+typedef enum {
+    nat_trans_int_to_ext,
+    nat_trans_ext_to_int
+} sr_nat_trans_type;
+
+typedef enum {
+    tcp_state_listen,
+    tcp_state_syn_sent,
+    tcp_state_syn_recv,
+    tcp_state_established,
+    tcp_state_fin_wait1,
+    tcp_state_fin_wait2,
+    tcp_state_close_wait,
+    tcp_state_time_wait,
+    tcp_state_last_ack,
+    tcp_state_closed
+} sr_tcp_state;
+
 struct sr_nat_connection {
   /* add TCP connection state data members here */
+	uint32_t ip_src;
+	uint16_t src_seq;
+	uint32_t ip_dest;
+	uint16_t port_dest;
+	time_t last_updated;
+	sr_tcp_state state;
 
-  struct sr_nat_connection *next;
+	struct sr_nat_connection *next;
 };
 
 struct sr_nat_mapping {
@@ -33,11 +57,18 @@ struct sr_nat {
   /* add any fields here */
   struct sr_nat_mapping *mappings;
 
-  int id;
+  unsigned int icmpTimeout;
+  unsigned int tcpEstTimeout;
+  unsigned int tcpTransTimeout;
+
+    uint32_t auxCounter; /* used to generate source port/ID */
+    uint32_t nat_external_ip;
+
+  /*int id;
   uint32_t internal_ip;
   uint16_t internal_port;
   uint32_t external_ip;
-  uint16_t external_port;
+  uint16_t external_port;*/
 
   /* threading */
   pthread_mutex_t lock;
