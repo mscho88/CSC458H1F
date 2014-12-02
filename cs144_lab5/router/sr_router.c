@@ -237,6 +237,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 					mapping_type = nat_mapping_tcp;
 					aux_ext = tcp_hdr->dest_port;
+					printf("11\n");
 				}
 
 				/* look for any mapping */
@@ -258,7 +259,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 			}
 		}
-
+		printf("22\n");
 		if(ip_hdr->ip_p == ip_protocol_icmp){
 			sr_icmp_hdr_t *icmp_hdr = (sr_icmp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 			if(icmp_hdr->icmp_type == 8){
@@ -315,6 +316,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					src_port = icmp_t3_hdr->unused;
 					proto_type = nat_mapping_icmp;
 				}else if(ip_hdr->ip_p == ip_protocol_tcp){
+					printf("33\n");
 					/* Sanity Check */
 					if (len < sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_tcp_hdr_t)){
 						return;
@@ -331,6 +333,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					src_port = tcp_hdr->src_port;
 					proto_type = nat_mapping_tcp;
 					conn = build_connections(ip_hdr, tcp_hdr);
+					printf("44\n");
 				}
 
 				/* If there any mapping regarding to the src IP address, insert it to mappings */
