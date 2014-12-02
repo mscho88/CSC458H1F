@@ -225,6 +225,8 @@ struct sr_nat_mapping *sr_nat_lookup_external(struct sr_nat *nat,
             copy->last_updated = current->last_updated;
             copy->conns = current->conns;
             copy->next = current->next;
+            pthread_mutex_unlock(&(nat->lock));
+
             return copy;
         }
         current = current->next;
@@ -260,6 +262,8 @@ struct sr_nat_mapping *sr_nat_lookup_internal(struct sr_nat *nat,
             copy->last_updated = current->last_updated;
             copy->conns = current->conns;
             copy->next = current->next;
+            pthread_mutex_unlock(&(nat->lock));
+
             return copy;
         }
         current = current->next;
