@@ -75,7 +75,7 @@ int sr_read_from_server(struct sr_instance* );
 void sr_init(struct sr_instance* );
 void sr_handlepacket(struct sr_instance* , uint8_t * , unsigned int , char* );
 void sr_nat_translate(struct sr_instance*, uint8_t*, int,  struct sr_nat_mapping*, sr_nat_trans_type);
-
+char* sr_longest_prefix_match(struct sr_instance *sr, uint32_t );
 uint16_t tcp_cksum(const void *, int);
 
 /* -- sr_if.c -- */

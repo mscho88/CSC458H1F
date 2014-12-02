@@ -25,13 +25,9 @@
  *
  */
 
-#include "sr_rt.h"
-#include "sr_router.h"
-
 #ifndef SR_UTILS_H
 #define SR_UTILS_H
 
-char* sr_longest_prefix_match(struct sr_instance *sr, uint32_t );
 uint16_t cksum(const void *_data, int len);
 
 uint16_t ethertype(uint8_t *buf);

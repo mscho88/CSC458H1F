@@ -655,3 +655,26 @@ void sr_nat_translate(struct sr_instance* sr, uint8_t* packet, int len, struct s
     pthread_mutex_unlock(&(sr->nat.lock));
 
 }
+
+
+/*---------------------------------------------------------------------
+ * Method: sr_longest_prefix_match(struct sr_instance *, uint32_t)
+ * Scope:  Global
+ *
+ * Find the longest prefix match from the routing table
+ *---------------------------------------------------------------------*/
+char* sr_longest_prefix_match(struct sr_instance *sr, uint32_t dest_ip){
+    struct sr_rt* cur = sr->routing_table;
+    char* iface = NULL;
+    uint32_t mask = 0;
+    while(cur){
+        if(cur->mask.s_addr > mask || mask == 0){
+            if((dest_ip & cur->mask.s_addr) == cur->dest.s_addr){
+            	mask = cur->mask.s_addr;
+                iface = cur->interface;
+            }
+        }
+        cur = cur->next;
+    }
+    return iface;
+}/* end sr_longest_prefix_match */
