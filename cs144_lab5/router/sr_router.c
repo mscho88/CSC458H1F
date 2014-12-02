@@ -233,12 +233,12 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 	struct sr_nat_mapping *mappings ;
 
 	struct sr_rt *matching_ip = sr_longest_prefix_match(sr->routing_table, ip_hdr->ip_dst);
-	printf("matching ip %s\n", matching_ip->interface);
-	if (strcmp(matching_ip->interface, INBOUND)){
+
+	if (strcmp(matching_ip->interface, OUTBOUND) == 0){
 		/* If the packet is for outbound packet .. */
-		printf("It works for outbound\n");
 
 		mappings = sr_nat_lookup_internal(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
+		printf("It works for outbound\n");
 		if(mappings == NULL){
 			mappings = sr_nat_insert_mapping(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
 		}
@@ -256,7 +256,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 		ip_hdr->ip_sum = cksum(ip_hdr, sizeof(sr_ip_hdr_t));
 		icmp_hdr->icmp_sum = cksum(icmp_hdr, len - sizeof(sr_ethernet_hdr_t) - sizeof(sr_ip_hdr_t));
 		/* end of setting the Check Sum */
-	}else if(strcmp(matching_ip->interface, OUTBOUND)){
+	}else if(strcmp(matching_ip->interface, INBOUND) == 0){
 		/* If the packet is for inbound packet .. */
 		printf("It works for inbound\n");
 		mappings = sr_nat_lookup_external(sr->nat, 0, nat_mapping_icmp);
