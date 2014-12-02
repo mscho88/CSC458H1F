@@ -25,6 +25,36 @@
 #include "sr_if.h"
 #include "sr_router.h"
 
+
+/*---------------------------------------------------------------------
+ * Method: sr_find_interface
+ * Scope: Global
+ *
+ * Given an ip return the interface with that ip  or 0 if it doesn't
+ * exist.
+ *
+ *---------------------------------------------------------------------*/
+
+struct sr_if* sr_find_interface(struct sr_instance* sr, uint32_t ip)
+{
+    struct sr_if* if_walker = 0;
+
+    /* -- REQUIRES -- */
+    assert(ip);
+    assert(sr);
+
+    if_walker = sr->if_list;
+
+    while(if_walker)
+    {
+       if(if_walker->ip == ip)
+        { return if_walker; }
+        if_walker = if_walker->next;
+    }
+
+    return 0;
+} /* -- sr_find_interface -- */
+
 /*--------------------------------------------------------------------- 
  * Method: sr_get_interface
  * Scope: Global
