@@ -234,7 +234,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 
 	if(matching_ip == NULL){
 		/* External to Internal */
-		if(ip_hdr->ip_dst == sr->nat->external_ip){
+		if(ip_hdr->ip_dst == sr->nat->external_ip || ip_hdr->ip_dst == sr->nat->internal_ip){
 			mappings = sr_nat_lookup_external(sr->nat, 0, nat_mapping_icmp);
 			if(mappings == NULL){
 				printf("this??");
