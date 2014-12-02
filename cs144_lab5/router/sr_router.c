@@ -403,16 +403,18 @@ void sr_nat_translate(struct sr_instance* sr,
     sr_tcp_hdr_t *tcp_hdr  = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
     struct sr_if *interface = NULL;
-
+    printf("11\n");
     /* Internal to External */
     if(trans_type == nat_trans_int_to_ext){
     	ip_hdr->ip_src = mapping->ip_ext;
-
+    	printf("22\n");
         if(mapping->type == nat_mapping_icmp){
+        	printf("33\n");
         	icmp_hdr->unused = mapping->aux_ext;
         	icmp_hdr->icmp_sum  = 0;
         	icmp_hdr->icmp_sum  = cksum(icmp_hdr, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t));
         }else if(mapping->type == nat_mapping_tcp){
+        	printf("44\n");
             uint32_t src_seq = tcp_hdr->ack_num - 1;
             struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_dst, src_seq, tcp_hdr->dest_port);
             if(conn){
@@ -453,7 +455,7 @@ void sr_nat_translate(struct sr_instance* sr,
     }/* External to Internal */else if(trans_type == nat_trans_ext_to_int){
         /* Set new destination IP */
     	ip_hdr->ip_dst = mapping->ip_int;
-
+    	printf("55\n");
         /* ICMP: Set new icmp ID and redo Checksum */
         if(mapping->type == nat_mapping_icmp){
         	icmp_hdr->unused = mapping->aux_int;
@@ -468,6 +470,7 @@ void sr_nat_translate(struct sr_instance* sr,
               sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int,
             		  ip_hdr->ip_src, src_seq, tcp_hdr->src_port);
             if(conn){
+            	printf("66\n");
                 printf("Ext to Int: found a connection.\n");
                 /* Determine the packet type (syn,ack,etc...) */
                 /* Change the connection state accordingly */
@@ -489,7 +492,7 @@ void sr_nat_translate(struct sr_instance* sr,
 						conn->state = tcp_state_closed;
 					}
 				}
-
+				printf("77\n");
 				/*update the sequence number*/
 				conn->src_seq = tcp_hdr->sequence_num;
 				/* Update the timer */
@@ -507,7 +510,7 @@ void sr_nat_translate(struct sr_instance* sr,
         interface = sr_get_interface(sr, INBOUND);
 
     }
-
+    printf("88\n");
     memcpy(((sr_ethernet_hdr_t *)packet)->ether_dhost, interface->addr, ETHER_ADDR_LEN);
     memcpy(((sr_ethernet_hdr_t *)packet)->ether_shost, interface->addr, ETHER_ADDR_LEN);
 
