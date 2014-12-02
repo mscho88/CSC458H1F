@@ -356,15 +356,19 @@ struct sr_nat_connection* sr_nat_lookup_connection(
     pthread_mutex_lock(&(nat->lock));
 
     assert(mapping);
-
+    printf("11\n");
     struct sr_nat_connection* walker = mapping->conns;
     while(walker){
+    	printf("222\n");
         if((ip_src == walker->ip_src) &&
          (ip_dest == walker->ip_dest) &&
          (port_dest == walker->port_dest) &&
          (src_seq == walker->src_seq)){
 
+        	printf("333\n");
             /* Connection matched */
+            pthread_mutex_unlock(&(nat->lock));
+
             return walker;
 
         }
