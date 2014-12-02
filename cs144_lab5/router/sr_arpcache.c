@@ -11,82 +11,67 @@
 #include "sr_if.h"
 #include "sr_protocol.h"
 #include "sr_utils.h"
-/*
-  Author: Tzu-Yao Chien 998758759
-          Pouria
-*/
+
 /* 
   This function gets called every second. For each request sent out, we keep
   checking whether we should resend an request or destroy the arp request.
   See the comments in the header file for an idea of what it should look like.
 */
 void sr_arpcache_sweepreqs(struct sr_instance *sr) { 
-    /*printf("************************Arpcache_Sweepreqs starts**********************\n");*/
-    /*sr_arpcache_dump(&sr->cache);*/
-
-    /*Initialize variables variable*/
-    time_t currentTime;
-    time(&currentTime);
     struct sr_arpreq* request = sr->cache.requests;
-    /*Loop through all process in queue for sending broadcast*/
-    while(request)
-    {
-	/*Sanity Check on the request*/
-	/*Check 1: if the total sent is 5 or more, then sent ICMP*/
-	if(request->times_sent > 4)
-	{
-	  fprintf(stderr,"The arp request with ip: %d has expired, Sent ICMP\n", request->ip);
-	  print_addr_ip_int(request->ip);
-      struct sr_packet *pkts;
-          for(pkts=request->packets; pkts != NULL; pkts = pkts->next){
-            sr_send_icmp(sr,pkts->buf,pkts->len,3,1,pkts->iface);
-          }
-          sr_arpreq_destroy(&sr->cache,request);
-	}
-	else
-	{
- 	  /*Check 2: if sent time differ from current time, then sent ARP Request*/
-	  if(difftime(currentTime, request->sent)!=0)
-	  {
-	    request->sent             = currentTime;
-	    request->times_sent       = request->times_sent + 1;
-        char* rInterface = sr_longest_prefix_match(sr, request->ip);
-        if(rInterface == NULL)
-        {
-            fprintf(stderr,"Fail due to empty rInterface in sr_arpcache\n");
-        }
-        struct sr_if* destIPInterface = sr_get_interface(sr, rInterface);
-        if(!destIPInterface)
-        {
-            fprintf(stderr,"Fail due to empty destIPInterface in sr_arpcache\n");
-        }
-        uint8_t *arpRequestPacket = (uint8_t *)malloc(42);
-        /*Set the ARP packet's ethernet header*/
-        sr_ethernet_hdr_t *ehdr   = (sr_ethernet_hdr_t *) arpRequestPacket;
-        uint8_t broadcastAddr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-        memcpy(ehdr->ether_dhost, broadcastAddr, ETHER_ADDR_LEN);
-        memcpy(ehdr->ether_shost, destIPInterface->addr, ETHER_ADDR_LEN);
-        ehdr->ether_type = htons(2054);
-        /*Set the ARP packet's ARP header*/
-        sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(arpRequestPacket + sizeof(sr_ethernet_hdr_t));
-        arp_hdr->ar_hrd = htons(1);
-        arp_hdr->ar_pro = htons(2048);
-        arp_hdr->ar_hln = 6;
-        arp_hdr->ar_pln = 4;
-        arp_hdr->ar_op = htons(1);
-        memcpy(arp_hdr->ar_sha, destIPInterface->addr, ETHER_ADDR_LEN);
-        arp_hdr->ar_sip = destIPInterface->ip;
-        uint8_t broadcastArpAddr[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-        memcpy(arp_hdr->ar_tha, broadcastArpAddr, ETHER_ADDR_LEN);
-        arp_hdr->ar_tip = request->ip;
-        sr_send_packet(sr, arpRequestPacket, 42, destIPInterface->name);
-        free(arpRequestPacket);
-	  }
-	}
+
+    while(request){
+		if(request->times_sent < 5){
+			/* If the packet in the cache had been sent a second ago, then resend
+			 * the message to the destination ip address. */
+			if(difftime(time(NULL), request->sent) > 1.0){
+				request->sent = time(NULL);
+				request->times_sent++;
+				char* iface1 = sr_longest_prefix_match(sr, request->ip);
+				if(iface1 == NULL){
+					fprintf(stderr,"Failed\n");
+				}
+				struct sr_if* iface2 = sr_get_interface(sr, iface1);
+				if(!iface2){
+					fprintf(stderr,"Failed\n");
+				}
+				uint8_t *_packet = (uint8_t *)malloc(42);
+
+				sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *) _packet;
+
+				/* build ethernet header */
+				memcpy(eth_hdr->ether_dhost, broadcast_addr, ETHER_ADDR_LEN);
+				memcpy(eth_hdr->ether_shost, iface2->addr, ETHER_ADDR_LEN);
+				eth_hdr->ether_type = htons(2054);
+
+				/* build ARP header */
+				sr_arp_hdr_t *arp_hdr = (sr_arp_hdr_t *)(_packet + sizeof(sr_ethernet_hdr_t));
+				arp_hdr->ar_hrd = htons(1);
+				arp_hdr->ar_pro = htons(2048);
+				arp_hdr->ar_hln = 6;
+				arp_hdr->ar_pln = 4;
+				arp_hdr->ar_op = htons(1);
+				memcpy(arp_hdr->ar_sha, iface2->addr, ETHER_ADDR_LEN);
+				arp_hdr->ar_sip = iface2->ip;
+				memcpy(arp_hdr->ar_tha, zeros_addr, ETHER_ADDR_LEN);
+				arp_hdr->ar_tip = request->ip;
+
+				sr_send_packet(sr, _packet, 42, iface2->name);
+				free(_packet);
+			}
+		}else{
+			/* If the number of times of message sending is greater or equal to 5 times,
+			 * then erase the packet from the cache and send icmp message that the dest-
+			 * ination is unreachable. */
+			struct sr_packet *pkts = request->packets;
+			while(pkts != NULL){
+				sr_send_icmp(sr, pkts->buf, pkts->len, icmp_type3, icmp_code1, pkts->iface);
+				pkts = pkts->next;
+			}
+			sr_arpreq_destroy(&sr->cache, request);
+		}
 	request = request->next;
     }
-    /*printf("************************Arpcache_Sweepreqs ends**********************\n");*/
-
 }
 
 /* You should not need to touch the rest of this code. */

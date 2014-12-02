@@ -78,6 +78,10 @@ void sr_handlepacket(struct sr_instance* sr,
     assert(packet);
     assert(interface);
 
+    printf("eth %d\n", sizeof(sr_ethernet_hdr_t));
+    printf("arp %d\n", sizeof(sr_arp_hdr_t));
+    printf("ip %d\n", sizeof(sr_ip_hdr_t));
+    printf("icmp %d\n", sizeof(sr_icmp_hdr_t));
     printf("*** -> Received packet of length %d \n",len);
 
     /* Sanity Check*/

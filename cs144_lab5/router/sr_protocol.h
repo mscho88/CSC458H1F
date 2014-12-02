@@ -231,7 +231,6 @@ enum sr_ethertype {
   ethertype_ip = 0x0800,
 };
 
-
 enum sr_arp_opcode {
   arp_op_request = 0x0001,
   arp_op_reply = 0x0002,
@@ -240,6 +239,9 @@ enum sr_arp_opcode {
 enum sr_arp_hrd_fmt {
   arp_hrd_ethernet = 0x0001,
 };
+
+uint8_t broadcast_addr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+uint8_t zeros_addr[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 
 struct sr_arp_hdr
