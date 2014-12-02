@@ -417,7 +417,9 @@ void sr_nat_translate(struct sr_instance* sr,
         	printf("44\n");
             uint32_t src_seq = tcp_hdr->ack_num - 1;
             struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_dst, src_seq, tcp_hdr->dest_port);
+            printf("444\n");
             if(conn){
+            	printf("555\n");
             	if(conn->state == tcp_state_syn_sent){
 					int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
 					int syncBit = ((tcp_hdr->flag_state >> 1)&1)%2;
@@ -440,6 +442,7 @@ void sr_nat_translate(struct sr_instance* sr,
 				/* Update the timer */
 				conn->last_updated = time(NULL);
 			}else{
+				printf("666\n");
 				printf("Ext to In: no connection found.\n");
 					/*wait 6 seconds and if link exist then drop it. If not, then sent icmp unreachable.*/
 			}
