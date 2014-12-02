@@ -28,6 +28,7 @@
 #ifndef SR_UTILS_H
 #define SR_UTILS_H
 
+uint16_t tcp_cksum(const void *, int);
 uint16_t cksum(const void *_data, int len);
 
 uint16_t ethertype(uint8_t *buf);
