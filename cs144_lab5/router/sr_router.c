@@ -91,7 +91,6 @@ void sr_handlepacket(struct sr_instance* sr,
 	if(ethernet_protocol_type == ethertype_arp){
 		sr_handlepacket_arp(sr, packet, len, interface);
 	}else if(ethernet_protocol_type == ethertype_ip){
-
 	    if(sr->nat_active){
 	    	/* Set the IN&OUT BOUND ip port address */
 	    	struct sr_if *in_iface = sr_get_interface(sr, INBOUND);
@@ -301,7 +300,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		return;
 	}
 	/* end of TTL Check */
-
+	printf("It works \n");
 	if(sr->nat_active){
 		/* Since NAT is on active, figure out what the external and internal IP and port */
 		/* Firstly, we need to check whether the destination is outbound or not */
