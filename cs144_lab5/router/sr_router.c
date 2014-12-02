@@ -109,9 +109,9 @@ void sr_handlepacket(struct sr_instance* sr,
     }
 }/* end sr_handlepacket */
 
-char *sr_rtable_lookup(struct sr_rt *rtable, uint32_t ip_dest){
+char *sr_rtable_lookup(struct sr_instance *sr, uint32_t ip_dest){
 	struct sr_rt *best = NULL;
-	struct sr_rt *cur = rtable;
+	struct sr_rt *cur = sr->routing_table;
 	while(cur != NULL){
 		if((ip_dest & cur->mask.s_addr) == (cur->dest.s_addr & cur->mask.s_addr)){
 			if(best == NULL || cur->mask.s_addr > best->mask.s_addr){
