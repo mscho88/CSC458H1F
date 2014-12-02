@@ -697,13 +697,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 					src_port = tcp_hdr->src_port;
 					proto_type = nat_mapping_tcp;
-					struct sr_nat_connection* conn = (struct sr_nat_connection *)malloc(sizeof(struct sr_nat_connection));
-					conn->ip_src = ip_hdr->ip_src;
+					/*struct sr_nat_connection* conn = (struct sr_nat_connection *)malloc(sizeof(struct sr_nat_connection));*/
+					struct sr_nat_connection *conn = build_connections(conn, ip_hdr, tcp_hdr);
+					/*conn->ip_src = ip_hdr->ip_src;
 					conn->src_seq = tcp_hdr->sequence_num;
 					conn->ip_dest = ip_hdr->ip_dst;
 					conn->port_dest = tcp_hdr->dest_port;
 					conn->last_updated = time(NULL);
-					conn->state = tcp_state_syn_sent;
+					conn->state = tcp_state_syn_sent;*/
 				}
 
 				/* If there any mapping regarding to the src ip address, insert it to mappings */
@@ -749,4 +750,26 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			free(arp_cache);
 		}
 	}
+}
+
+/*---------------------------------------------------------------------
+ * Method: build_connections(sr_ip_hdr_t *, sr_tcp_hdr_t *)
+ * Scope:  Local
+ *
+ * This method build connections in case of TCP protocol. In case of
+ * ICMP protocol, building connections is not required. Connections
+ * are set to be NULL.
+ *
+ * NOTE : ICMP protocl will not call this function.
+ *
+ *---------------------------------------------------------------------*/
+struct sr_nat_connection *build_connections(sr_ip_hdr_t *ip_hdr, sr_tcp_hdr_t *tcp_hdr){
+	struct sr_nat_connection *conn = (struct sr_nat_connection *)malloc(sizeof(struct sr_nat_connection));
+	conn->ip_src = ip_hdr->ip_src;
+	conn->src_seq = tcp_hdr->sequence_num;
+	conn->ip_dest = ip_hdr->ip_dst;
+	conn->port_dest = tcp_hdr->dest_port;
+	conn->last_updated = time(NULL);
+	conn->state = tcp_state_syn_sent;
+	return conn;
 }
