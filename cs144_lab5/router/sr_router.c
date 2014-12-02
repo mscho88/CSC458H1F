@@ -109,7 +109,21 @@ void sr_handlepacket(struct sr_instance* sr,
     }
 }/* end sr_handlepacket */
 
-char* sr_rtable_lookup(struct sr_instance *sr, uint32_t dest_ip){
+char *sr_rtable_lookup(struct sr_rt *rtable, uint32_t ip_dest){
+	struct sr_rt *best = NULL;
+	struct sr_rt *cur = rtable;
+	while(cur != NULL){
+		if((ip_dest & cur->mask.s_addr) == (cur->dest.s_addr & cur->mask.s_addr)){
+			if(best == NULL || cur->mask.s_addr > best->mask.s_addr){
+				best = cur;
+			}
+		}
+		cur = cur->next;
+	}
+	return best->interface;
+}/* end sr_longest_prefix_match */
+
+char* sr_rtable_lookup1(struct sr_instance *sr, uint32_t dest_ip){
     struct sr_rt* rtable = sr->routing_table;
     char* iface = NULL;
     uint32_t rMask = 0;
@@ -117,7 +131,6 @@ char* sr_rtable_lookup(struct sr_instance *sr, uint32_t dest_ip){
         uint32_t curMask = rtable->mask.s_addr;
         uint32_t curDest = rtable->dest.s_addr;
         if(rMask == 0 || curMask > rMask){
-            /*Check with Longest Prefix Match Algorithm*/
             uint32_t newDestIP = (dest_ip & curMask);
             if(newDestIP == curDest)
             {
