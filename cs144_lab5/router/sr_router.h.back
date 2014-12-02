@@ -30,8 +30,6 @@
 
 #define INIT_TTL 255
 #define PACKET_DUMP_SIZE 1024
-#define NAT_INT "eth1"
-#define NAT_EXT "eth2"
 
 /* forward declare */
 struct sr_if;
@@ -55,9 +53,11 @@ struct sr_instance
     struct sr_if* if_list; /* list of interfaces */
     struct sr_rt* routing_table; /* routing table */
     struct sr_arpcache cache;   /* ARP cache */
-    struct sr_nat nat;   /* NAT cache */
     pthread_attr_t attr;
     FILE* logfile;
+
+    struct sr_nat *nat;
+    int nat_active;
 };
 
 /* -- sr_main.c -- */
@@ -71,16 +71,20 @@ int sr_read_from_server(struct sr_instance* );
 /* -- sr_router.c -- */
 void sr_init(struct sr_instance* );
 void sr_handlepacket(struct sr_instance* , uint8_t * , unsigned int , char* );
-void sr_nat_translate(struct sr_instance*, uint8_t*, int,  struct sr_nat_mapping*, sr_nat_trans_type);
-char* sr_rtable_lookup(struct sr_instance *sr, uint32_t destIP);
-uint16_t tcp_cksum(const void *, int);
+int interface_exist(struct sr_if *, uint32_t );
+void build_ethernet_header(uint8_t *, uint8_t *, struct sr_if* , uint16_t );
+void build_arp_header(uint8_t *, sr_arp_hdr_t* , struct sr_if* , uint16_t );
+void sr_handlepacket_arp(struct sr_instance* , uint8_t * , unsigned int , char* );
+void sr_handlepacket_ip(struct sr_instance* , uint8_t * , unsigned int , char* );
+struct sr_rt *sr_longest_prefix_match(struct sr_rt *, uint32_t);
+void sr_send_icmp_message(struct sr_instance *, uint8_t *, uint16_t , uint16_t );
+void sr_arpcache_handle(struct sr_instance *, struct sr_arpreq *);
+
 
 /* -- sr_if.c -- */
 void sr_add_interface(struct sr_instance* , const char* );
 void sr_set_ether_ip(struct sr_instance* , uint32_t );
 void sr_set_ether_addr(struct sr_instance* , const unsigned char* );
-void sr_send_icmp(struct sr_instance*, uint8_t*,unsigned int, uint8_t,uint8_t,char*);
-
-
+void sr_print_if_list(struct sr_instance* );
 
 #endif /* SR_ROUTER_H */
