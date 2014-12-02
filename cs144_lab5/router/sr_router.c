@@ -235,6 +235,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 	/*print_hdr_ip(ip_hdr);*/
 
 	if(matching_ip == NULL){
+		/* External to Internal */
 		if(ip_hdr->ip_dst == sr->nat->external_ip){
 			mappings = sr_nat_lookup_external(sr->nat, 0, nat_mapping_icmp);
 			if(mappings == NULL){
@@ -254,7 +255,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 			}
 		}
 	}else if (strcmp(matching_ip->interface, OUTBOUND) == 0){
-		/* If the packet is for outbound packet .. */
+		/* Internal to External */
 		printf("22\n");
 		mappings = sr_nat_lookup_internal(sr->nat, ip_hdr->ip_src, icmp_t3_hdr->unused, nat_mapping_icmp);
 		printf("33\n");
@@ -277,7 +278,7 @@ void sr_nat_handle_icmp(struct sr_instance* sr,
 		printf("66\n");
 		/* end of setting the Check Sum */
 	}else if(strcmp(matching_ip->interface, INBOUND) == 0){
-		/* If the packet is for inbound packet .. */
+		/* Internal to Internal */
 		printf("It works for inbound\n");
 		mappings = sr_nat_lookup_external(sr->nat, 0, nat_mapping_icmp);
 		if(mappings == NULL){
