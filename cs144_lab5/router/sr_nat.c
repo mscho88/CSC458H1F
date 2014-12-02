@@ -206,16 +206,9 @@ struct sr_nat_mapping *sr_nat_lookup_external(struct sr_nat *nat,
     /* handle lookup here, malloc and assign to copy */
     struct sr_nat_mapping *copy = NULL;
 
-    printf("Looking for external aux: %d\n",aux_ext);
-
     struct sr_nat_mapping *current = nat->mappings;
-    while(current)
-    {
-        printf("Current external aux: %i\n",current->aux_ext);
-        printf("type %i  and  currentType %i\n",current->type, type);
-        if(current->type == type && current->aux_ext == aux_ext)
-        {
-            /* TODO: Remember to free it */
+    while(current){
+        if(current->type == type && current->aux_ext == aux_ext){
             copy = malloc(sizeof(struct sr_nat_mapping));
             copy->type = current->type;
             copy->ip_int = current->ip_int;
@@ -248,11 +241,8 @@ struct sr_nat_mapping *sr_nat_lookup_internal(struct sr_nat *nat,
     struct sr_nat_mapping *copy = NULL;
 
     struct sr_nat_mapping *current = nat->mappings;
-    while(current)
-    {
-        if(current->type == type && current->ip_int == ip_int && current->aux_int == aux_int)
-        {
-            /* TODO: Remember to free it */
+    while(current){
+        if(current->type == type && current->ip_int == ip_int && current->aux_int == aux_int){
             copy = malloc(sizeof(struct sr_nat_mapping));
             copy->type = current->type;
             copy->ip_int = current->ip_int;
@@ -289,12 +279,11 @@ struct sr_nat_mapping *sr_nat_insert_mapping(struct sr_nat *nat,
     /* handle insert here, create a mapping, and then return a copy of it */
     struct sr_nat_mapping *mapping = malloc(sizeof(struct sr_nat_mapping));
 
-    /* Init mapping */
     mapping->ip_int = ip_int;
     mapping->aux_int = aux_int;
-    mapping->ip_ext = nat->nat_external_ip;   /* TODO: NAT IP, maybe get it from sr_nat ? */
-    mapping->aux_ext = sr_nat_genAux(nat);  /* Port or ID */
-    mapping->last_updated = time(NULL); /* Lazy solution ?*/
+    mapping->ip_ext = nat->nat_external_ip;
+    mapping->aux_ext = sr_nat_genAux(nat);
+    mapping->last_updated = time(NULL);
     mapping->conns = NULL;
     mapping->type = type;
     mapping->next = nat->mappings;
@@ -305,17 +294,12 @@ struct sr_nat_mapping *sr_nat_insert_mapping(struct sr_nat *nat,
     return mapping;
 }
 
-
-/*
- * Return a number from 1024-65535 by incrementing auxCounter in nat
- * if the counter reaches 64500, it wraps around.
- */
 uint32_t sr_nat_genAux(struct sr_nat *nat){
 
     assert(nat);
 
     uint32_t retn;
-    retn = nat->auxCounter + 1024; /* 1024 - 65535 */
+    retn = nat->auxCounter + 1024;
     nat->auxCounter = ((nat->auxCounter+1)%64500);
     return retn;
 }
@@ -342,15 +326,6 @@ void print_nat_mappings(struct sr_nat *nat){
     return;
 }
 
-/*
-*   Looks through the connections in the given mapping
-*   and returns a pointer to a connection that matches
-*   ip_src,ip_dest,port_src and port_dest. Returns NULL
-*   if no match was found.
-*
-*   Note: For thread safety, must only be called from
-*         sr_nat_translate since it has a lock.
-*/
 struct sr_nat_connection* sr_nat_lookup_connection(
   struct sr_nat* nat,
   struct sr_nat_mapping* mapping,
@@ -360,21 +335,15 @@ struct sr_nat_connection* sr_nat_lookup_connection(
     pthread_mutex_lock(&(nat->lock));
 
     assert(mapping);
-    printf("11\n");
     struct sr_nat_connection* walker = mapping->conns;
     while(walker !=  NULL){
-    	printf("222\n");
         if((ip_src == walker->ip_src) &&
          (ip_dest == walker->ip_dest) &&
          (port_dest == walker->port_dest) &&
          (src_seq == walker->src_seq)){
-
-        	printf("333\n");
-            /* Connection matched */
             pthread_mutex_unlock(&(nat->lock));
 
             return walker;
-
         }
         walker = walker->next;
     }
