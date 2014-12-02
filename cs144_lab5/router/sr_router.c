@@ -80,7 +80,7 @@ void sr_handlepacket(struct sr_instance* sr,
     assert(interface);
 
 	/* Initialize NAT external IP if it is not already */
-    if(sr->nat_active && sr->nat->nat_external_ip == 0)
+    if(sr->nat->activated && sr->nat->nat_external_ip == 0)
     {
         struct sr_if* natExternalInterface = sr_get_interface(sr, OUTBOUND);
         sr->nat->nat_external_ip = natExternalInterface->ip;
@@ -173,7 +173,7 @@ void sr_handlepacket(struct sr_instance* sr,
         if(destInterface) /* is there an interface that has destIP ? */
         {
             /* NAT enabled ? */
-            if(sr->nat_active)
+            if(sr->nat->activated)
             {
                 /* External to External */
                 if(!strcmp(interface,OUTBOUND) && !strcmp(destInterface,OUTBOUND))
@@ -364,7 +364,7 @@ void sr_handlepacket(struct sr_instance* sr,
                 return;
             }
 
-            if(sr->nat_active)
+            if(sr->nat->activated)
             {
                 /*find internal interface name by src ip*/
                 if (strcmp(interface, INBOUND) == 0 && strcmp(rInterface, OUTBOUND) == 0)
