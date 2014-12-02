@@ -6,8 +6,6 @@
 
 
 uint16_t tcp_cksum(const void *packet, int len){
-    assert(packet);
-
     printf("HEX: %x\n",cksum(packet, len));
 
     sr_tcp_pseudo_hdr_t *pseudo_hdr;
