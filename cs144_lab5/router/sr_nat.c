@@ -116,6 +116,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 				continue;
 
             }else if(cur_map->type == nat_mapping_tcp){
+            	printf("1");
                 cur_conn = cur_map->conns;
                 while(cur_conn != NULL){
 					if(nat->tcp_establish < curtime - cur_conn->last_updated && cur_conn->state == tcp_state_established){
@@ -146,7 +147,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
             	cur_map = cur_map->next;
             }
         }
-        printf("1");
+
         pthread_mutex_unlock(&(nat->lock));
     }
     return NULL;
