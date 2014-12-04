@@ -105,8 +105,9 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
         struct sr_nat_connection *cur_conn  = NULL;
         struct sr_nat_connection *prev_conn    = NULL;
 
+        pthread_mutex_unlock(&(nat->lock));
         while(cur_map){
-        	printf("1");
+            pthread_mutex_lock(&(nat->lock));
 
         	if(cur_map->type == nat_mapping_icmp && nat->icmp_query < (curtime - cur_map->last_updated)){
         		sr_dismiss_mapping(nat, prev_map, cur_map);
@@ -147,6 +148,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
             	prev_map = cur_map;
             	cur_map = cur_map->next;
             }
+            pthread_mutex_unlock(&(nat->lock));
         }
 
         pthread_mutex_unlock(&(nat->lock));
