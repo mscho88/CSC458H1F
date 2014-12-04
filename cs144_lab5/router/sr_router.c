@@ -260,8 +260,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				/* Internal/External to External/Internal respectively */
 				sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 			}
+			printf("hello\n");
 		}
-		printf("hello\n");
+
 		if(ip_hdr->ip_p == ip_protocol_icmp){
 			sr_icmp_hdr_t *icmp_hdr = (sr_icmp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 			if(icmp_hdr->icmp_type == 8){
