@@ -30,7 +30,7 @@ int sr_nat_init(struct sr_nat *nat) { /* Initializes the nat */
     nat->icmp_query = 60;
     nat->tcp_establish = 7440;
     nat->tcp_transitory = 300;
-    nat->auxCounter = 0;
+    nat->port_id = 0;
     nat->nat_external_ip = 0;
 
     /* Initialize any variables here */
@@ -121,7 +121,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
             }else if(cur_map->type == nat_mapping_tcp){
                 cur_conn = cur_map->conns;
                 while(cur_conn != NULL){
-					if(nat->tcp_establish < curtime - cur_conn->last_updated && cur_conn->state == tcp_state_established){
+					if(nat->tcp_establish < curtime - cur_conn->last_updated && cur_conn->state == established){
 						if(prev_conn){
 							prev_conn->next = cur_conn->next;
 						}else{
@@ -240,8 +240,8 @@ struct sr_nat_mapping *sr_nat_insert_mapping(struct sr_nat *nat,
     mapping->ip_int = ip_int;
     mapping->aux_int = aux_int;
     mapping->ip_ext = nat->nat_external_ip;
-    mapping->aux_ext = nat->auxCounter + 1024;
-    nat->auxCounter = ((nat->auxCounter+1)%64500);
+    mapping->aux_ext = nat->port_id + 1024;
+    nat->port_id = ((nat->port_id + 1) % 64500);
     mapping->last_updated = time(NULL);
     mapping->conns = NULL;
     mapping->type = type;
@@ -250,16 +250,6 @@ struct sr_nat_mapping *sr_nat_insert_mapping(struct sr_nat *nat,
 
     pthread_mutex_unlock(&(nat->lock));
     return mapping;
-}
-
-uint32_t sr_nat_genAux(struct sr_nat *nat){
-
-    assert(nat);
-
-    uint32_t retn;
-    retn = nat->auxCounter + 1024;
-    nat->auxCounter = ((nat->auxCounter+1)%64500);
-    return retn;
 }
 
 /*---------------------------------------------------------------------
@@ -299,7 +289,7 @@ struct sr_nat_connection* sr_nat_lookup_connection(
  * ICMP protocol, building connections is not required. Connections
  * are set to be NULL.
  *
- * NOTE : ICMP protocl will not call this function.
+ * NOTE : ICMP protocol will not call this function.
  *
  *---------------------------------------------------------------------*/
 struct sr_nat_connection *build_connections(sr_ip_hdr_t *ip_hdr, sr_tcp_hdr_t *tcp_hdr){
@@ -309,7 +299,7 @@ struct sr_nat_connection *build_connections(sr_ip_hdr_t *ip_hdr, sr_tcp_hdr_t *t
 	conn->ip_dest = ip_hdr->ip_dst;
 	conn->port_dest = tcp_hdr->dest_port;
 	conn->last_updated = time(NULL);
-	conn->state = tcp_state_syn_sent;
+	conn->state = syn_sent;
 	conn->next = NULL;
 	return conn;
 }

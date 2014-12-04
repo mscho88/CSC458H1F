@@ -6,17 +6,10 @@
 
 
 uint16_t tcp_cksum(const void *packet, int len){
-    printf("HEX: %x\n",cksum(packet, len));
-
-    sr_tcp_pseudo_hdr_t *pseudo_hdr;
-    unsigned char*  buf;
-    unsigned int total_len = 0;
-    uint16_t checksum = 0;
-
     sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
     sr_tcp_hdr_t *tcp_hdr = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+    sr_tcp_pseudo_hdr_t *pseudo_hdr = (sr_tcp_pseudo_hdr_t *)malloc(sizeof(sr_tcp_pseudo_hdr_t));
 
-    pseudo_hdr = (sr_tcp_pseudo_hdr_t *)malloc(sizeof(sr_tcp_pseudo_hdr_t));
     pseudo_hdr->ip_src = ip_hdr->ip_src;
     pseudo_hdr->ip_dst = ip_hdr->ip_dst;
     pseudo_hdr->reserved = 0;
@@ -24,16 +17,15 @@ uint16_t tcp_cksum(const void *packet, int len){
     pseudo_hdr->len = htons(ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t));
 
     uint16_t orig_sum = tcp_hdr->checksum;
+
     tcp_hdr->checksum = 0;
-
-    total_len = ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t) + sizeof(sr_tcp_pseudo_hdr_t);
-
-    buf = malloc(total_len);
+    unsigned char *buf = malloc(ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t) + sizeof(sr_tcp_pseudo_hdr_t));
     memcpy(buf, pseudo_hdr, sizeof(sr_tcp_pseudo_hdr_t));
     memcpy(buf + sizeof(sr_tcp_pseudo_hdr_t), tcp_hdr, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t));
 
-    checksum = cksum(buf, total_len);
+    uint16_t checksum = cksum(buf, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t) + sizeof(sr_tcp_pseudo_hdr_t));
     tcp_hdr->checksum = orig_sum;
+
     free(pseudo_hdr);
     free(buf);
 

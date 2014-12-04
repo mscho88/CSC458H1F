@@ -239,22 +239,18 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 					struct sr_nat_mapping *mapping = sr_nat_lookup_external(&(sr->nat),aux_ext, mapping_type);
 					if(mapping != NULL){
-						sr_nat_translate(sr, packet, len, mapping, nat_trans_ext_to_int);
+						sr_nat_translate(sr, packet, len, mapping, ex2in);
 						sr_handlepacket(sr, packet, len, INBOUND);
 						free(mapping);
 						return;
 					}
 				}else if(ip_hdr->ip_p == ip_protocol_tcp){
-					printf("hello1\n");
 					sr_tcp_hdr_t *tcp_hdr = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 					mapping_type = nat_mapping_tcp;
 					aux_ext = tcp_hdr->dest_port;
-					printf("hello2\n");
 					struct sr_nat_mapping *mapping = sr_nat_lookup_external(&(sr->nat),aux_ext, mapping_type);
-					printf("hello3\n");
 					if(mapping != NULL){
-						printf("hello4\n");
-						sr_nat_translate(sr, packet, len, mapping, nat_trans_ext_to_int);
+						sr_nat_translate(sr, packet, len, mapping, ex2in);
 						sr_handlepacket(sr, packet, len, INBOUND);
 						free(mapping);
 						return;
@@ -324,7 +320,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 					mappings = sr_nat_lookup_internal(&sr->nat, ip_hdr->ip_src, src_port, proto_type);
 				}
-				sr_nat_translate(sr, packet, len, mappings, nat_trans_int_to_ext);
+				sr_nat_translate(sr, packet, len, mappings, in2ex);
 				sr_handlepacket(sr, packet, len, OUTBOUND);
 
 				/* if any mapping found, then it need to be freed */
@@ -368,21 +364,21 @@ void sr_handlepacket_ip(struct sr_instance* sr,
  *
  *---------------------------------------------------------------------*/
 void sr_nat_connection_state(struct sr_nat_connection* conn, sr_tcp_hdr_t *tcp_hdr){
-	if(conn->state == tcp_state_syn_sent){
+	if(conn->state == syn_sent){
 		int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
 		int syncBit = ((tcp_hdr->flag_state >> 1)&1)%2;
 		if(ackBit && syncBit){
-			conn->state = tcp_state_syn_recv;
+			conn->state = syn_recv;
 		}
-	}else if(conn->state == tcp_state_syn_recv){
+	}else if(conn->state == syn_recv){
 		int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
 		if(ackBit){
-			conn->state = tcp_state_established;
+			conn->state = established;
 		}
-	}else if(conn->state == tcp_state_established){
+	}else if(conn->state == established){
 		int finBit = ((tcp_hdr->flag_state)&1)%2;
 		if(finBit){
-			conn->state = tcp_state_closed;
+			conn->state = closed;
 		}
 	}
 }/* end sr_nat_connection_state */
@@ -412,7 +408,7 @@ void sr_nat_translate(struct sr_instance* sr,
 
     struct sr_if *interface = NULL;
 
-    if(trans_type == nat_trans_int_to_ext){
+    if(trans_type == in2ex){
         /* Internal to External */
     	ip_hdr->ip_src = mapping->ip_ext;
 
@@ -437,7 +433,7 @@ void sr_nat_translate(struct sr_instance* sr,
 
         interface = sr_get_interface(sr, OUTBOUND);
 
-    }else if(trans_type == nat_trans_ext_to_int){
+    }else if(trans_type == ex2in){
     	/* External to Internal */
     	ip_hdr->ip_dst = mapping->ip_int;
 

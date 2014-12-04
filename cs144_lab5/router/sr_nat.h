@@ -10,26 +10,26 @@
 
 typedef enum {
   nat_mapping_icmp,
-  nat_mapping_tcp
-  /* nat_mapping_udp, */
+  nat_mapping_tcp,
+  nat_mapping_udp,
 } sr_nat_mapping_type;
 
 typedef enum {
-    nat_trans_int_to_ext,
-    nat_trans_ext_to_int
+    in2ex,
+    ex2in,
 } sr_nat_trans_type;
 
 typedef enum {
-    tcp_state_listen,
-    tcp_state_syn_sent,
-    tcp_state_syn_recv,
-    tcp_state_established,
-    tcp_state_fin_wait1,
-    tcp_state_fin_wait2,
-    tcp_state_close_wait,
-    tcp_state_time_wait,
-    tcp_state_last_ack,
-    tcp_state_closed
+    listen,
+    syn_sent,
+    syn_recv,
+    established,
+    fin_wait1,
+    fin_wait2,
+    close_wait,
+    time_wait,
+    last_ack,
+    closed,
 } sr_tcp_state;
 
 
@@ -64,7 +64,7 @@ struct sr_nat {
   int tcp_establish;
   int tcp_transitory;
 
-  uint32_t auxCounter; /* used to generate source port/ID */
+  uint32_t port_id;
   uint32_t nat_external_ip;
 
   /* threading */
@@ -93,10 +93,6 @@ struct sr_nat_mapping *sr_nat_lookup_internal(struct sr_nat *nat,
    You must free the returned structure if it is not NULL. */
 struct sr_nat_mapping *sr_nat_insert_mapping(struct sr_nat *nat,
   uint32_t ip_int, uint16_t aux_int, sr_nat_mapping_type type );
-
-uint32_t sr_nat_genAux(struct sr_nat *nat);
-
-void print_nat_mappings(struct sr_nat *nat);
 
 struct sr_nat_connection*
 sr_nat_lookup_connection(struct sr_nat* nat, struct sr_nat_mapping* mapping,
