@@ -98,17 +98,13 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
         while(cur){
             /*timeElapsed = curtime - current->last_updated;*/
         	if(cur->type == nat_mapping_icmp){
-				if(nat->icmp_query < curtime - cur->last_updated){
-					/* If current mapping is the first one, then mapping should
-										 * point the next one of the current mapping. Otherwise,
-										 * previous should point the next one of the current mapping. */
-			        if (prev == NULL){
+				if(nat->icmp_query < (curtime - cur->last_updated)){
+
+					if (prev == NULL){
 						nat->mappings = cur->next;
 					}else{
 						prev->next = cur->next;
 					}
-
-			        /* expired mapping should be destroyed and freed */
 					expiredEntry = cur;
 					cur = cur->next;
 					free(expiredEntry);
