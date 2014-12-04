@@ -238,9 +238,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					aux_ext = icmp_t3_hdr->unused;
 
 					struct sr_nat_mapping *mapping = sr_nat_lookup_external(&(sr->nat),aux_ext, mapping_type);
-					printf("hello3\n");
 					if(mapping != NULL){
-						printf("hello4\n");
 						sr_nat_translate(sr, packet, len, mapping, nat_trans_ext_to_int);
 						sr_handlepacket(sr, packet, len, INBOUND);
 						free(mapping);

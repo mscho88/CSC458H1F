@@ -155,7 +155,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
    You must free the returned structure if it is not NULL. */
 struct sr_nat_mapping *sr_nat_lookup_external(struct sr_nat *nat,
         uint16_t aux_ext, sr_nat_mapping_type type ) {
-
+	printf("0\n");
     pthread_mutex_lock(&(nat->lock));
 
     printf("1\n");
@@ -177,8 +177,8 @@ struct sr_nat_mapping *sr_nat_lookup_external(struct sr_nat *nat,
             copy->last_updated = current->last_updated;
             copy->conns = current->conns;
             copy->next = current->next;
-            pthread_mutex_unlock(&(nat->lock));
 
+            pthread_mutex_unlock(&(nat->lock));
             return copy;
         }
         current = current->next;
@@ -210,8 +210,8 @@ struct sr_nat_mapping *sr_nat_lookup_internal(struct sr_nat *nat,
             copy->last_updated = current->last_updated;
             copy->conns = current->conns;
             copy->next = current->next;
-            pthread_mutex_unlock(&(nat->lock));
 
+            pthread_mutex_unlock(&(nat->lock));
             return copy;
         }
         current = current->next;
@@ -334,11 +334,3 @@ struct sr_nat_connection *build_connections(sr_ip_hdr_t *ip_hdr, sr_tcp_hdr_t *t
 	conn->next = NULL;
 	return conn;
 }
-/*
-void add_connections(struct sr_nat_mapping *mappings, struct sr_nat_connection *conn){
-	struct sr_nat_connection conns = mappings->conns;
-	while(conns != NULL){
-		conns = conns->next;
-	}
-	conns->next = conn;
-}*/
