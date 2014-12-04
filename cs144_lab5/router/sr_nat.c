@@ -280,40 +280,34 @@ void print_nat_mappings(struct sr_nat *nat){
     return;
 }
 
+/*---------------------------------------------------------------------
+ * Method: build_connections(sr_ip_hdr_t *, sr_tcp_hdr_t *)
+ * Scope:  Local
+ *
+ * Find the matching connection in the connection list.
+ *
+ *---------------------------------------------------------------------*/
 struct sr_nat_connection* sr_nat_lookup_connection(
   struct sr_nat* nat,
   struct sr_nat_mapping* mapping,
   uint32_t ip_src, uint32_t ip_dest,
   uint32_t src_seq,uint16_t port_dest){
+    assert(mapping);
 
     pthread_mutex_lock(&(nat->lock));
 
-    assert(mapping);
     struct sr_nat_connection* walker = mapping->conns;
     while(walker != NULL){
-    	printf("00\n");
-    	if(walker == NULL){
-			print_addr_ip_int(walker->ip_src);
-			print_addr_ip_int(walker->ip_dest);
-			printf("11\n");
-    	}
-    	printf("22\n");
-        if((ip_src == walker->ip_src) && (ip_dest == walker->ip_dest) && (src_seq == walker->src_seq) && (port_dest == walker->port_dest)){
+    	if((ip_src == walker->ip_src) && (ip_dest == walker->ip_dest) && (src_seq == walker->src_seq) && (port_dest == walker->port_dest)){
             pthread_mutex_unlock(&(nat->lock));
-
             return walker;
         }
         walker = walker->next;
     }
 
-    printf("44\n");
     pthread_mutex_unlock(&(nat->lock));
-
     return NULL;
 }
-
-
-
 
 /*---------------------------------------------------------------------
  * Method: build_connections(sr_ip_hdr_t *, sr_tcp_hdr_t *)
@@ -336,4 +330,12 @@ struct sr_nat_connection *build_connections(sr_ip_hdr_t *ip_hdr, sr_tcp_hdr_t *t
 	conn->state = tcp_state_syn_sent;
 	conn->next = NULL;
 	return conn;
+}
+
+void add_connections(struct sr_nat_mapping mappings, struct sr_nat_connection *conn){
+	struct sr_nat_connection conns = mappings->conns;
+	while(conns != NULL){
+		conns = conns->next;
+	}
+	conns->next = conn;
 }
