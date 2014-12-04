@@ -248,12 +248,12 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				/* if any mapping found
 				 * otherwise, drop the packet .. */
 				if(mapping != NULL){
-					printf("hello\n");
 					sr_nat_translate(sr, packet, len, mapping, nat_trans_ext_to_int);
 					sr_handlepacket(sr, packet, len, INBOUND);
 					free(mapping);
 					return;
 				}
+				printf("hello\n");
 			}else if(strcmp(interface, INBOUND) + strcmp(dest_if->name, INBOUND) == 0){
 				/* Internal to Internal */
 				/* nothing to be set */
