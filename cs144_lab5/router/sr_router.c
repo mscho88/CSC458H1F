@@ -491,10 +491,10 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     sr_icmp_t3_hdr_t *icmp_hdr = (sr_icmp_t3_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
     struct sr_if *src_if = sr_get_interface(sr,interface);
+	memcpy(_packet, packet, length);
 
     /* build ICMP header */
 	if(type == icmp_type0){
-		memcpy(_packet, packet, length);
 		icmp_hdr_2send->unused    = icmp_hdr->unused;
 		icmp_hdr_2send->next_mtu  = icmp_hdr->next_mtu;
 		icmp_hdr_2send->icmp_type = type;
