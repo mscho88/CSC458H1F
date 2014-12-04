@@ -20,7 +20,6 @@ typedef enum {
 } sr_nat_trans_type;
 
 typedef enum {
-    tcp_listen,
     syn_sent,
     syn_recv,
     established,

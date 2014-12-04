@@ -365,21 +365,11 @@ void sr_handlepacket_ip(struct sr_instance* sr,
  *---------------------------------------------------------------------*/
 void sr_nat_connection_state(struct sr_nat_connection* conn, sr_tcp_hdr_t *tcp_hdr){
 	if(conn->state == syn_sent){
-		int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
-		int syncBit = ((tcp_hdr->flag_state >> 1)&1)%2;
-		if(((tcp_hdr->flag_state >> 4)&1)%2 && ((tcp_hdr->flag_state >> 1)&1)%2){
-			conn->state = syn_recv;
-		}
+		if(((tcp_hdr->flag_state >> 4)&1)%2 && ((tcp_hdr->flag_state >> 1)&1)%2){ conn->state = syn_recv; }
 	}else if(conn->state == syn_recv){
-		int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
-		if(((tcp_hdr->flag_state >> 4)&1)%2){
-			conn->state = established;
-		}
+		if(((tcp_hdr->flag_state >> 4)&1)%2){ conn->state = established; }
 	}else if(conn->state == established){
-		int finBit = ((tcp_hdr->flag_state)&1)%2;
-		if(((tcp_hdr->flag_state)&1)%2){
-			conn->state = closed;
-		}
+		if(((tcp_hdr->flag_state)&1)%2){ conn->state = closed; }
 	}
 }/* end sr_nat_connection_state */
 
