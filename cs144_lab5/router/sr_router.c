@@ -247,7 +247,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 				/* if any mapping found
 				 * otherwise, drop the packet .. */
+				printf("hello\n");
 				if(mapping != NULL){
+					printf("hello\n");
 					sr_nat_translate(sr, packet, len, mapping, nat_trans_ext_to_int);
 					sr_handlepacket(sr, packet, len, INBOUND);
 					free(mapping);
