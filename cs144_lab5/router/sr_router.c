@@ -481,7 +481,6 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     int length = type == icmp_type0 ? len : sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 
     uint8_t *_packet = (uint8_t*) malloc(length);
-    memset(_packet,0,length);
 
     sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *) _packet;
     sr_ip_hdr_t *ip_hdr_2send = (sr_ip_hdr_t *) (_packet + sizeof(sr_ethernet_hdr_t));
@@ -530,10 +529,13 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     icmp_hdr_2send->icmp_sum  = 0;
     icmp_hdr_2send->icmp_sum  = cksum(icmp_hdr_2send, ntohs(ip_hdr_2send->ip_len) - sizeof(sr_ip_hdr_t));
 
+    print_hdr_eth(eth_hdr);
     print_hdr_eth(eth_hdr_2send);
-    print_hdr_ip(ip_hdr_2send);
-    print_hdr_icmp(icmp_hdr_2send);
-    sr_send_packet(sr, _packet, length, interface);
+	print_hdr_ip(ip_hdr);
+	print_hdr_ip(ip_hdr_2send);
+	print_hdr_icmp(icmp_hdr);
+	print_hdr_icmp(icmp_hdr_2send);
+	sr_send_packet(sr, _packet, length, interface);
 
     free(_packet);
 }/* end sr_send_icmp */
