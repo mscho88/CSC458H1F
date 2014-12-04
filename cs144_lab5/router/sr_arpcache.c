@@ -32,11 +32,11 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 				request->times_sent++;
 				char* iface1 = sr_longest_prefix_match(sr, request->ip);
 				if(iface1 == NULL){
-					fprintf(stderr,"Failed\n");
+					continue;
 				}
 				struct sr_if* iface2 = sr_get_interface(sr, iface1);
 				if(!iface2){
-					fprintf(stderr,"Failed\n");
+					continue;
 				}
 				uint8_t *_packet = (uint8_t *)malloc(42);
 
