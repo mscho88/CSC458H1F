@@ -224,10 +224,15 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}
 		/* end Checksum */
 	}
-	printf("111\n");
 	if(dest_if->name){
+		printf("111\n");
+
 		if(sr->nat_active){
+			printf("222\n");
+
 			if(strcmp(interface, OUTBOUND) + strcmp(dest_if->name, OUTBOUND) == 0){
+				printf("333\n");
+
 				/* External to External */
 				sr_nat_mapping_type mapping_type;
 				uint16_t aux_ext;
@@ -420,7 +425,7 @@ void sr_nat_translate(struct sr_instance* sr,
             tcp_hdr->checksum = 0;
             tcp_hdr->checksum = tcp_cksum(packet,len);
 		}
-    	printf("222\n");
+
         interface = sr_get_interface(sr, OUTBOUND);
 
     }else if(trans_type == nat_trans_ext_to_int){
@@ -445,7 +450,7 @@ void sr_nat_translate(struct sr_instance* sr,
             tcp_hdr->checksum = 0;
             tcp_hdr->checksum  = tcp_cksum(packet,len);
         }
-    	printf("333\n");
+
         interface = sr_get_interface(sr, INBOUND);
 
     }
