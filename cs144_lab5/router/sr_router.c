@@ -224,6 +224,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}
 		/* end Checksum */
 	}
+
 	if(dest_if->name){
 		if(sr->nat_active){
 			if(strcmp(interface, OUTBOUND) + strcmp(dest_if->name, OUTBOUND) == 0){
@@ -325,7 +326,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				return;
 			}
 			else if (strcmp(interface, OUTBOUND) + strcmp(matching_iface, INBOUND) == 0){
-
 				sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 				return;
 			}
