@@ -227,10 +227,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	}
 
 	if(dest_if->name){
-		printf("hello??\n");
-
 		if(sr->nat_active){
 			if(strcmp(interface, OUTBOUND) + strcmp(dest_if->name, OUTBOUND) == 0){
+				printf("hello\n");
 				/* External to External */
 				sr_nat_mapping_type mapping_type;
 				uint16_t aux_ext;
@@ -275,8 +274,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			sr_send_icmp(sr, packet, len, icmp_code3, icmp_type3, interface);
 		}
 	}else{
-		printf("hello world\n");
-
 		/* if there is any routing table for the packet .. */
 		if(sr->routing_table == 0){
 			sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
