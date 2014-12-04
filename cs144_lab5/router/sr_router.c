@@ -224,10 +224,11 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			return;
 		}
 		/* end Checksum */
-		printf("hello??\n");
 	}
 
 	if(dest_if->name){
+		printf("hello??\n");
+
 		if(sr->nat_active){
 			if(strcmp(interface, OUTBOUND) + strcmp(dest_if->name, OUTBOUND) == 0){
 				/* External to External */
@@ -259,8 +260,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				/* nothing to be set */
 			}else{
 				/* Internal/External to External/Internal respectively */
-				printf("hello world\n");
-
 				sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 			}
 		}
@@ -276,6 +275,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			sr_send_icmp(sr, packet, len, icmp_code3, icmp_type3, interface);
 		}
 	}else{
+		printf("hello world\n");
 
 		/* if there is any routing table for the packet .. */
 		if(sr->routing_table == 0){
