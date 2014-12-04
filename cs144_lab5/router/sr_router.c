@@ -546,7 +546,7 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     sr_send_packet(sr,_packet, length,interface);
 
     free(_packet);
-}
+}/* end sr_send_icmp */
 
 /*---------------------------------------------------------------------
  * Method: sr_longest_prefix_match(struct sr_instance *, uint32_t)

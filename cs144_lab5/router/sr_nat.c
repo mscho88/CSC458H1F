@@ -160,19 +160,14 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
    You must free the returned structure if it is not NULL. */
 struct sr_nat_mapping *sr_nat_lookup_external(struct sr_nat *nat,
         uint16_t aux_ext, sr_nat_mapping_type type ) {
-	printf("0\n");
     pthread_mutex_lock(&(nat->lock));
 
-    printf("1\n");
     /* handle lookup here, malloc and assign to copy */
     struct sr_nat_mapping *copy = NULL;
 
     struct sr_nat_mapping *current = nat->mappings;
-    printf("2\n");
     while(current){
-    	printf("3\n");
         if(current->type == type && current->aux_ext == aux_ext){
-        	printf("4\n");
             copy = malloc(sizeof(struct sr_nat_mapping));
             copy->type = current->type;
             copy->ip_int = current->ip_int;
@@ -264,28 +259,6 @@ uint32_t sr_nat_genAux(struct sr_nat *nat){
     retn = nat->auxCounter + 1024;
     nat->auxCounter = ((nat->auxCounter+1)%64500);
     return retn;
-}
-
-
-void print_nat_mappings(struct sr_nat *nat){
-
-    assert(nat);
-
-    struct sr_nat_mapping *mapping = nat->mappings;
-    while(mapping){
-        printf("************************\n");
-        printf("\nip_int: ");
-        print_addr_ip_int(htonl(mapping->ip_int));
-        printf("\naux_int: %d\n", mapping->aux_int);
-        printf("\nip_ext: ");
-        print_addr_ip_int(htonl(mapping->ip_ext));
-        printf("\naux_ext: %d\n", mapping->aux_ext);
-        printf("\n type: %i",mapping->type);
-
-        mapping = mapping->next;
-    }
-
-    return;
 }
 
 /*---------------------------------------------------------------------
