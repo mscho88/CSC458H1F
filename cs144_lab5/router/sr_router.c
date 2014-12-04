@@ -261,6 +261,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				/* Internal to Internal */
 				/* nothing to be set */
 			}else{
+				printf("hello\n");
 				/* Internal/External to External/Internal respectively */
 				sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 			}
