@@ -118,7 +118,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
                 currentConns = cur->conns;
                 while(currentConns){
 					timeElapsed = curtime - currentConns->last_updated;
-					if(currentConns->state == tcp_state_established && timeElapsed > nat->tcp_establish){
+					if(currentConns->state == tcp_state_established && curtime - currentConns->last_updated > nat->tcp_establish){
 						if(wasteConns){
 							wasteConns->next = currentConns->next;
 						}else{
@@ -132,7 +132,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
 								}
 							}
 						}
-					}else if (timeElapsed > nat->tcp_transitory){
+					}else if (curtime - currentConns->last_updated > nat->tcp_transitory){
 						if(wasteConns){
 							wasteConns->next = currentConns->next;
 						}else{
