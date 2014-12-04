@@ -191,10 +191,11 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	ip_hdr->ip_sum = orig_sum;
 	/* end Checksum */
 
-	printf("hello??\n");
+
 	struct sr_if* dest_if = sr_find_interface(sr, ip_hdr->ip_dst);
 
 	if(ip_hdr->ip_p == ip_protocol_icmp){
+		printf("hello??\n");
 		/* Sanity Check */
 		if (len < sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t)){
 			return;
