@@ -220,7 +220,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		sr_tcp_hdr_t *tcp_hdr = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
 		/* Checksum */
-		if(tcp_cksum(packet, len) != tcp_hdr->checksum){
+		if(tcp_cksum(packet,len) != tcp_hdr->checksum){
 			return;
 		}
 		/* end Checksum */
@@ -270,7 +270,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			sr_icmp_hdr_t *icmp_hdr = (sr_icmp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 			if(icmp_hdr->icmp_type == 8){
 				if(icmp_hdr->icmp_code == 0){
-					printf("11\n");
 					sr_send_icmp(sr, packet, len, icmp_code0, icmp_type0, interface);
 				}
 			}
@@ -529,6 +528,9 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     icmp_hdr_2send->icmp_sum  = 0;
     icmp_hdr_2send->icmp_sum  = cksum(icmp_hdr_2send, ntohs(ip_hdr_2send->ip_len) - sizeof(sr_ip_hdr_t));
 
+    print_hdr_eth(eth_hdr_2send);
+    print_hdr_ip(ip_hdr_2send);
+    print_hdr_icmp(icmp_hdr_2send);
     sr_send_packet(sr, _packet, length, interface);
 
     free(_packet);
