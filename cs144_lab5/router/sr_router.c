@@ -528,7 +528,7 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     icmp_hdr_2send->icmp_sum  = 0;
     icmp_hdr_2send->icmp_sum  = cksum(icmp_hdr_2send, ntohs(ip_hdr_2send->ip_len) - sizeof(sr_ip_hdr_t));
 
-    printf("packet size = %d(%d)\n", sizeof(packet), len);
+    printf("packet size = %i(%d)\n", sizeof(packet), len);
     print_hdr_eth(eth_hdr);
     print_hdr_eth(eth_hdr_2send);
 	print_hdr_ip(ip_hdr);
