@@ -244,7 +244,6 @@ struct sr_nat_mapping *sr_nat_insert_mapping(struct sr_nat *nat,
     mapping->next = nat->mappings;
     nat->mappings = mapping;
 
-
     pthread_mutex_unlock(&(nat->lock));
     return mapping;
 }

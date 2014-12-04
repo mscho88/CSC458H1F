@@ -302,7 +302,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					sr_tcp_hdr_t *tcp_hdr = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 					src_port = tcp_hdr->src_port;
 					proto_type = nat_mapping_tcp;
+					printf("11\n");
 					conn = build_connections(ip_hdr, tcp_hdr);
+					printf("22\n");
 				}
 
 				/* If there any mapping regarding to the src IP address, insert it to mappings */
