@@ -191,6 +191,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	ip_hdr->ip_sum = orig_sum;
 	/* end Checksum */
 
+	printf("hello??\n");
 	struct sr_if* dest_if = sr_find_interface(sr, ip_hdr->ip_dst);
 
 	if(ip_hdr->ip_p == ip_protocol_icmp){
