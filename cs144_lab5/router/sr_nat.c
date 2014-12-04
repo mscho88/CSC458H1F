@@ -98,7 +98,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
         while(cur){
             /*timeElapsed = curtime - current->last_updated;*/
         	if(cur->type == nat_mapping_icmp){
-				if(nat->icmp_query < (curtime - cur->last_updated)){
+				if((nat->icmp_query) < (curtime - cur->last_updated)){
 					if (prev == NULL){
 						nat->mappings = cur->next;
 					}else{
