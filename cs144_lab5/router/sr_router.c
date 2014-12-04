@@ -220,6 +220,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 		/* Checksum */
 		if(tcp_cksum(packet,len) != tcp_hdr->checksum){
+			printf("failed\n");
 			return;
 		}
 		/* end Checksum */
