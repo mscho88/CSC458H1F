@@ -81,63 +81,67 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
         pthread_mutex_lock(&(nat->lock));
 
         time_t curtime = time(NULL);
-        /* handle periodic tasks here */
 
-        if (curtime == ((time_t)-1)){
+        /*if (curtime == ((time_t)-1)){
             printf("Failure to compute the current time.\n");
             return NULL;
-        }
+        }*/
 
-        /* loop through the nat and see if anything expired.  */
-        unsigned int timeElapsed;
-        struct sr_nat_mapping *expiredEntry = NULL;
-        struct sr_nat_mapping *previous     = NULL;
+        //unsigned int timeElapsed;
+        //struct sr_nat_mapping *exp_entry = NULL;
+        struct sr_nat_mapping *prev     = NULL;
+        struct sr_nat_mapping *cur = nat->mappings;
+
         struct sr_nat_connection *currentConns  = NULL;
         struct sr_nat_connection *wasteConns    = NULL;
-        struct sr_nat_mapping *current = nat->mappings;
 
-        while(current){
+        while(cur){
             /*timeElapsed = curtime - current->last_updated;*/
+        	if(cur->type == nat_mapping_icmp){
+				if(nat->icmp_query < curtime - cur->last_updated){
+					/* If current mapping is the first one, then mapping should
+					 * point the next one of the current mapping. Otherwise,
+					 * previous should point the next one of the current mapping. */
+			        if (prev == NULL){
+						nat->mappings = cur->next;
+					}else{
+						prev->next = cur->next;
+					}
 
-            if(nat->icmp_query < (curtime - current->last_updated) && current->type == nat_mapping_icmp){
-				if (previous == NULL){
-                    nat->mappings = current->next;
-                }else{
-                    previous->next = current->next;
-                }
-                expiredEntry = current;
-                current = current->next;
-                free(expiredEntry);
-                continue;
-            }else if(current->type == nat_mapping_tcp){
+			        /* expired mapping should be destroyed and freed */
+			        struct sr_nat_mapping *exp_entry = cur;
+					cur = cur->next;
+					free(exp_entry);
+					continue;
+				}
+            }else if(cur->type == nat_mapping_tcp){
                 printf("TCP is checked for timeout\n");
-                currentConns = current->conns;
+                currentConns = cur->conns;
                 while(currentConns){
-					timeElapsed = curtime - currentConns->last_updated;
-					if(currentConns->state == tcp_state_established && timeElapsed > nat->tcp_establish){
+					if(currentConns->state == tcp_state_established && curtime - currentConns->last_updated > nat->tcp_establish){
 						if(wasteConns){
 							wasteConns->next = currentConns->next;
 						}else{
-							current->conns = currentConns->next;
-							if(current->conns == NULL){
+							cur->conns = currentConns->next;
+							if(cur->conns == NULL){
 								/* delete the entry */
-								if (previous == NULL){
-									nat->mappings = current->next;
+								if (prev == NULL){
+									nat->mappings = cur->next;
 								}else{
-									previous->next = current->next;
+									prev->next = cur->next;
 								}
 							}
 						}
-					}else if (timeElapsed > nat->tcp_transitory){
+					}else if (curtime - currentConns->last_updated > nat->tcp_transitory){
 						if(wasteConns){
 							wasteConns->next = currentConns->next;
 						}else{
-							current->conns = currentConns->next;
-							if(current->conns == NULL){
-								if (previous == NULL){
-									nat->mappings = current->next;
+							cur->conns = currentConns->next;
+							if(cur->conns == NULL){
+								if (prev == NULL){
+									nat->mappings = cur->next;
 								}else{
-									previous->next = current->next;
+									prev->next = cur->next;
 								}
 							}
 						}
@@ -148,8 +152,8 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
                 }
             }else{
             	/* this entry is not expired */
-            	previous = current;
-            	current = current->next;
+            	prev = cur;
+            	cur = cur->next;
             }
         }
         pthread_mutex_unlock(&(nat->lock));
