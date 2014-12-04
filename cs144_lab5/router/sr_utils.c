@@ -7,7 +7,7 @@
 
 uint16_t tcp_cksum(const void *packet, int len){
     printf("HEX: %x\n",cksum(packet, len));
-
+    printf("111\n");
     sr_tcp_pseudo_hdr_t *pseudo_hdr;
     unsigned char*  buf;
     unsigned int total_len = 0;
@@ -36,7 +36,7 @@ uint16_t tcp_cksum(const void *packet, int len){
     tcp_hdr->checksum = orig_sum;
     free(pseudo_hdr);
     free(buf);
-
+    printf("222\n");
     return checksum;
 }
 

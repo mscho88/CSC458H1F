@@ -51,7 +51,7 @@ int sr_nat_destroy(struct sr_nat *nat){
     struct sr_nat_mapping *wasteMapping;
     struct sr_nat_mapping *current = nat->mappings;
 
-    printf("111\n");
+
     while(current)
     {
         currentConns = current->conns;
@@ -65,7 +65,7 @@ int sr_nat_destroy(struct sr_nat *nat){
         current = current->next;
         free(wasteMapping);
     }
-    printf("222\n");
+
 
     pthread_kill(nat->thread, SIGKILL);
     return pthread_mutex_destroy(&(nat->lock)) &&
