@@ -290,8 +290,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		}
 
 		if(sr->nat_active){
-			printf("111\n");
-
 			if (strcmp(interface, INBOUND) == 0 && strcmp(matching_iface, OUTBOUND) == 0){
 				printf("111\n");
 
@@ -328,12 +326,14 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				return;
 			}
 			else if (strcmp(interface, OUTBOUND) + strcmp(matching_iface, INBOUND) == 0){
-				printf("111\n");
+				printf("222\n");
 
 				sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 				return;
 			}
 		}
+		printf("333\n");
+
 		sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
 		struct sr_arpentry* arp_cache = sr_arpcache_lookup(&sr->cache, ip_hdr->ip_dst);
 		if(arp_cache == NULL){
