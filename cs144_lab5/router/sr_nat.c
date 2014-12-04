@@ -94,7 +94,6 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 
     struct sr_nat *nat = (struct sr_nat *)nat_ptr;
     while (1) {
-    	printf("11\n");
         sleep(1.0);
         pthread_mutex_lock(&(nat->lock));
 
@@ -118,7 +117,9 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 
             }else if(cur_map->type == nat_mapping_tcp){
                 cur_conn = cur_map->conns;
+                printf("11\n");
                 while(cur_conn){
+                	printf("22\n");
 					if(nat->tcp_establish < curtime - cur_conn->last_updated && cur_conn->state == tcp_state_established){
 						if(prev_conn){
 							prev_conn->next = cur_conn->next;
