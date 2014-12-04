@@ -94,6 +94,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 
     struct sr_nat *nat = (struct sr_nat *)nat_ptr;
     while (1) {
+    	printf("11\n");
         sleep(1.0);
         pthread_mutex_lock(&(nat->lock));
 
