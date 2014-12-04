@@ -492,6 +492,21 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
 
     struct sr_if *src_if = sr_get_interface(sr,interface);
 
+    /* build ICMP header */
+	if(type == icmp_type0){
+		memcpy(_packet, packet, length);
+		icmp_hdr_2send->unused    = icmp_hdr->unused;
+		icmp_hdr_2send->next_mtu  = icmp_hdr->next_mtu;
+		icmp_hdr_2send->icmp_type = type;
+		icmp_hdr_2send->icmp_code = code;
+	}else if(type == icmp_type3 || type == icmp_type11){
+		memcpy(icmp_hdr_2send->data, ip_hdr, ICMP_DATA_SIZE);
+		icmp_hdr_2send->icmp_type = type;
+		icmp_hdr_2send->icmp_code = code;
+	}else{
+		return;
+	}
+
     /* build Ethernet header */
 	memcpy(eth_hdr_2send->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
 	memcpy(eth_hdr_2send->ether_shost, eth_hdr->ether_dhost, ETHER_ADDR_LEN);
@@ -509,26 +524,10 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
 	ip_hdr_2send->ip_dst = ip_hdr->ip_src;
 	ip_hdr_2send->ip_src = src_if->ip;
 
-    /* build ICMP header */
-    if(type == icmp_type0){
-        /*memcpy(_packet, packet, length);*/
-        icmp_hdr_2send->unused    = icmp_hdr->unused;
-        icmp_hdr_2send->next_mtu  = icmp_hdr->next_mtu;
-        icmp_hdr_2send->icmp_type = type;
-        icmp_hdr_2send->icmp_code = code;
-    }else if(type == icmp_type3 || type == icmp_type11){
-        memcpy(icmp_hdr_2send->data, ip_hdr, ICMP_DATA_SIZE);
-        icmp_hdr_2send->icmp_type = type;
-        icmp_hdr_2send->icmp_code = code;
-    }else{
-        return;
-    }
-
     ip_hdr_2send->ip_sum = 0;
     icmp_hdr_2send->icmp_sum  = 0;
-
-    icmp_hdr_2send->icmp_sum  = cksum(icmp_hdr_2send,ntohs(ip_hdr_2send->ip_len) - sizeof(sr_ip_hdr_t));
     ip_hdr_2send->ip_sum      = cksum((_packet + sizeof(sr_ethernet_hdr_t)), sizeof(sr_ip_hdr_t));
+    icmp_hdr_2send->icmp_sum  = cksum(icmp_hdr_2send,ntohs(ip_hdr_2send->ip_len) - sizeof(sr_ip_hdr_t));
 
     sr_send_packet(sr,_packet, length,interface);
 
