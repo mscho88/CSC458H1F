@@ -478,7 +478,7 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
 	assert(packet);
 	assert(interface);
 
-    int length = type == icmp_type0 ? len : sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
+    int length = type == icmp_type0 ? len : sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_hdr_t);
 
     uint8_t *_packet = (uint8_t*) malloc(length);
 
