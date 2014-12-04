@@ -220,7 +220,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		sr_tcp_hdr_t *tcp_hdr = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
 		/* Checksum */
-		if(tcp_cksum(packet,len) != tcp_hdr->checksum){
+		if(tcp_cksum(packet, len) != tcp_hdr->checksum){
 			return;
 		}
 		/* end Checksum */
@@ -481,6 +481,7 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     int length = type == icmp_type0 ? len : sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t) + sizeof(sr_icmp_t3_hdr_t);
 
     uint8_t *_packet = (uint8_t*) malloc(length);
+    memset(_packet,0,length);
 
     sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *) _packet;
     sr_ip_hdr_t *ip_hdr_2send = (sr_ip_hdr_t *) (_packet + sizeof(sr_ethernet_hdr_t));
