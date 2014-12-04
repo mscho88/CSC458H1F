@@ -314,9 +314,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					mappings = sr_nat_lookup_internal(&sr->nat, ip_hdr->ip_src, src_port, proto_type);
 				}
 				sr_nat_translate(sr, packet, len, mappings, nat_trans_int_to_ext);
-				printf("111\n");
 				sr_handlepacket(sr, packet, len, OUTBOUND);
-				printf("222\n");
 
 				/* if any mapping found, then it need to be freed */
 				if(mappings){
@@ -403,21 +401,31 @@ void sr_nat_translate(struct sr_instance* sr,
     sr_tcp_hdr_t *tcp_hdr  = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
     struct sr_if *interface = NULL;
+	printf("111\n");
+
     if(trans_type == nat_trans_int_to_ext){
         /* Internal to External */
     	ip_hdr->ip_src = mapping->ip_ext;
+    	printf("222\n");
+
     	if(mapping->type == nat_mapping_icmp){
         	icmp_hdr->unused = mapping->aux_ext;
         	icmp_hdr->icmp_sum  = 0;
         	icmp_hdr->icmp_sum  = cksum(icmp_hdr, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t));
         }else if(mapping->type == nat_mapping_tcp){
+        	printf("333\n");
+
         	uint32_t src_seq = tcp_hdr->ack_num - 1;
             struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_dst, src_seq, tcp_hdr->dest_port);
+        	printf("444\n");
+
             if(conn){
             	sr_nat_connection_state(conn, tcp_hdr);
 				conn->src_seq = tcp_hdr->sequence_num;
 				conn->last_updated = time(NULL);
 			}
+        	printf("555\n");
+
             tcp_hdr->src_port = mapping->aux_ext;
             tcp_hdr->checksum = 0;
             tcp_hdr->checksum = tcp_cksum(packet,len);
