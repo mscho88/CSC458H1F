@@ -158,12 +158,16 @@ struct sr_nat_mapping *sr_nat_lookup_external(struct sr_nat *nat,
 
     pthread_mutex_lock(&(nat->lock));
 
+    printf("1\n");
     /* handle lookup here, malloc and assign to copy */
     struct sr_nat_mapping *copy = NULL;
 
     struct sr_nat_mapping *current = nat->mappings;
+    printf("2\n");
     while(current){
+    	printf("3\n");
         if(current->type == type && current->aux_ext == aux_ext){
+        	printf("4\n");
             copy = malloc(sizeof(struct sr_nat_mapping));
             copy->type = current->type;
             copy->ip_int = current->ip_int;
@@ -181,7 +185,6 @@ struct sr_nat_mapping *sr_nat_lookup_external(struct sr_nat *nat,
     }
 
     pthread_mutex_unlock(&(nat->lock));
-    printf("Nothing matches aux %i\n", aux_ext);
     return copy;
 }
 
