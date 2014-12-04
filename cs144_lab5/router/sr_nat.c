@@ -147,6 +147,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
             }
         }
         pthread_mutex_unlock(&(nat->lock));
+        printf("1");
     }
     return NULL;
 }
