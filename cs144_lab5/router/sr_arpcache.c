@@ -39,7 +39,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 				if(!iface2){
 					fprintf(stderr,"Failed\n");
 				}
-				uint8_t *_packet = (uint8_t *)malloc(42);
+				uint8_t *_packet = (uint8_t *)malloc(length);
 
 				sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *) _packet;
 
@@ -60,7 +60,7 @@ void sr_arpcache_sweepreqs(struct sr_instance *sr) {
 				memcpy(arp_hdr->ar_tha, zeros_addr, ETHER_ADDR_LEN);
 				arp_hdr->ar_tip = request->ip;
 
-				sr_send_packet(sr, _packet, 42, iface2->name);
+				sr_send_packet(sr, _packet, length, iface2->name);
 				free(_packet);
 			}
 		}else{
