@@ -71,7 +71,17 @@ int sr_nat_destroy(struct sr_nat *nat){
     return pthread_mutex_destroy(&(nat->lock)) &&
         pthread_mutexattr_destroy(&(nat->attr));
 }
-
+/*---------------------------------------------------------------------
+ * Method: sr_dismiss_mapping(struct sr_nat *, struct sr_nat_mapping *,
+ * 								struct sr_nat_mapping *);
+ * Scope:  Local
+ *
+ * If cur is the first mapping, then prev must be NULL. Hence,
+ * nat_mappings should be the next element of the cureent one.
+ * Otherwise, the next of prev should point the next mapping of
+ * the current one.
+ *
+ *---------------------------------------------------------------------*/
 void sr_dismiss_mapping(struct sr_nat *nat, struct sr_nat_mapping *prev_map,struct sr_nat_mapping *cur_map){
 	if (prev_map == NULL){
 		nat->mappings = cur_map->next;
@@ -79,6 +89,7 @@ void sr_dismiss_mapping(struct sr_nat *nat, struct sr_nat_mapping *prev_map,stru
 		prev_map->next = cur_map->next;
 	}
 }
+
 void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 
     struct sr_nat *nat = (struct sr_nat *)nat_ptr;
@@ -96,13 +107,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 
         while(cur_map){
         	if(cur_map->type == nat_mapping_icmp && nat->icmp_query < (curtime - cur_map->last_updated)){
-        		/* If cur is the first mapping, then prev must be NULL.
-        		 * Hence, nat_mappings should be the next element of the
-				 * cureent one. Otherwise, the next of prev should point
-				 * the next mapping of the current one. */
         		sr_dismiss_mapping(nat, prev_map, cur_map);
-				/*if (prev_map == NULL){ nat->mappings = cur_map->next; }
-				else{ prev_map->next = cur_map->next; }*/
 
 				/* Destroy the current mapping. */
 		        struct sr_nat_mapping *exp_entry = cur_map;

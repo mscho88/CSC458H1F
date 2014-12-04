@@ -463,7 +463,7 @@ void sr_nat_translate(struct sr_instance* sr,
 /*---------------------------------------------------------------------
  * Method: sr_send_icmp(struct sr_instance *, uint8_t *,
         				unsigned int , uint8_t , uint8_t ,
-        				char* ){
+        				char* );
  * Scope:  Global
  *
  * Fill the Ethernet, IP and ICMP header and send the packet. The

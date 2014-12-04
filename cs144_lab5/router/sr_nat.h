@@ -104,6 +104,7 @@ sr_nat_lookup_connection(struct sr_nat* nat, struct sr_nat_mapping* mapping,
 
 
 struct sr_nat_connection *build_connections(sr_ip_hdr_t *, sr_tcp_hdr_t *);
+void sr_dismiss_mapping(struct sr_nat *, struct sr_nat_mapping *,struct sr_nat_mapping *);
 
 
 #endif
