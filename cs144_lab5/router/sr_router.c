@@ -272,6 +272,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			sr_icmp_hdr_t *icmp_hdr = (sr_icmp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 			if(icmp_hdr->icmp_type == 8){
 				if(icmp_hdr->icmp_code == 0){
+					printf("hello\n");
 					sr_send_icmp(sr, packet, len, icmp_code0, icmp_type0, interface);
 				}
 			}
