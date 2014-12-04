@@ -310,12 +310,10 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					mappings = sr_nat_insert_mapping(&sr->nat, ip_hdr->ip_src, src_port, proto_type);
 					/* If the protocol is TCP, then connections must be set.
 					 * Otherwise, it is ICMP where connections must be set to NULL. */
-					/*mappings->conns = proto_type == nat_mapping_tcp ? conn : NULL;*/
-					proto_type == nat_mapping_tcp ? add_connections(mappings, conn) : NULL;
+					mappings->conns = proto_type == nat_mapping_tcp ? conn : NULL;
 
 					mappings = sr_nat_lookup_internal(&sr->nat, ip_hdr->ip_src, src_port, proto_type);
 				}
-				/** TODO : Segmentation Fault **/
 				sr_nat_translate(sr, packet, len, mappings, nat_trans_int_to_ext);
 				sr_handlepacket(sr, packet, len, OUTBOUND);
 
