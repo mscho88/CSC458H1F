@@ -493,8 +493,8 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     struct sr_if *src_if = sr_get_interface(sr, interface);
 
     /* build Ethernet header */
-	memcpy(eth_hdr_2send->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
-	memcpy(eth_hdr_2send->ether_shost, eth_hdr->ether_dhost, ETHER_ADDR_LEN);
+	memcpy(eth_hdr_2send->ether_dhost, eth_hdr->ether_dhost, ETHER_ADDR_LEN);
+	memcpy(eth_hdr_2send->ether_shost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
 	eth_hdr_2send->ether_type = htons(ethertype_ip);
 
 	/* build IP header */
