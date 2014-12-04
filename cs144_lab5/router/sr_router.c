@@ -229,7 +229,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 	if(dest_if->name){
 		if(sr->nat_active){
 			if(strcmp(interface, OUTBOUND) + strcmp(dest_if->name, OUTBOUND) == 0){
-				printf("hello\n");
 				/* External to External */
 				sr_nat_mapping_type mapping_type;
 				uint16_t aux_ext;
@@ -249,6 +248,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				/* if any mapping found
 				 * otherwise, drop the packet .. */
 				if(mapping != NULL){
+					printf("hello\n");
 					sr_nat_translate(sr, packet, len, mapping, nat_trans_ext_to_int);
 					sr_handlepacket(sr, packet, len, INBOUND);
 					free(mapping);
