@@ -143,6 +143,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 					prev_conn = cur_conn;
 					cur_conn = cur_conn->next;
                 }
+                printf("33\n");
             }else{
             	prev_map = cur_map;
             	cur_map = cur_map->next;
