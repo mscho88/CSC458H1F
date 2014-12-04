@@ -146,8 +146,8 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
             	cur_map = cur_map->next;
             }
         }
-        pthread_mutex_unlock(&(nat->lock));
         printf("1");
+        pthread_mutex_unlock(&(nat->lock));
     }
     return NULL;
 }
