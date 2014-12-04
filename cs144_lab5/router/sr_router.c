@@ -300,7 +300,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					proto_type = nat_mapping_icmp;
 				}else if(ip_hdr->ip_p == ip_protocol_tcp){
 					sr_tcp_hdr_t *tcp_hdr = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
-					src_port = 1050;/*tcp_hdr->src_port;*/
+					src_port = tcp_hdr->src_port;
+					printf("%i\n", tcp_hdr->src_port);
 					proto_type = nat_mapping_tcp;
 					conn = build_connections(ip_hdr, tcp_hdr);
 				}
