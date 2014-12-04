@@ -225,14 +225,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		/* end Checksum */
 	}
 	if(dest_if->name){
-		printf("111\n");
-
 		if(sr->nat_active){
-			printf("222\n");
-
 			if(strcmp(interface, OUTBOUND) + strcmp(dest_if->name, OUTBOUND) == 0){
-				printf("333\n");
-
 				/* External to External */
 				sr_nat_mapping_type mapping_type;
 				uint16_t aux_ext;
@@ -277,6 +271,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			sr_send_icmp(sr, packet, len, icmp_code3, icmp_type3, interface);
 		}
 	}else{
+		printf("111\n");
+
 		/* if there is any routing table for the packet .. */
 		if(sr->routing_table == 0){
 			sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
@@ -293,6 +289,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			sr_send_icmp(sr, packet, len, icmp_type11, icmp_code0, interface);
 			return;
 		}
+		printf("222\n");
 
 		if(sr->nat_active){
 			if (strcmp(interface, INBOUND) == 0 && strcmp(matching_iface, OUTBOUND) == 0){
