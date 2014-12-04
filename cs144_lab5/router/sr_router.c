@@ -236,27 +236,33 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					sr_icmp_t3_hdr_t *icmp_t3_hdr = (sr_icmp_t3_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 					mapping_type = nat_mapping_icmp;
 					aux_ext = icmp_t3_hdr->unused;
+
+					struct sr_nat_mapping *mapping = sr_nat_lookup_external(&(sr->nat),aux_ext, mapping_type);
+					printf("hello3\n");
+					if(mapping != NULL){
+						printf("hello4\n");
+						sr_nat_translate(sr, packet, len, mapping, nat_trans_ext_to_int);
+						sr_handlepacket(sr, packet, len, INBOUND);
+						free(mapping);
+						return;
+					}
 				}else if(ip_hdr->ip_p == ip_protocol_tcp){
 					printf("hello1\n");
 					sr_tcp_hdr_t *tcp_hdr = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 					mapping_type = nat_mapping_tcp;
 					aux_ext = tcp_hdr->dest_port;
 					printf("hello2\n");
+					struct sr_nat_mapping *mapping = sr_nat_lookup_external(&(sr->nat),aux_ext, mapping_type);
+					printf("hello3\n");
+					if(mapping != NULL){
+						printf("hello4\n");
+						sr_nat_translate(sr, packet, len, mapping, nat_trans_ext_to_int);
+						sr_handlepacket(sr, packet, len, INBOUND);
+						free(mapping);
+						return;
+					}
 				}
 
-				/* look for any mapping */
-				struct sr_nat_mapping *mapping = sr_nat_lookup_external(&(sr->nat),aux_ext, mapping_type);
-
-				/* if any mapping found
-				 * otherwise, drop the packet .. */
-				printf("hello3\n");
-				if(mapping != NULL){
-					printf("hello4\n");
-					sr_nat_translate(sr, packet, len, mapping, nat_trans_ext_to_int);
-					sr_handlepacket(sr, packet, len, INBOUND);
-					free(mapping);
-					return;
-				}
 			}else if(strcmp(interface, INBOUND) + strcmp(dest_if->name, INBOUND) == 0){
 				/* Internal to Internal */
 				/* nothing to be set */
