@@ -367,17 +367,17 @@ void sr_nat_connection_state(struct sr_nat_connection* conn, sr_tcp_hdr_t *tcp_h
 	if(conn->state == syn_sent){
 		int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
 		int syncBit = ((tcp_hdr->flag_state >> 1)&1)%2;
-		if(ackBit && syncBit){
+		if(((tcp_hdr->flag_state >> 4)&1)%2 && ((tcp_hdr->flag_state >> 1)&1)%2){
 			conn->state = syn_recv;
 		}
 	}else if(conn->state == syn_recv){
 		int ackBit = ((tcp_hdr->flag_state >> 4)&1)%2;
-		if(ackBit){
+		if(((tcp_hdr->flag_state >> 4)&1)%2){
 			conn->state = established;
 		}
 	}else if(conn->state == established){
 		int finBit = ((tcp_hdr->flag_state)&1)%2;
-		if(finBit){
+		if(((tcp_hdr->flag_state)&1)%2){
 			conn->state = closed;
 		}
 	}
