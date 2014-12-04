@@ -87,8 +87,8 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
             return NULL;
         }*/
 
-        //unsigned int timeElapsed;
-        //struct sr_nat_mapping *exp_entry = NULL;
+        /*unsigned int timeElapsed;
+        struct sr_nat_mapping *exp_entry = NULL;*/
         struct sr_nat_mapping *prev     = NULL;
         struct sr_nat_mapping *cur = nat->mappings;
 
