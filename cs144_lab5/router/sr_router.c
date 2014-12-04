@@ -257,6 +257,8 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				/* nothing to be set */
 			}else{
 				/* Internal/External to External/Internal respectively */
+				printf("hello world\n");
+
 				sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 			}
 		}
@@ -269,7 +271,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			}
 			return;
 		}else if(ip_hdr->ip_p == ip_protocol_tcp || ip_hdr->ip_p == ip_protocol_udp){
-			printf("hello world\n");
 			sr_send_icmp(sr, packet, len, icmp_code3, icmp_type3, interface);
 		}
 	}else{
