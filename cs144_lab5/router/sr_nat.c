@@ -331,11 +331,11 @@ struct sr_nat_connection *build_connections(sr_ip_hdr_t *ip_hdr, sr_tcp_hdr_t *t
 	conn->next = NULL;
 	return conn;
 }
-
+/*
 void add_connections(struct sr_nat_mapping *mappings, struct sr_nat_connection *conn){
 	struct sr_nat_connection conns = mappings->conns;
 	while(conns != NULL){
 		conns = conns->next;
 	}
 	conns->next = conn;
-}
+}*/
