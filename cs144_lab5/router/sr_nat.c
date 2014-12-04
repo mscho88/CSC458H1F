@@ -290,7 +290,8 @@ struct sr_nat_connection* sr_nat_lookup_connection(
 
     assert(mapping);
     struct sr_nat_connection* walker = mapping->conns;
-    while(walker !=  NULL){
+    while(walker != NULL){
+    	if(walker != NULL)
     	print_addr_ip_int(walker->ip_src);
     	print_addr_ip_int(walker->ip_dest);
         if((ip_src == walker->ip_src) &&
