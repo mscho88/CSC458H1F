@@ -289,8 +289,11 @@ struct sr_nat_connection* sr_nat_lookup_connection(
     pthread_mutex_lock(&(nat->lock));
 
     assert(mapping);
+    printf("11\n");
     struct sr_nat_connection* walker = mapping->conns;
+    printf("22\n");
     while(walker !=  NULL){
+    	printf("33\n");
         if((ip_src == walker->ip_src) &&
          (ip_dest == walker->ip_dest) &&
          (port_dest == walker->port_dest) &&
@@ -302,6 +305,7 @@ struct sr_nat_connection* sr_nat_lookup_connection(
         walker = walker->next;
     }
 
+    printf("44\n");
     pthread_mutex_unlock(&(nat->lock));
 
     return NULL;
