@@ -291,21 +291,25 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 
 		if(sr->nat_active){
 			if (strcmp(interface, INBOUND) == 0 && strcmp(matching_iface, OUTBOUND) == 0){
-				printf("111\n");
-
 				sr_nat_mapping_type proto_type;
 				uint16_t src_port = 0;
 				struct sr_nat_connection* conn = NULL;
+				printf("111\n");
 				if(ip_hdr->ip_p == ip_protocol_icmp){
 					sr_icmp_t3_hdr_t *icmp_t3_hdr = (sr_icmp_t3_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 					src_port = icmp_t3_hdr->unused;
 					proto_type = nat_mapping_icmp;
 				}else if(ip_hdr->ip_p == ip_protocol_tcp){
+					printf("222\n");
+
 					sr_tcp_hdr_t *tcp_hdr = (sr_tcp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 					src_port = tcp_hdr->src_port;
 					proto_type = nat_mapping_tcp;
 					conn = build_connections(ip_hdr, tcp_hdr);
+					printf("333\n");
+
 				}
+				printf("444\n");
 
 				/* If there any mapping regarding to the src IP address, insert it to mappings */
 				struct sr_nat_mapping *mappings = sr_nat_lookup_internal(&sr->nat, ip_hdr->ip_src, src_port, proto_type);
@@ -316,8 +320,11 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 					mappings->conns = proto_type == nat_mapping_tcp ? conn : NULL;
 					mappings = sr_nat_lookup_internal(&sr->nat, ip_hdr->ip_src, src_port, proto_type);
 				}
+				printf("555\n");
+
 				sr_nat_translate(sr, packet, len, mappings, nat_trans_int_to_ext);
 				sr_handlepacket(sr, packet, len, OUTBOUND);
+				printf("666\n");
 
 				/* if any mapping found, then it need to be freed */
 				if(mappings){
@@ -326,14 +333,11 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 				return;
 			}
 			else if (strcmp(interface, OUTBOUND) + strcmp(matching_iface, INBOUND) == 0){
-				printf("222\n");
 
 				sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 				return;
 			}
 		}
-		printf("333\n");
-
 		sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
 		struct sr_arpentry* arp_cache = sr_arpcache_lookup(&sr->cache, ip_hdr->ip_dst);
 		if(arp_cache == NULL){
