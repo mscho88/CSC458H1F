@@ -88,11 +88,6 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 
         time_t curtime = time(NULL);
 
-        if (curtime == ((time_t)-1)){
-            printf("Failure to compute the current time.\n");
-            return NULL;
-        }
-
         struct sr_nat_mapping *prev_map     = NULL;
         struct sr_nat_mapping *cur_map = nat->mappings;
 
@@ -100,7 +95,6 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
         struct sr_nat_connection *prev_conn    = NULL;
 
         while(cur_map){
-            /*timeElapsed = curtime - current->last_updated;*/
         	if(cur_map->type == nat_mapping_icmp && nat->icmp_query < (curtime - cur_map->last_updated)){
         		/* If cur is the first mapping, then prev must be NULL.
         		 * Hence, nat_mappings should be the next element of the
@@ -120,7 +114,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
                 printf("TCP is checked for timeout\n");
                 cur_conn = cur_map->conns;
                 while(cur_conn){
-					if(cur_conn->state == tcp_state_established && curtime - cur_conn->last_updated > nat->tcp_establish){
+					if(nat->tcp_establish < curtime - cur_conn->last_updated && cur_conn->state == tcp_state_established){
 						if(prev_conn){
 							prev_conn->next = cur_conn->next;
 						}else{
@@ -129,7 +123,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 								sr_dismiss_mapping(nat, prev_map, cur_map);
 							}
 						}
-					}else if (curtime - cur_conn->last_updated > nat->tcp_transitory){
+					}else if (nat->tcp_transitory < curtime - cur_conn->last_updated){
 						if(prev_conn){
 							prev_conn->next = cur_conn->next;
 						}else{
