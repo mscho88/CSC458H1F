@@ -424,7 +424,9 @@ void sr_nat_translate(struct sr_instance* sr,
         	icmp_hdr->icmp_sum  = cksum(icmp_hdr, ntohs(ip_hdr->ip_len) - sizeof(sr_ip_hdr_t));
         }else if(mapping->type == nat_mapping_tcp){
         	uint32_t src_seq = tcp_hdr->ack_num - 1;
+            pthread_mutex_unlock(&(sr->nat.lock));
             struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_dst, src_seq, tcp_hdr->dest_port);
+            pthread_mutex_lock(&(sr->nat.lock));
 
             if(conn){
             	sr_nat_connection_state(conn, tcp_hdr);
@@ -450,7 +452,10 @@ void sr_nat_translate(struct sr_instance* sr,
         }
         else if(mapping->type == nat_mapping_tcp){
             uint32_t src_seq = tcp_hdr->ack_num - 1;
+            pthread_mutex_unlock(&(sr->nat.lock));
             struct sr_nat_connection* conn = sr_nat_lookup_connection(&(sr->nat), mapping, mapping->ip_int, ip_hdr->ip_src, src_seq, tcp_hdr->src_port);
+            pthread_mutex_lock(&(sr->nat.lock));
+
             if(conn){
             	sr_nat_connection_state(conn, tcp_hdr);
 				conn->src_seq = tcp_hdr->sequence_num;
