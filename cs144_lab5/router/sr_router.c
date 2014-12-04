@@ -272,7 +272,6 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			sr_icmp_hdr_t *icmp_hdr = (sr_icmp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 			if(icmp_hdr->icmp_type == 8){
 				if(icmp_hdr->icmp_code == 0){
-					printf("hello\n");
 					sr_send_icmp(sr, packet, len, icmp_code0, icmp_type0, interface);
 				}
 			}
@@ -485,14 +484,14 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     uint8_t *_packet = (uint8_t*) malloc(length);
 
     sr_ethernet_hdr_t *eth_hdr_2send = (sr_ethernet_hdr_t *) _packet;
-    sr_ip_hdr_t *ip_hdr_2send      = (sr_ip_hdr_t*) (_packet + sizeof(sr_ethernet_hdr_t));
-    sr_icmp_t3_hdr_t *icmp_hdr_2send  = (sr_icmp_t3_hdr_t*) (_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+    sr_ip_hdr_t *ip_hdr_2send = (sr_ip_hdr_t *) (_packet + sizeof(sr_ethernet_hdr_t));
+    sr_icmp_t3_hdr_t *icmp_hdr_2send = (sr_icmp_t3_hdr_t *) (_packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
     sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *) packet;
-    sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t));
-    sr_icmp_t3_hdr_t *icmp_hdr = (sr_icmp_t3_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
+    sr_ip_hdr_t *ip_hdr = (sr_ip_hdr_t *) (packet + sizeof(sr_ethernet_hdr_t));
+    sr_icmp_t3_hdr_t *icmp_hdr = (sr_icmp_t3_hdr_t *) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 
-    struct sr_if *src_if = sr_get_interface(sr,interface);
+    struct sr_if *src_if = sr_get_interface(sr, interface);
 
     /* build Ethernet header */
 	memcpy(eth_hdr_2send->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
@@ -526,13 +525,15 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
         return;
     }
 
-    ip_hdr_2send->ip_sum = 0;
-    icmp_hdr_2send->icmp_sum  = 0;
-
-    icmp_hdr_2send->icmp_sum  = cksum(icmp_hdr_2send,ntohs(ip_hdr_2send->ip_len) - sizeof(sr_ip_hdr_t));
+    ip_hdr_2send->ip_sum 	  = 0;
     ip_hdr_2send->ip_sum      = cksum((_packet + sizeof(sr_ethernet_hdr_t)), sizeof(sr_ip_hdr_t));
+    icmp_hdr_2send->icmp_sum  = 0;
+    icmp_hdr_2send->icmp_sum  = cksum(icmp_hdr_2send, ntohs(ip_hdr_2send->ip_len) - sizeof(sr_ip_hdr_t));
 
-    sr_send_packet(sr,_packet, length,interface);
+    print_hdr_eth(eth_hdr_2send);
+    print_hdr_ip(ip_hdr_2send);
+    print_hdr_icmp(icmp_hdr_2send);
+    sr_send_packet(sr,_packet, length, interface);
 
     free(_packet);
 }/* end sr_send_icmp */
