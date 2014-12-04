@@ -117,7 +117,9 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 
             }else if(cur_map->type == nat_mapping_tcp){
                 cur_conn = cur_map->conns;
-                printf("11\n");
+                if(cur_conn == NULL){
+                	printf("11\n");
+                }
                 while(cur_conn){
                 	printf("22\n");
 					if(nat->tcp_establish < curtime - cur_conn->last_updated && cur_conn->state == tcp_state_established){
