@@ -97,8 +97,9 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
 
         while(cur){
             /*timeElapsed = curtime - current->last_updated;*/
-        	if(nat->icmp_query < (curtime - cur->last_updated) && cur->type == nat_mapping_icmp){
-
+        	if(cur->type == nat_mapping_icmp){
+        		if(nat->icmp_query < (curtime - cur->last_updated))
+        		{
 					if (prev == NULL){
 						nat->mappings = cur->next;
 					}else{
@@ -108,7 +109,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
 					cur = cur->next;
 					free(expiredEntry);
 					continue;
-
+        		}
             }else if(cur->type == nat_mapping_tcp){
                 printf("TCP is checked for timeout\n");
                 currentConns = cur->conns;
