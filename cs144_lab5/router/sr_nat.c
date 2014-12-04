@@ -298,10 +298,7 @@ struct sr_nat_connection* sr_nat_lookup_connection(
 			printf("11\n");
     	}
     	printf("22\n");
-        if((ip_src == walker->ip_src) &&
-         (ip_dest == walker->ip_dest) &&
-         (port_dest == walker->port_dest) &&
-         (src_seq == walker->src_seq)){
+        if((ip_src == walker->ip_src) && (ip_dest == walker->ip_dest) && (src_seq == walker->src_seq) && (port_dest == walker->port_dest)){
             pthread_mutex_unlock(&(nat->lock));
 
             return walker;
@@ -337,5 +334,6 @@ struct sr_nat_connection *build_connections(sr_ip_hdr_t *ip_hdr, sr_tcp_hdr_t *t
 	conn->port_dest = tcp_hdr->dest_port;
 	conn->last_updated = time(NULL);
 	conn->state = tcp_state_syn_sent;
+	conn->next = NULL;
 	return conn;
 }
