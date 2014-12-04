@@ -87,7 +87,6 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
             return NULL;
         }
 
-        unsigned int timeElapsed;
         struct sr_nat_mapping *prev     = NULL;
         struct sr_nat_mapping *cur = nat->mappings;
 
@@ -117,7 +116,6 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
                 printf("TCP is checked for timeout\n");
                 currentConns = cur->conns;
                 while(currentConns){
-					timeElapsed = curtime - currentConns->last_updated;
 					if(currentConns->state == tcp_state_established && curtime - currentConns->last_updated > nat->tcp_establish){
 						if(wasteConns){
 							wasteConns->next = currentConns->next;
