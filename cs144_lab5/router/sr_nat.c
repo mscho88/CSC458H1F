@@ -88,7 +88,6 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
         }
 
         unsigned int timeElapsed;
-        struct sr_nat_mapping *expiredEntry = NULL;
         struct sr_nat_mapping *prev     = NULL;
         struct sr_nat_mapping *cur = nat->mappings;
 
@@ -98,15 +97,21 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
         while(cur){
             /*timeElapsed = curtime - current->last_updated;*/
         	if(cur->type == nat_mapping_icmp && nat->icmp_query < (curtime - cur->last_updated)){
-        			if (prev == NULL){
-						nat->mappings = cur->next;
-					}else{
-						prev->next = cur->next;
-					}
-					expiredEntry = cur;
-					cur = cur->next;
-					free(expiredEntry);
-					continue;
+        		/* If cur is the first mapping, then prev must be NULL.
+        		 * Hence, nat_mappings should be the next element of the
+				 * cureent one. Otherwise, the next of prev should point
+				 * the next mapping of the current one. */
+				if (prev == NULL){
+					nat->mappings = cur->next;
+				}else{
+					prev->next = cur->next;
+				}
+
+				/* Destroy the current mapping. */
+		        struct sr_nat_mapping *exp_entry = cur;
+				cur = cur->next;
+				free(exp_entry);
+				continue;
 
             }else if(cur->type == nat_mapping_tcp){
                 printf("TCP is checked for timeout\n");
