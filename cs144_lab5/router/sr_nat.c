@@ -291,9 +291,11 @@ struct sr_nat_connection* sr_nat_lookup_connection(
     assert(mapping);
     struct sr_nat_connection* walker = mapping->conns;
     while(walker != NULL){
-    	if(walker != NULL)
-    	print_addr_ip_int(walker->ip_src);
-    	print_addr_ip_int(walker->ip_dest);
+    	if(walker != NULL){
+			print_addr_ip_int(walker->ip_src);
+			print_addr_ip_int(walker->ip_dest);
+    	}
+    	printf("this line\n");
         if((ip_src == walker->ip_src) &&
          (ip_dest == walker->ip_dest) &&
          (port_dest == walker->port_dest) &&
