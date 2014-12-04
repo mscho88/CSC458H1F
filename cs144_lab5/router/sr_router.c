@@ -260,9 +260,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			}else if(strcmp(interface, INBOUND) + strcmp(dest_if->name, INBOUND) == 0){
 				/* Internal to Internal */
 				/* nothing to be set */
-				printf("hello\n");
 			}else{
-
 				/* Internal/External to External/Internal respectively */
 				sr_send_icmp(sr, packet, len, icmp_code3, icmp_type0, interface);
 			}
@@ -272,6 +270,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 			sr_icmp_hdr_t *icmp_hdr = (sr_icmp_hdr_t*) (packet + sizeof(sr_ethernet_hdr_t) + sizeof(sr_ip_hdr_t));
 			if(icmp_hdr->icmp_type == 8){
 				if(icmp_hdr->icmp_code == 0){
+					printf("11\n");
 					sr_send_icmp(sr, packet, len, icmp_code0, icmp_type0, interface);
 				}
 			}
@@ -533,7 +532,7 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     print_hdr_eth(eth_hdr_2send);
     print_hdr_ip(ip_hdr_2send);
     print_hdr_icmp(icmp_hdr_2send);
-    sr_send_packet(sr,_packet, length, interface);
+    sr_send_packet(sr, _packet, length, interface);
 
     free(_packet);
 }/* end sr_send_icmp */
