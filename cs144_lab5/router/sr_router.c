@@ -337,7 +337,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 		sr_ethernet_hdr_t *eth_hdr = (sr_ethernet_hdr_t *)packet;
 		struct sr_arpentry* arp_cache = sr_arpcache_lookup(&sr->cache, ip_hdr->ip_dst);
 		if(arp_cache == NULL){
-			struct sr_arpreq* currentRequest = sr_arpcache_queuereq(&sr->cache, ip_hdr->ip_dst, packet, len, interface);
+			sr_arpcache_queuereq(&sr->cache, ip_hdr->ip_dst, packet, len, interface);
 		}else{
 			struct sr_if* curInterface = sr_get_interface(sr, matching_iface);
 			ip_hdr->ip_ttl--;
