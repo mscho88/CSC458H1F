@@ -51,7 +51,7 @@ int sr_nat_destroy(struct sr_nat *nat){
     struct sr_nat_mapping *wasteMapping;
     struct sr_nat_mapping *current = nat->mappings;
 
-
+    printf("111\n");
     while(current)
     {
         currentConns = current->conns;
@@ -65,7 +65,7 @@ int sr_nat_destroy(struct sr_nat *nat){
         current = current->next;
         free(wasteMapping);
     }
-
+    printf("222\n");
 
     pthread_kill(nat->thread, SIGKILL);
     return pthread_mutex_destroy(&(nat->lock)) &&
@@ -117,33 +117,22 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 
             }else if(cur_map->type == nat_mapping_tcp){
                 cur_conn = cur_map->conns;
-                if(cur_conn == NULL){
-                	printf("11\n");
-                }
                 while(cur_conn != NULL){
-                	printf("22\n");
 					if(nat->tcp_establish < curtime - cur_conn->last_updated && cur_conn->state == tcp_state_established){
-						printf("33\n");
 						if(prev_conn){
-							printf("44\n");
 							prev_conn->next = cur_conn->next;
 						}else{
-							printf("55\n");
 							cur_map->conns = cur_conn->next;
 							if(cur_map->conns == NULL){
 								sr_dismiss_mapping(nat, prev_map, cur_map);
 							}
 						}
 					}else if (nat->tcp_transitory < curtime - cur_conn->last_updated){
-						printf("66\n");
 						if(prev_conn){
-							printf("77\n");
 							prev_conn->next = cur_conn->next;
 						}else{
-							printf("88\n");
 							cur_map->conns = cur_conn->next;
 							if(cur_map->conns == NULL){
-								printf("99\n");
 								sr_dismiss_mapping(nat, prev_map, cur_map);
 							}
 						}
@@ -152,7 +141,6 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 					prev_conn = cur_conn;
 					cur_conn = cur_conn->next;
                 }
-                printf("00\n");
             }else{
             	prev_map = cur_map;
             	cur_map = cur_map->next;
