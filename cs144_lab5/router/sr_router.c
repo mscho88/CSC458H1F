@@ -492,8 +492,6 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
 
     struct sr_if *src_if = sr_get_interface(sr, interface);
 
-    memcpy(_packet, packet, length);
-
     /* build Ethernet header */
 	memcpy(eth_hdr_2send->ether_dhost, eth_hdr->ether_shost, ETHER_ADDR_LEN);
 	memcpy(eth_hdr_2send->ether_shost, eth_hdr->ether_dhost, ETHER_ADDR_LEN);
@@ -531,13 +529,7 @@ void sr_send_icmp(struct sr_instance *sr, uint8_t *packet,
     icmp_hdr_2send->icmp_sum  = 0;
     icmp_hdr_2send->icmp_sum  = cksum(icmp_hdr_2send, ntohs(ip_hdr_2send->ip_len) - sizeof(sr_ip_hdr_t));
 
-    print_hdr_eth(eth_hdr);
-    print_hdr_eth(eth_hdr_2send);
-	print_hdr_ip(ip_hdr);
-	print_hdr_ip(ip_hdr_2send);
-	print_hdr_icmp(icmp_hdr);
-	print_hdr_icmp(icmp_hdr_2send);
-	sr_send_packet(sr, _packet, length, interface);
+    sr_send_packet(sr, _packet, length, interface);
 
     free(_packet);
 }/* end sr_send_icmp */
