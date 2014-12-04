@@ -105,7 +105,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
         struct sr_nat_connection *cur_conn  = NULL;
         struct sr_nat_connection *prev_conn    = NULL;
 
-        while(cur_map){
+        while(cur_map != NULL){
         	if(cur_map->type == nat_mapping_icmp && nat->icmp_query < (curtime - cur_map->last_updated)){
         		sr_dismiss_mapping(nat, prev_map, cur_map);
 
