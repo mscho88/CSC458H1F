@@ -106,6 +106,8 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
         struct sr_nat_connection *prev_conn    = NULL;
 
         while(cur_map){
+        	printf("1");
+
         	if(cur_map->type == nat_mapping_icmp && nat->icmp_query < (curtime - cur_map->last_updated)){
         		sr_dismiss_mapping(nat, prev_map, cur_map);
 
@@ -116,7 +118,6 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 				continue;
 
             }else if(cur_map->type == nat_mapping_tcp){
-            	printf("1");
                 cur_conn = cur_map->conns;
                 while(cur_conn != NULL){
 					if(nat->tcp_establish < curtime - cur_conn->last_updated && cur_conn->state == tcp_state_established){
