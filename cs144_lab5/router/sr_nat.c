@@ -82,10 +82,10 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
 
         time_t curtime = time(NULL);
 
-        /*if (curtime == ((time_t)-1)){
+        if (curtime == ((time_t)-1)){
             printf("Failure to compute the current time.\n");
             return NULL;
-        }*/
+        }
 
         unsigned int timeElapsed;
         struct sr_nat_mapping *expiredEntry = NULL;
