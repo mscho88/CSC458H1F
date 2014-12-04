@@ -72,6 +72,13 @@ int sr_nat_destroy(struct sr_nat *nat){
         pthread_mutexattr_destroy(&(nat->attr));
 }
 
+void sr_dismiss_mapping(struct sr_nat *nat, struct sr_nat_mapping *prev_map,struct sr_nat_mapping *cur_map){
+	if (prev_map == NULL){
+		nat->mappings = cur_map->next;
+	}else{
+		prev_map->next = cur_map->next;
+	}
+}
 void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 
     struct sr_nat *nat = (struct sr_nat *)nat_ptr;
@@ -90,7 +97,7 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
         struct sr_nat_mapping *cur_map = nat->mappings;
 
         struct sr_nat_connection *cur_conn  = NULL;
-        struct sr_nat_connection *wasteConns    = NULL;
+        struct sr_nat_connection *prev_conn    = NULL;
 
         while(cur_map){
             /*timeElapsed = curtime - current->last_updated;*/
@@ -99,11 +106,9 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
         		 * Hence, nat_mappings should be the next element of the
 				 * cureent one. Otherwise, the next of prev should point
 				 * the next mapping of the current one. */
-				if (prev_map == NULL){
-					nat->mappings = cur_map->next;
-				}else{
-					prev_map->next = cur_map->next;
-				}
+        		sr_dismiss_mapping(nat, prev_map, cur_map);
+				/*if (prev_map == NULL){ nat->mappings = cur_map->next; }
+				else{ prev_map->next = cur_map->next; }*/
 
 				/* Destroy the current mapping. */
 		        struct sr_nat_mapping *exp_entry = cur_map;
@@ -116,38 +121,29 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
                 cur_conn = cur_map->conns;
                 while(cur_conn){
 					if(cur_conn->state == tcp_state_established && curtime - cur_conn->last_updated > nat->tcp_establish){
-						if(wasteConns){
-							wasteConns->next = cur_conn->next;
+						if(prev_conn){
+							prev_conn->next = cur_conn->next;
 						}else{
 							cur_map->conns = cur_conn->next;
 							if(cur_map->conns == NULL){
-								if (prev_map == NULL){
-									nat->mappings = cur_map->next;
-								}else{
-									prev_map->next = cur_map->next;
-								}
+								sr_dismiss_mapping(nat, prev_map, cur_map);
 							}
 						}
 					}else if (curtime - cur_conn->last_updated > nat->tcp_transitory){
-						if(wasteConns){
-							wasteConns->next = cur_conn->next;
+						if(prev_conn){
+							prev_conn->next = cur_conn->next;
 						}else{
 							cur_map->conns = cur_conn->next;
 							if(cur_map->conns == NULL){
-								if (prev_map == NULL){
-									nat->mappings = cur_map->next;
-								}else{
-									prev_map->next = cur_map->next;
-								}
+								sr_dismiss_mapping(nat, prev_map, cur_map);
 							}
 						}
 					}
 
-					wasteConns = cur_conn;
+					prev_conn = cur_conn;
 					cur_conn = cur_conn->next;
                 }
             }else{
-            	/* this entry is not expired */
             	prev_map = cur_map;
             	cur_map = cur_map->next;
             }
