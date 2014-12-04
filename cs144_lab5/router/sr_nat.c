@@ -39,8 +39,7 @@ int sr_nat_init(struct sr_nat *nat) { /* Initializes the nat */
 }
 
 
-int sr_nat_destroy(struct sr_nat *nat)
-{
+int sr_nat_destroy(struct sr_nat *nat){
     /* Destroys the nat (free memory) */
     pthread_mutex_lock(&(nat->lock));
 
@@ -73,7 +72,7 @@ int sr_nat_destroy(struct sr_nat *nat)
         pthread_mutexattr_destroy(&(nat->attr));
 }
 
-void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
+void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timeout handling */
 
     struct sr_nat *nat = (struct sr_nat *)nat_ptr;
     while (1) {
@@ -87,76 +86,74 @@ void *sr_nat_timeout(void *nat_ptr) {  /* Periodic Timout handling */
             return NULL;
         }
 
-        struct sr_nat_mapping *prev     = NULL;
-        struct sr_nat_mapping *cur = nat->mappings;
+        struct sr_nat_mapping *prev_map     = NULL;
+        struct sr_nat_mapping *cur_map = nat->mappings;
 
-        struct sr_nat_connection *currentConns  = NULL;
+        struct sr_nat_connection *cur_conn  = NULL;
         struct sr_nat_connection *wasteConns    = NULL;
 
-        while(cur){
+        while(cur_map){
             /*timeElapsed = curtime - current->last_updated;*/
-        	if(cur->type == nat_mapping_icmp && nat->icmp_query < (curtime - cur->last_updated)){
+        	if(cur_map->type == nat_mapping_icmp && nat->icmp_query < (curtime - cur_map->last_updated)){
         		/* If cur is the first mapping, then prev must be NULL.
         		 * Hence, nat_mappings should be the next element of the
 				 * cureent one. Otherwise, the next of prev should point
 				 * the next mapping of the current one. */
-				if (prev == NULL){
-					nat->mappings = cur->next;
+				if (prev_map == NULL){
+					nat->mappings = cur_map->next;
 				}else{
-					prev->next = cur->next;
+					prev_map->next = cur_map->next;
 				}
 
 				/* Destroy the current mapping. */
-		        struct sr_nat_mapping *exp_entry = cur;
-				cur = cur->next;
+		        struct sr_nat_mapping *exp_entry = cur_map;
+				cur_map = cur_map->next;
 				free(exp_entry);
 				continue;
 
-            }else if(cur->type == nat_mapping_tcp){
+            }else if(cur_map->type == nat_mapping_tcp){
                 printf("TCP is checked for timeout\n");
-                currentConns = cur->conns;
-                while(currentConns){
-					if(currentConns->state == tcp_state_established && curtime - currentConns->last_updated > nat->tcp_establish){
+                cur_conn = cur_map->conns;
+                while(cur_conn){
+					if(cur_conn->state == tcp_state_established && curtime - cur_conn->last_updated > nat->tcp_establish){
 						if(wasteConns){
-							wasteConns->next = currentConns->next;
+							wasteConns->next = cur_conn->next;
 						}else{
-							cur->conns = currentConns->next;
-							if(cur->conns == NULL){
-								/* delete the entry */
-								if (prev == NULL){
-									nat->mappings = cur->next;
+							cur_map->conns = cur_conn->next;
+							if(cur_map->conns == NULL){
+								if (prev_map == NULL){
+									nat->mappings = cur_map->next;
 								}else{
-									prev->next = cur->next;
+									prev_map->next = cur_map->next;
 								}
 							}
 						}
-					}else if (curtime - currentConns->last_updated > nat->tcp_transitory){
+					}else if (curtime - cur_conn->last_updated > nat->tcp_transitory){
 						if(wasteConns){
-							wasteConns->next = currentConns->next;
+							wasteConns->next = cur_conn->next;
 						}else{
-							cur->conns = currentConns->next;
-							if(cur->conns == NULL){
-								if (prev == NULL){
-									nat->mappings = cur->next;
+							cur_map->conns = cur_conn->next;
+							if(cur_map->conns == NULL){
+								if (prev_map == NULL){
+									nat->mappings = cur_map->next;
 								}else{
-									prev->next = cur->next;
+									prev_map->next = cur_map->next;
 								}
 							}
 						}
 					}
 
-					wasteConns = currentConns;
-					currentConns = currentConns->next;
+					wasteConns = cur_conn;
+					cur_conn = cur_conn->next;
                 }
             }else{
             	/* this entry is not expired */
-            	prev = cur;
-            	cur = cur->next;
+            	prev_map = cur_map;
+            	cur_map = cur_map->next;
             }
         }
         pthread_mutex_unlock(&(nat->lock));
     }
-
     return NULL;
 }
 
